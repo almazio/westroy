@@ -2,6 +2,7 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface User {
     id: string;
@@ -13,12 +14,17 @@ interface User {
 
 export function useAuth() {
     const { data: session, status } = useSession();
+    const router = useRouter();
 
     return {
         user: session?.user as User | null,
         isLoading: status === 'loading',
-        login: () => { window.location.href = '/login' },
-        logout: () => signOut({ callbackUrl: '/' }),
+        login: () => { router.push('/login'); },
+        logout: async () => {
+            await signOut({ redirect: false });
+            router.push('/');
+            router.refresh();
+        },
         switchRole: () => { console.warn('Switch role not supported in real auth') },
         isDemo: false
     };

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
 import { notificationService } from '@/lib/notifications';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/db';
 
 type PartnerApplication = {
     id: string;
@@ -13,27 +12,9 @@ type PartnerApplication = {
     category: string;
     city: string;
     message: string;
+    status: 'pending' | 'approved' | 'rejected';
     createdAt: string;
 };
-
-const isVercel = Boolean(process.env.VERCEL);
-const storageDir = isVercel ? '/tmp' : path.join(process.cwd(), 'data');
-const storageFile = path.join(storageDir, 'partner-applications.json');
-
-async function readApplications(): Promise<PartnerApplication[]> {
-    try {
-        const raw = await fs.readFile(storageFile, 'utf8');
-        const parsed = JSON.parse(raw) as unknown;
-        return Array.isArray(parsed) ? (parsed as PartnerApplication[]) : [];
-    } catch {
-        return [];
-    }
-}
-
-async function writeApplications(applications: PartnerApplication[]) {
-    await fs.mkdir(storageDir, { recursive: true });
-    await fs.writeFile(storageFile, JSON.stringify(applications, null, 2), 'utf8');
-}
 
 export async function GET() {
     const session = await auth();
@@ -41,8 +22,15 @@ export async function GET() {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const applications = await readApplications();
-    return NextResponse.json(applications);
+    try {
+        const applications = await prisma.partnerApplication.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+        return NextResponse.json(applications);
+    } catch (error) {
+        console.error('Failed to fetch partner applications:', error);
+        return NextResponse.json({ error: 'Не удалось загрузить заявки' }, { status: 500 });
+    }
 }
 
 export async function POST(request: Request) {
@@ -69,18 +57,22 @@ export async function POST(request: Request) {
             category,
             city,
             message,
+            status: 'pending',
             createdAt: new Date().toISOString(),
         };
 
-        // On Vercel, filesystem is ephemeral/read-only outside /tmp.
-        // We persist when possible, but don't fail submission if storage write fails.
-        try {
-            const applications = await readApplications();
-            applications.unshift(application);
-            await writeApplications(applications);
-        } catch (storageError) {
-            console.error('Partner application storage warning:', storageError);
-        }
+        await prisma.partnerApplication.create({
+            data: {
+                name: application.name,
+                email: application.email,
+                phone: application.phone,
+                companyName: application.companyName,
+                category: application.category,
+                city: application.city,
+                message: application.message,
+                status: application.status,
+            },
+        });
 
         const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SMTP_USER;
         if (adminEmail) {

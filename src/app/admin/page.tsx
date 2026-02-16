@@ -58,6 +58,7 @@ interface PartnerApplicationData {
     category: string;
     city: string;
     message: string;
+    status: 'pending' | 'approved' | 'rejected';
     createdAt: string;
 }
 
@@ -646,6 +647,7 @@ export default function AdminPanel() {
                                 <th>Контакт</th>
                                 <th>Категория</th>
                                 <th>Город</th>
+                                <th>Статус</th>
                                 <th>Комментарий</th>
                                 <th>Дата</th>
                             </tr>
@@ -661,13 +663,18 @@ export default function AdminPanel() {
                                     </td>
                                     <td>{a.category}</td>
                                     <td>{a.city}</td>
+                                    <td>
+                                        {a.status === 'pending' && <span className="badge badge-warning">pending</span>}
+                                        {a.status === 'approved' && <span className="badge badge-success">approved</span>}
+                                        {a.status === 'rejected' && <span className="badge badge-error">rejected</span>}
+                                    </td>
                                     <td className={styles.applicationMessage}>{a.message || '—'}</td>
                                     <td>{formatDate(a.createdAt)}</td>
                                 </tr>
                             ))}
                             {partnerApplications.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="text-muted">Пока нет заявок</td>
+                                    <td colSpan={7} className="text-muted">Пока нет заявок</td>
                                 </tr>
                             )}
                         </tbody>
