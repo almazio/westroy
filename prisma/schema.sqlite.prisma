@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/sqlite-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("SQLITE_DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String    @unique
+  passwordHash  String?
+  role          String
+  company       Company?
+  requests      Request[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Region {
+  id        String    @id
+  name      String
+  nameRu    String
+  companies Company[]
+}
+
+model Category {
+  id        String    @id
+  name      String
+  nameRu    String
+  icon      String
+  keywords  String
+  companies Company[]
+  products  Product[]
+  requests  Request[]
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  address     String
+  phone       String
+  delivery    Boolean  @default(false)
+  logoUrl     String?
+  verified    Boolean  @default(false)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  regionId    String
+  region      Region   @relation(fields: [regionId], references: [id])
+  ownerId     String?  @unique
+  owner       User?    @relation(fields: [ownerId], references: [id])
+  products    Product[]
+  offers      Offer[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  unit        String
+  priceFrom   Float
+  priceUnit   String
+  inStock     Boolean  @default(true)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Request {
+  id             String   @id @default(cuid())
+  query          String
+  parsedCategory String
+  parsedVolume   String?
+  parsedCity     String
+  deliveryNeeded Boolean
+  address        String?
+  deadline       String?
+  status         String
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+  offers         Offer[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Offer {
+  id               String   @id @default(cuid())
+  price            Float
+  priceUnit        String
+  comment          String
+  deliveryIncluded Boolean
+  deliveryPrice    Float?
+  validUntil       String
+  status           String
+  requestId        String
+  request          Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

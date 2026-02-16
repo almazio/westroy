@@ -2,6 +2,8 @@ import Link from 'next/link';
 import styles from './Footer.module.css';
 
 export default function Footer() {
+    const year = new Date().getFullYear();
+
     return (
         <footer className={styles.footer}>
             <div className={styles.inner}>
@@ -20,10 +22,10 @@ export default function Footer() {
                     <div className={styles.col}>
                         <h4>Категории</h4>
                         <a href="/search?category=concrete">Бетон</a>
-                        <a href="/search?category=aggregates">Инертные</a>
-                        <a href="/search?category=blocks">Кирпич и блоки</a>
-                        <a href="/search?category=rebar">Арматура</a>
-                        <a href="/search?category=machinery">Спецтехника</a>
+                        <a href="/search?category=sand">Песок</a>
+                        <a href="/search?category=stone">Щебень</a>
+                        <a href="/search?category=brick">Кирпич</a>
+                        <a href="/search?category=cement">Цемент</a>
                     </div>
                     <div className={styles.col}>
                         <h4>Платформа</h4>
@@ -40,8 +42,7 @@ export default function Footer() {
                 </div>
 
                 <div className={styles.bottom}>
-                    <p>© 2024 WESTROY. Все права защищены.</p>
-                    <p className={styles.disclaimer}>Demo-версия. Данные носят ориентировочный характер.</p>
+                    <p>© {year} WESTROY. Все права защищены.</p>
                 </div>
             </div>
         </footer>

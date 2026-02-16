@@ -794,6 +794,7 @@ export type CompanyCreateOrConnectWithoutRegionInput = {
 
 export type CompanyCreateManyRegionInputEnvelope = {
   data: Prisma.CompanyCreateManyRegionInput | Prisma.CompanyCreateManyRegionInput[]
+  skipDuplicates?: boolean
 }
 
 export type CompanyUpsertWithWhereUniqueWithoutRegionInput = {
@@ -872,6 +873,7 @@ export type CompanyCreateOrConnectWithoutCategoryInput = {
 
 export type CompanyCreateManyCategoryInputEnvelope = {
   data: Prisma.CompanyCreateManyCategoryInput | Prisma.CompanyCreateManyCategoryInput[]
+  skipDuplicates?: boolean
 }
 
 export type CompanyUpsertWithWhereUniqueWithoutCategoryInput = {
@@ -2015,6 +2017,7 @@ export type CompanyCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * The data used to create many Companies.
    */
   data: Prisma.CompanyCreateManyInput | Prisma.CompanyCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2033,6 +2036,7 @@ export type CompanyCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many Companies.
    */
   data: Prisma.CompanyCreateManyInput | Prisma.CompanyCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

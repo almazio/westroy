@@ -644,6 +644,7 @@ export type RequestCreateOrConnectWithoutUserInput = {
 
 export type RequestCreateManyUserInputEnvelope = {
   data: Prisma.RequestCreateManyUserInput | Prisma.RequestCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type RequestUpsertWithWhereUniqueWithoutUserInput = {
@@ -720,6 +721,7 @@ export type RequestCreateOrConnectWithoutCategoryInput = {
 
 export type RequestCreateManyCategoryInputEnvelope = {
   data: Prisma.RequestCreateManyCategoryInput | Prisma.RequestCreateManyCategoryInput[]
+  skipDuplicates?: boolean
 }
 
 export type RequestUpsertWithWhereUniqueWithoutCategoryInput = {
@@ -1750,6 +1752,7 @@ export type RequestCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * The data used to create many Requests.
    */
   data: Prisma.RequestCreateManyInput | Prisma.RequestCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1768,6 +1771,7 @@ export type RequestCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many Requests.
    */
   data: Prisma.RequestCreateManyInput | Prisma.RequestCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

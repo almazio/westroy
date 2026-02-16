@@ -650,6 +650,7 @@ export type OfferCreateOrConnectWithoutCompanyInput = {
 
 export type OfferCreateManyCompanyInputEnvelope = {
   data: Prisma.OfferCreateManyCompanyInput | Prisma.OfferCreateManyCompanyInput[]
+  skipDuplicates?: boolean
 }
 
 export type OfferUpsertWithWhereUniqueWithoutCompanyInput = {
@@ -721,6 +722,7 @@ export type OfferCreateOrConnectWithoutRequestInput = {
 
 export type OfferCreateManyRequestInputEnvelope = {
   data: Prisma.OfferCreateManyRequestInput | Prisma.OfferCreateManyRequestInput[]
+  skipDuplicates?: boolean
 }
 
 export type OfferUpsertWithWhereUniqueWithoutRequestInput = {
@@ -1618,6 +1620,7 @@ export type OfferCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * The data used to create many Offers.
    */
   data: Prisma.OfferCreateManyInput | Prisma.OfferCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1636,6 +1639,7 @@ export type OfferCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    * The data used to create many Offers.
    */
   data: Prisma.OfferCreateManyInput | Prisma.OfferCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

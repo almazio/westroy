@@ -1057,6 +1057,7 @@ export type RegionCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * The data used to create many Regions.
    */
   data: Prisma.RegionCreateManyInput | Prisma.RegionCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1075,6 +1076,7 @@ export type RegionCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensio
    * The data used to create many Regions.
    */
   data: Prisma.RegionCreateManyInput | Prisma.RegionCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
