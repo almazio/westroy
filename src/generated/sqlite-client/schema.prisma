@@ -9,16 +9,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  phone         String    @unique
-  passwordHash  String?
-  role          String
-  company       Company?
-  requests      Request[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String    @unique
+  passwordHash String?
+  role         String
+  company      Company?
+  requests     Request[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Region {
@@ -40,24 +40,24 @@ model Category {
 }
 
 model Company {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String
   address     String
   phone       String
-  delivery    Boolean  @default(false)
+  delivery    Boolean   @default(false)
   logoUrl     String?
-  verified    Boolean  @default(false)
+  verified    Boolean   @default(false)
   categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+  category    Category  @relation(fields: [categoryId], references: [id])
   regionId    String
-  region      Region   @relation(fields: [regionId], references: [id])
-  ownerId     String?  @unique
-  owner       User?    @relation(fields: [ownerId], references: [id])
+  region      Region    @relation(fields: [regionId], references: [id])
+  ownerId     String?   @unique
+  owner       User?     @relation(fields: [ownerId], references: [id])
   products    Product[]
   offers      Offer[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Product {

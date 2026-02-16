@@ -1,5 +1,5 @@
 
-import { PrismaClient } from '../generated/client/client';
+import { PrismaClient } from '@prisma/client';
 import { Region, Category, Company, Product, User, Request, Offer } from './types';
 
 // Prisma Client Singleton for Next.js dev HMR
