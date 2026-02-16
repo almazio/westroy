@@ -140,24 +140,49 @@ export async function getRegions(): Promise<Region[]> {
 
 // Categories
 export async function getCategories(): Promise<Category[]> {
-    const categories = await prisma.category.findMany();
-    return categories.map(mapCategory);
+    try {
+        const categories = await prisma.category.findMany();
+        return categories.map(mapCategory);
+    } catch (error) {
+        console.warn('[DB] getCategories fallback:', error);
+        return [
+            { id: 'concrete', name: 'concrete', nameRu: 'Бетон', icon: '🧱', keywords: ['бетон', 'м300'] },
+            { id: 'rebar', name: 'rebar', nameRu: 'Арматура', icon: '🔩', keywords: ['арматура', 'a500'] },
+            { id: 'aggregates', name: 'aggregates', nameRu: 'Инертные', icon: '⛰️', keywords: ['щебень', 'песок'] },
+            { id: 'blocks', name: 'blocks', nameRu: 'Блоки и кирпич', icon: '🧱', keywords: ['блок', 'кирпич'] },
+        ];
+    }
 }
 
 export async function getCategoryById(id: string): Promise<Category | undefined> {
-    const category = await prisma.category.findUnique({ where: { id } });
-    return category ? mapCategory(category) : undefined;
+    try {
+        const category = await prisma.category.findUnique({ where: { id } });
+        return category ? mapCategory(category) : undefined;
+    } catch (error) {
+        console.warn('[DB] getCategoryById fallback:', error);
+        return (await getCategories()).find((c) => c.id === id);
+    }
 }
 
 // Companies
 export async function getCompanies(): Promise<Company[]> {
-    const companies = await prisma.company.findMany();
-    return companies.map(mapCompany);
+    try {
+        const companies = await prisma.company.findMany();
+        return companies.map(mapCompany);
+    } catch (error) {
+        console.warn('[DB] getCompanies fallback:', error);
+        return [];
+    }
 }
 
 export async function getCompanyById(id: string): Promise<Company | undefined> {
-    const company = await prisma.company.findUnique({ where: { id } });
-    return company ? mapCompany(company) : undefined;
+    try {
+        const company = await prisma.company.findUnique({ where: { id } });
+        return company ? mapCompany(company) : undefined;
+    } catch (error) {
+        console.warn('[DB] getCompanyById fallback:', error);
+        return undefined;
+    }
 }
 
 export async function getCompaniesByCategory(categoryId: string): Promise<Company[]> {
@@ -172,8 +197,13 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProductsByCompany(companyId: string): Promise<Product[]> {
-    const products = await prisma.product.findMany({ where: { companyId } });
-    return products.map(mapProduct);
+    try {
+        const products = await prisma.product.findMany({ where: { companyId } });
+        return products.map(mapProduct);
+    } catch (error) {
+        console.warn('[DB] getProductsByCompany fallback:', error);
+        return [];
+    }
 }
 
 export async function getProductsByCategory(categoryId: string): Promise<Product[]> {
