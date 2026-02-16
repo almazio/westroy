@@ -130,6 +130,10 @@ const mapOffer = (o: OfferDbRecord): Offer => ({
     createdAt: o.createdAt.toISOString(),
 });
 
+function hasConfiguredDatabaseUrl() {
+    return Boolean(process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL);
+}
+
 // ---- PUBLIC API ----
 
 // Regions
@@ -144,13 +148,16 @@ export async function getCategories(): Promise<Category[]> {
         const categories = await prisma.category.findMany();
         return categories.map(mapCategory);
     } catch (error) {
-        console.warn('[DB] getCategories fallback:', error);
-        return [
-            { id: 'concrete', name: 'concrete', nameRu: 'Бетон', icon: '🧱', keywords: ['бетон', 'м300'] },
-            { id: 'rebar', name: 'rebar', nameRu: 'Арматура', icon: '🔩', keywords: ['арматура', 'a500'] },
-            { id: 'aggregates', name: 'aggregates', nameRu: 'Инертные', icon: '⛰️', keywords: ['щебень', 'песок'] },
-            { id: 'blocks', name: 'blocks', nameRu: 'Блоки и кирпич', icon: '🧱', keywords: ['блок', 'кирпич'] },
-        ];
+        if (!hasConfiguredDatabaseUrl()) {
+            console.warn('[DB] getCategories fallback (no DB url):', error);
+            return [
+                { id: 'concrete', name: 'concrete', nameRu: 'Бетон', icon: '🧱', keywords: ['бетон', 'м300'] },
+                { id: 'rebar', name: 'rebar', nameRu: 'Арматура', icon: '🔩', keywords: ['арматура', 'a500'] },
+                { id: 'aggregates', name: 'aggregates', nameRu: 'Инертные', icon: '⛰️', keywords: ['щебень', 'песок'] },
+                { id: 'blocks', name: 'blocks', nameRu: 'Блоки и кирпич', icon: '🧱', keywords: ['блок', 'кирпич'] },
+            ];
+        }
+        throw error;
     }
 }
 
@@ -159,7 +166,8 @@ export async function getCategoryById(id: string): Promise<Category | undefined>
         const category = await prisma.category.findUnique({ where: { id } });
         return category ? mapCategory(category) : undefined;
     } catch (error) {
-        console.warn('[DB] getCategoryById fallback:', error);
+        if (hasConfiguredDatabaseUrl()) throw error;
+        console.warn('[DB] getCategoryById fallback (no DB url):', error);
         return (await getCategories()).find((c) => c.id === id);
     }
 }
@@ -170,7 +178,8 @@ export async function getCompanies(): Promise<Company[]> {
         const companies = await prisma.company.findMany();
         return companies.map(mapCompany);
     } catch (error) {
-        console.warn('[DB] getCompanies fallback:', error);
+        if (hasConfiguredDatabaseUrl()) throw error;
+        console.warn('[DB] getCompanies fallback (no DB url):', error);
         return [];
     }
 }
@@ -180,7 +189,8 @@ export async function getCompanyById(id: string): Promise<Company | undefined> {
         const company = await prisma.company.findUnique({ where: { id } });
         return company ? mapCompany(company) : undefined;
     } catch (error) {
-        console.warn('[DB] getCompanyById fallback:', error);
+        if (hasConfiguredDatabaseUrl()) throw error;
+        console.warn('[DB] getCompanyById fallback (no DB url):', error);
         return undefined;
     }
 }
@@ -201,7 +211,8 @@ export async function getProductsByCompany(companyId: string): Promise<Product[]
         const products = await prisma.product.findMany({ where: { companyId } });
         return products.map(mapProduct);
     } catch (error) {
-        console.warn('[DB] getProductsByCompany fallback:', error);
+        if (hasConfiguredDatabaseUrl()) throw error;
+        console.warn('[DB] getProductsByCompany fallback (no DB url):', error);
         return [];
     }
 }
