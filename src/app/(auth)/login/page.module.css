@@ -1,0 +1,7 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - var(--nav-height) - 100px);
+    /* Adjust for nav and footer */
+}

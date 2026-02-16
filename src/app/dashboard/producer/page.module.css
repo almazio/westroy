@@ -1,0 +1,194 @@
+.header {
+    margin-bottom: 32px;
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-bottom: 28px;
+    width: fit-content;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tab:hover {
+    color: var(--text-primary);
+}
+
+.tabActive {
+    background: var(--accent);
+    color: #000;
+}
+
+.tabCount {
+    font-size: 0.75rem;
+    background: var(--bg-tertiary);
+    padding: 2px 7px;
+    border-radius: 100px;
+}
+
+.tabActive .tabCount {
+    background: rgba(0, 0, 0, 0.2);
+    color: #000;
+}
+
+.requestsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.requestCard {
+    padding: 22px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast);
+}
+
+.requestCard:hover {
+    border-color: var(--border-accent);
+}
+
+.requestTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.requestDate {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.requestQuery {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+    color: var(--text-primary);
+    font-style: italic;
+}
+
+.requestDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.detailRow {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.detailLabel {
+    color: var(--text-muted);
+    min-width: 80px;
+}
+
+/* Offer form inline */
+.offerFormInline {
+    margin-top: 14px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    animation: slideUp 0.2s ease;
+}
+
+.offerFormInline h4 {
+    margin-bottom: 12px;
+    color: var(--accent-light);
+}
+
+.offerFields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.offerFormActions {
+    display: flex;
+    gap: 8px;
+}
+
+.offerSentBadge {
+    margin-top: 14px;
+    padding: 12px;
+    text-align: center;
+    background: var(--success-bg);
+    color: var(--success);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+}
+
+.productsInfo {
+    max-width: 600px;
+}
+
+.productsList {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.productItem {
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+}
+
+@media (max-width: 768px) {
+    .requestsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .tabs {
+        width: 100%;
+    }
+
+    .tab {
+        flex: 1;
+        justify-content: center;
+    }
+}

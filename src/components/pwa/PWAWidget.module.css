@@ -1,0 +1,46 @@
+.widget {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    width: min(360px, calc(100vw - 24px));
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(12px);
+    padding: 14px;
+    z-index: 200;
+}
+
+.title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.widget p {
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+.actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .widget {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        padding: 12px;
+    }
+
+    .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}

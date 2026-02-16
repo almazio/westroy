@@ -1,0 +1,128 @@
+.searchBar {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 700px;
+}
+
+.hero {
+    max-width: 800px;
+}
+
+.inputWrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color var(--transition-fast);
+}
+
+.input {
+    width: 100%;
+    padding: 14px 40px 14px 48px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg), 0 4px 20px rgba(245, 158, 11, 0.12);
+}
+
+.input::placeholder {
+    color: var(--text-muted);
+    transition: opacity 0.3s ease;
+}
+
+.input:focus::placeholder {
+    opacity: 0.5;
+}
+
+.hero .input {
+    padding: 18px 48px 18px 56px;
+    font-size: 1.15rem;
+    border-radius: var(--radius-lg);
+    background: var(--hero-search-bg);
+    backdrop-filter: blur(8px);
+}
+
+.hero .searchIcon {
+    left: 20px;
+    width: 24px;
+    height: 24px;
+}
+
+.clearBtn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 6px;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+}
+
+.clearBtn:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.submitBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #000;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    box-shadow: 0 2px 14px rgba(245, 158, 11, 0.3);
+}
+
+.submitBtn:hover {
+    background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    box-shadow: 0 4px 24px rgba(245, 158, 11, 0.5);
+    transform: translateY(-1px);
+}
+
+.submitBtn:active {
+    transform: scale(0.97);
+}
+
+.hero .submitBtn {
+    padding: 18px 36px;
+    font-size: 1.05rem;
+    border-radius: var(--radius-lg);
+}
+
+@media (max-width: 640px) {
+    .searchBar {
+        flex-direction: column;
+    }
+
+    .submitBtn {
+        justify-content: center;
+    }
+}

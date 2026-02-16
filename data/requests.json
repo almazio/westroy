@@ -1,0 +1,30 @@
+[
+  {
+    "id": "r1",
+    "userId": "u1",
+    "categoryId": "concrete",
+    "query": "Нужен бетон М300 20 кубов с доставкой",
+    "parsedCategory": "Бетон",
+    "parsedVolume": "20 м³",
+    "parsedCity": "Шымкент",
+    "deliveryNeeded": true,
+    "address": "ул. Абая, 100, Шымкент",
+    "deadline": "2024-12-20",
+    "status": "active",
+    "createdAt": "2024-12-15T10:30:00"
+  },
+  {
+    "id": "r2",
+    "userId": "u1",
+    "categoryId": "aggregates",
+    "query": "Песок 30 тонн доставка на стройку",
+    "parsedCategory": "Инертные материалы",
+    "parsedVolume": "30 тонн",
+    "parsedCity": "Шымкент",
+    "deliveryNeeded": true,
+    "address": "мкр. Нуртас, уч. 45",
+    "deadline": "2024-12-22",
+    "status": "in_progress",
+    "createdAt": "2024-12-14T14:00:00"
+  }
+]

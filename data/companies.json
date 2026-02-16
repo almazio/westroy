@@ -1,0 +1,98 @@
+[
+  {
+    "id": "beton-shymkent",
+    "name": "БетонШымкент",
+    "description": "Крупнейший производитель товарного бетона в Шымкенте. Работаем с 2010 года. Собственный парк миксеров для оперативной доставки.",
+    "categoryId": "concrete",
+    "regionId": "shymkent",
+    "address": "ул. Промышленная, 45, Шымкент",
+    "phone": "+7 (725) 123-45-67",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-01-15"
+  },
+  {
+    "id": "mega-beton",
+    "name": "МегаБетон",
+    "description": "Производство бетона всех марок. Лаборатория контроля качества. Доставка по городу и области.",
+    "categoryId": "concrete",
+    "regionId": "shymkent",
+    "address": "пр. Тауке хана, 120, Шымкент",
+    "phone": "+7 (725) 234-56-78",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-02-20"
+  },
+  {
+    "id": "yug-inertnye",
+    "name": "ЮгИнертные",
+    "description": "Добыча и продажа инертных материалов: песок речной, щебень фракции 5-20, 20-40, ПГС. Прямые поставки с карьера.",
+    "categoryId": "aggregates",
+    "regionId": "shymkent",
+    "address": "Сайрамский район, карьер «Южный»",
+    "phone": "+7 (725) 345-67-89",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-03-10"
+  },
+  {
+    "id": "shymkent-blok",
+    "name": "ШымкентБлок",
+    "description": "Производство газобетонных и пенобетонных блоков. Сертифицированная продукция. Скидки при объёмных заказах.",
+    "categoryId": "blocks",
+    "regionId": "shymkent",
+    "address": "ул. Строителей, 78, Шымкент",
+    "phone": "+7 (725) 456-78-90",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-04-05"
+  },
+  {
+    "id": "metall-yug",
+    "name": "МеталлЮг",
+    "description": "Арматура, швеллер, уголок, профильная труба. Широкий ассортимент металлопроката со склада в Шымкенте.",
+    "categoryId": "rebar",
+    "regionId": "shymkent",
+    "address": "ул. Металлургов, 15, Шымкент",
+    "phone": "+7 (725) 567-89-01",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-05-12"
+  },
+  {
+    "id": "tech-stroy",
+    "name": "ТехСтрой Аренда",
+    "description": "Аренда спецтехники: экскаваторы, автокраны, миксеры, самосвалы. Опытные операторы. Почасовая и посменная оплата.",
+    "categoryId": "machinery",
+    "regionId": "shymkent",
+    "address": "ул. Индустриальная, 200, Шымкент",
+    "phone": "+7 (725) 678-90-12",
+    "delivery": false,
+    "verified": true,
+    "createdAt": "2024-06-01"
+  },
+  {
+    "id": "beton-plus-shym",
+    "name": "Бетон Плюс",
+    "description": "Бетон, раствор, доставка миксером. Быстрое выполнение заказов. Гибкая система скидок.",
+    "categoryId": "concrete",
+    "regionId": "shymkent",
+    "address": "ул. Байтурсынова, 55, Шымкент",
+    "phone": "+7 (725) 111-22-33",
+    "delivery": true,
+    "verified": false,
+    "createdAt": "2024-07-15"
+  },
+  {
+    "id": "pesok-shymkent",
+    "name": "ПесокШымкент",
+    "description": "Песок мытый, карьерный. Щебень всех фракций. Доставка самосвалами от 10 тонн.",
+    "categoryId": "aggregates",
+    "regionId": "shymkent",
+    "address": "Абайский район, Шымкент",
+    "phone": "+7 (725) 222-33-44",
+    "delivery": true,
+    "verified": true,
+    "createdAt": "2024-08-20"
+  }
+]

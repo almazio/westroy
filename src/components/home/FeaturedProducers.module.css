@@ -1,0 +1,102 @@
+.section {
+    padding: 80px 0;
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+.sectionTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 40px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+    border-color: var(--border-hover);
+}
+
+.cardHeader {
+    height: 120px;
+    background: var(--bg-tertiary);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logoPlaceholder {
+    width: 64px;
+    height: 64px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.badges {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.verifiedBadge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    padding: 4px 8px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+.cardBody {
+    padding: 20px;
+}
+
+.name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.category {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #FBBF24;
+    font-size: 0.9rem;
+}
+
+.ratingCount {
+    color: var(--text-muted);
+}

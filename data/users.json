@@ -1,0 +1,24 @@
+[
+  {
+    "id": "u1",
+    "name": "Асылбек Нурланов",
+    "email": "client@demo.kz",
+    "phone": "+7 700 111 2233",
+    "role": "client"
+  },
+  {
+    "id": "u2",
+    "name": "Бауыржан Серіков",
+    "email": "producer@demo.kz",
+    "phone": "+7 700 444 5566",
+    "role": "producer",
+    "companyId": "beton-shymkent"
+  },
+  {
+    "id": "u3",
+    "name": "Админ WESTROY",
+    "email": "admin@demo.kz",
+    "phone": "+7 700 000 0000",
+    "role": "admin"
+  }
+]

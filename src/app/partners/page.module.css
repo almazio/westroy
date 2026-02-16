@@ -1,0 +1,111 @@
+.page {
+    background: var(--bg-primary);
+}
+
+.hero {
+    padding: calc(var(--nav-height) + 44px) 0 28px;
+}
+
+.heroCard {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px;
+    background:
+        radial-gradient(circle at 10% 10%, rgba(var(--accent-rgb), 0.1), transparent 45%),
+        linear-gradient(160deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+}
+
+.badge {
+    display: inline-flex;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 6px 12px;
+    margin-bottom: 18px;
+}
+
+.heroCard h1 {
+    margin: 0 0 12px;
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    line-height: 1.15;
+}
+
+.heroCard p {
+    margin: 0 0 20px;
+    color: var(--text-secondary);
+    max-width: 720px;
+    line-height: 1.6;
+}
+
+.steps {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.step {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+}
+
+.formSection {
+    padding: 24px 0 72px;
+}
+
+.formCard {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px;
+    background: var(--bg-card);
+    max-width: 840px;
+    margin: 0 auto;
+}
+
+.formCard h2 {
+    margin: 0 0 8px;
+    font-size: 1.7rem;
+}
+
+.formIntro {
+    margin: 0 0 22px;
+    color: var(--text-muted);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding-top: calc(var(--nav-height) + 24px);
+    }
+
+    .heroCard,
+    .formCard {
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .steps,
+    .row {
+        grid-template-columns: 1fr;
+    }
+}

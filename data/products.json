@@ -1,0 +1,211 @@
+[
+  {
+    "id": "p1",
+    "companyId": "beton-shymkent",
+    "categoryId": "concrete",
+    "name": "Бетон М200 (B15)",
+    "description": "Товарный бетон марки М200, класс B15. Подходит для фундаментов, стяжек.",
+    "unit": "м³",
+    "priceFrom": 24000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p2",
+    "companyId": "beton-shymkent",
+    "categoryId": "concrete",
+    "name": "Бетон М300 (B22.5)",
+    "description": "Товарный бетон марки М300, класс B22.5. Для монолитных работ, перекрытий.",
+    "unit": "м³",
+    "priceFrom": 28000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p3",
+    "companyId": "beton-shymkent",
+    "categoryId": "concrete",
+    "name": "Бетон М400 (B30)",
+    "description": "Высокопрочный бетон М400. Для ответственных конструкций.",
+    "unit": "м³",
+    "priceFrom": 32000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p4",
+    "companyId": "mega-beton",
+    "categoryId": "concrete",
+    "name": "Бетон М200",
+    "description": "Бетон М200 с доставкой миксером. Лабораторный контроль каждой партии.",
+    "unit": "м³",
+    "priceFrom": 23500,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p5",
+    "companyId": "mega-beton",
+    "categoryId": "concrete",
+    "name": "Бетон М300",
+    "description": "Бетон М300, подвижность П3-П4. Идеален для фундаментов и плит.",
+    "unit": "м³",
+    "priceFrom": 27500,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p6",
+    "companyId": "beton-plus-shym",
+    "categoryId": "concrete",
+    "name": "Бетон М300",
+    "description": "Бетон М300 с ускоренной доставкой. Работаем по выходным.",
+    "unit": "м³",
+    "priceFrom": 29000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p7",
+    "companyId": "yug-inertnye",
+    "categoryId": "aggregates",
+    "name": "Песок речной мытый",
+    "description": "Чистый речной песок для строительных работ. Модуль крупности 2.0-2.5.",
+    "unit": "тонна",
+    "priceFrom": 3500,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p8",
+    "companyId": "yug-inertnye",
+    "categoryId": "aggregates",
+    "name": "Щебень фр. 5-20",
+    "description": "Гранитный щебень фракции 5-20 мм. Для бетонных работ и дорожного строительства.",
+    "unit": "тонна",
+    "priceFrom": 5500,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p9",
+    "companyId": "yug-inertnye",
+    "categoryId": "aggregates",
+    "name": "Щебень фр. 20-40",
+    "description": "Щебень фракции 20-40 мм. Для фундаментов и подушек.",
+    "unit": "тонна",
+    "priceFrom": 5000,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p10",
+    "companyId": "pesok-shymkent",
+    "categoryId": "aggregates",
+    "name": "Песок карьерный",
+    "description": "Карьерный песок для засыпки, планировки, подготовительных работ.",
+    "unit": "тонна",
+    "priceFrom": 2800,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p11",
+    "companyId": "shymkent-blok",
+    "categoryId": "blocks",
+    "name": "Газоблок 600×200×300",
+    "description": "Газобетонный блок D500. Для несущих стен до 3 этажей.",
+    "unit": "м³",
+    "priceFrom": 22000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p12",
+    "companyId": "shymkent-blok",
+    "categoryId": "blocks",
+    "name": "Пеноблок 600×200×300",
+    "description": "Пенобетонный блок D600. Хорошая теплоизоляция.",
+    "unit": "м³",
+    "priceFrom": 18000,
+    "priceUnit": "за м³",
+    "inStock": true
+  },
+  {
+    "id": "p13",
+    "companyId": "shymkent-blok",
+    "categoryId": "blocks",
+    "name": "Кирпич рядовой М150",
+    "description": "Керамический кирпич М150 для кладки стен.",
+    "unit": "шт",
+    "priceFrom": 45,
+    "priceUnit": "за шт",
+    "inStock": true
+  },
+  {
+    "id": "p14",
+    "companyId": "metall-yug",
+    "categoryId": "rebar",
+    "name": "Арматура A500C ∅12",
+    "description": "Арматура рифлёная А500С, диаметр 12 мм. ГОСТ 34028-2016.",
+    "unit": "тонна",
+    "priceFrom": 320000,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p15",
+    "companyId": "metall-yug",
+    "categoryId": "rebar",
+    "name": "Швеллер 12П",
+    "description": "Швеллер горячекатаный 12П. Для каркасных конструкций.",
+    "unit": "тонна",
+    "priceFrom": 380000,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p16",
+    "companyId": "metall-yug",
+    "categoryId": "rebar",
+    "name": "Профильная труба 80×40×3",
+    "description": "Профильная труба для металлоконструкций.",
+    "unit": "тонна",
+    "priceFrom": 350000,
+    "priceUnit": "за тонну",
+    "inStock": true
+  },
+  {
+    "id": "p17",
+    "companyId": "tech-stroy",
+    "categoryId": "machinery",
+    "name": "Экскаватор-погрузчик JCB",
+    "description": "Аренда экскаватора-погрузчика JCB 3CX с оператором.",
+    "unit": "час",
+    "priceFrom": 12000,
+    "priceUnit": "за час",
+    "inStock": true
+  },
+  {
+    "id": "p18",
+    "companyId": "tech-stroy",
+    "categoryId": "machinery",
+    "name": "Автокран 25 тонн",
+    "description": "Аренда автокрана грузоподъёмностью 25 тонн.",
+    "unit": "смена",
+    "priceFrom": 80000,
+    "priceUnit": "за смену",
+    "inStock": true
+  },
+  {
+    "id": "p19",
+    "companyId": "tech-stroy",
+    "categoryId": "machinery",
+    "name": "Самосвал 20 тонн",
+    "description": "Аренда самосвала для перевозки грунта и сыпучих.",
+    "unit": "рейс",
+    "priceFrom": 25000,
+    "priceUnit": "за рейс",
+    "inStock": true
+  }
+]

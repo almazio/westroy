@@ -1,0 +1,36 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+}
+
+.card {
+    width: min(680px, 100%);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    padding: 40px 28px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+
+.icon {
+    font-size: 2.4rem;
+    margin-bottom: 12px;
+}
+
+.card h1 {
+    margin-bottom: 10px;
+}
+
+.actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}

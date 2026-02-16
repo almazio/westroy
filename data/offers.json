@@ -1,0 +1,41 @@
+[
+  {
+    "id": "o1",
+    "requestId": "r1",
+    "companyId": "beton-shymkent",
+    "price": 28000,
+    "priceUnit": "за м³",
+    "comment": "Доставим миксером в течение 2 часов после подтверждения.",
+    "deliveryIncluded": true,
+    "deliveryPrice": 0,
+    "validUntil": "2024-12-25",
+    "status": "pending",
+    "createdAt": "2024-12-15T11:00:00"
+  },
+  {
+    "id": "o2",
+    "requestId": "r1",
+    "companyId": "mega-beton",
+    "price": 27500,
+    "priceUnit": "за м³",
+    "comment": "Бетон с лабораторным контролем. Доставка бесплатная от 10 м³.",
+    "deliveryIncluded": true,
+    "deliveryPrice": 0,
+    "validUntil": "2024-12-25",
+    "status": "pending",
+    "createdAt": "2024-12-15T11:30:00"
+  },
+  {
+    "id": "o3",
+    "requestId": "r2",
+    "companyId": "yug-inertnye",
+    "price": 3500,
+    "priceUnit": "за тонну",
+    "comment": "Песок мытый, доставим самосвалом 20 тонн за рейс.",
+    "deliveryIncluded": true,
+    "deliveryPrice": 15000,
+    "validUntil": "2024-12-28",
+    "status": "pending",
+    "createdAt": "2024-12-14T15:00:00"
+  }
+]

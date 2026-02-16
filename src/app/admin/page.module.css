@@ -1,0 +1,202 @@
+.header {
+    margin-bottom: 24px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.statCard {
+    padding: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.statValue {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: var(--accent-light);
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.statLabel {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.analyticsRow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+}
+
+.metric span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.metric strong {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+
+.tab {
+    padding: 10px 18px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tab:hover {
+    color: var(--text-primary);
+}
+
+.tabActive {
+    background: var(--accent);
+    color: #000;
+}
+
+.warningBox {
+    margin-bottom: 12px;
+    border: 1px solid var(--warning);
+    background: var(--accent-bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 0.86rem;
+}
+
+.rowActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.editFields {
+    display: grid;
+    gap: 8px;
+}
+
+.code {
+    font-size: 0.78rem;
+}
+
+.categoryIcon {
+    font-size: 1.35rem;
+}
+
+.userCreateCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.userCreateCard h3 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.userCreateGrid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.applicationMessage {
+    max-width: 300px;
+    white-space: pre-wrap;
+}
+
+.qualitySection,
+.integrationSection {
+    display: grid;
+    gap: 12px;
+}
+
+.qualityGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.hintBox {
+    border: 1px dashed var(--border);
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 1024px) {
+    .stats,
+    .analyticsRow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .userCreateGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .qualityGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .stats,
+    .analyticsRow {
+        grid-template-columns: 1fr;
+    }
+
+    .userCreateGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .qualityGrid {
+        grid-template-columns: 1fr;
+    }
+}
