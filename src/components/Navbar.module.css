@@ -29,6 +29,7 @@
     color: var(--text-primary);
     text-decoration: none;
     margin-right: auto;
+    min-width: 0;
 }
 
 .logoText {
@@ -73,6 +74,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
 }
 
 .themeBtn {
@@ -162,6 +164,20 @@
     height: 2px;
     background: var(--text-primary);
     border-radius: 2px;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+    transform-origin: center;
+}
+
+.hamburgerOpen span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.hamburgerOpen span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburgerOpen span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
 }
 
 .overlay {
@@ -194,10 +210,24 @@
         align-items: center;
         justify-content: center;
         gap: 4px;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .logo {
-        font-size: 1.05rem;
+        font-size: 1rem;
+        max-width: 46vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .right {
+        gap: 8px;
+    }
+
+    .themeBtn {
+        width: 34px;
+        height: 34px;
     }
 
     .overlay {
@@ -207,6 +237,7 @@
         background: rgba(0, 0, 0, 0.45);
         border: none;
         z-index: 105;
+        touch-action: none;
     }
 
     .mobileDrawer {
@@ -221,10 +252,12 @@
         background: var(--bg-secondary);
         border-left: 1px solid var(--border);
         padding: 16px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom));
         transform: translateX(105%);
         transition: transform var(--transition);
         z-index: 110;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .mobileDrawerOpen {
@@ -290,5 +323,11 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 10px;
+        width: 100%;
+    }
+
+    .mobileAuthRow :global(.btn),
+    .mobileUserCard :global(.btn) {
+        width: 100%;
     }
 }

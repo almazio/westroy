@@ -27,7 +27,6 @@ export default async function CategoriesGrid() {
                                 <span className={styles.icon}>{cat.icon}</span>
                             </div>
                             <h3 className={styles.cardTitle}>{cat.nameRu}</h3>
-                            <p className={styles.cardCount}>120+ товаров</p>
                         </Link>
                     ))}
                 </div>

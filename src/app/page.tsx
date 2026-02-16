@@ -12,6 +12,30 @@ export default async function Home() {
     <div className={styles.page}>
       <Hero />
       <PopularMaterials />
+
+      <section className={styles.howItWorks}>
+        <div className="container">
+          <h2 className={styles.sectionTitle}>Как это работает</h2>
+          <div className={styles.steps}>
+            <article className={styles.stepCard}>
+              <span className={styles.stepNum}>1</span>
+              <h3>Опишите, что нужно</h3>
+              <p>Напишите материал, объём и город в поиске или оставьте заявку.</p>
+            </article>
+            <article className={styles.stepCard}>
+              <span className={styles.stepNum}>2</span>
+              <h3>Получите предложения</h3>
+              <p>Проверенные поставщики отправят цены и условия доставки.</p>
+            </article>
+            <article className={styles.stepCard}>
+              <span className={styles.stepNum}>3</span>
+              <h3>Выберите лучшее</h3>
+              <p>Сравните офферы, подтвердите подходящий и закройте задачу.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <CategoriesGrid />
       <FeaturedProducers />
 

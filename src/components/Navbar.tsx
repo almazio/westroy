@@ -46,13 +46,32 @@ export default function Navbar() {
             if (event.key === 'Escape') setMenuOpen(false);
         };
 
-        const originalOverflow = document.body.style.overflow;
+        const scrollY = window.scrollY;
+        const original = {
+            overflow: document.body.style.overflow,
+            position: document.body.style.position,
+            top: document.body.style.top,
+            width: document.body.style.width,
+        };
+
         document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+
         window.addEventListener('keydown', onKeyDown);
 
         return () => {
-            document.body.style.overflow = originalOverflow;
+            const top = document.body.style.top;
+            document.body.style.overflow = original.overflow;
+            document.body.style.position = original.position;
+            document.body.style.top = original.top;
+            document.body.style.width = original.width;
             window.removeEventListener('keydown', onKeyDown);
+            const restoredY = Number.parseInt(top || '0', 10);
+            if (!Number.isNaN(restoredY)) {
+                window.scrollTo(0, Math.abs(restoredY));
+            }
         };
     }, [menuOpen]);
 
@@ -113,7 +132,7 @@ export default function Navbar() {
                     )}
 
                     <button
-                        className={styles.hamburger}
+                        className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
                         onClick={() => setMenuOpen(!menuOpen)}
                         aria-expanded={menuOpen}
                         aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
@@ -151,7 +170,7 @@ export default function Navbar() {
                                 {user.role === 'admin' && 'Админ'}
                             </div>
                         </div>
-                        <button onClick={() => logout()} className="btn btn-ghost">Выйти</button>
+                        <button onClick={() => logout()} className="btn btn-ghost" style={{ width: '100%' }}>Выйти</button>
                     </div>
                 ) : (
                     <div className={styles.mobileAuthRow}>

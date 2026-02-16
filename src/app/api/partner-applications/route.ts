@@ -16,7 +16,8 @@ type PartnerApplication = {
     createdAt: string;
 };
 
-const storageDir = path.join(process.cwd(), 'data');
+const isVercel = Boolean(process.env.VERCEL);
+const storageDir = isVercel ? '/tmp' : path.join(process.cwd(), 'data');
 const storageFile = path.join(storageDir, 'partner-applications.json');
 
 async function readApplications(): Promise<PartnerApplication[]> {
@@ -71,9 +72,15 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString(),
         };
 
-        const applications = await readApplications();
-        applications.unshift(application);
-        await writeApplications(applications);
+        // On Vercel, filesystem is ephemeral/read-only outside /tmp.
+        // We persist when possible, but don't fail submission if storage write fails.
+        try {
+            const applications = await readApplications();
+            applications.unshift(application);
+            await writeApplications(applications);
+        } catch (storageError) {
+            console.error('Partner application storage warning:', storageError);
+        }
 
         const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SMTP_USER;
         if (adminEmail) {
@@ -93,7 +100,7 @@ export async function POST(request: Request) {
             });
         }
 
-        return NextResponse.json({ ok: true }, { status: 201 });
+        return NextResponse.json({ ok: true, received: true }, { status: 201 });
     } catch (error) {
         console.error('Failed to submit partner application:', error);
         return NextResponse.json({ error: 'Не удалось отправить заявку' }, { status: 500 });

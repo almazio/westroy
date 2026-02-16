@@ -15,12 +15,12 @@ export default async function FeaturedProducers() {
                     {companies.map(company => {
                         const cat = categories.find(c => c.id === company.categoryId);
                         return (
-                            <Link key={company.id} href={`/company/${company.id}`} className={styles.card}>
+                            <article key={company.id} className={styles.card}>
+                                <Link href={`/company/${company.id}`} className={styles.cardLink}>
                                 <div className={styles.cardHeader}>
                                     <div className={styles.logoPlaceholder}>
                                         {company.name[0]}
                                     </div>
-                                    {/* If we had logoUrl, we'd use Image */}
                                     <div className={styles.badges}>
                                         <span className={styles.verifiedBadge}>✓ Проверен</span>
                                     </div>
@@ -32,7 +32,13 @@ export default async function FeaturedProducers() {
                                         ★★★★★ <span className={styles.ratingCount}>(12 отзывов)</span>
                                     </div>
                                 </div>
-                            </Link>
+                                </Link>
+                                <div className={styles.actions}>
+                                    <Link href={`/company/${company.id}`} className={`btn btn-primary ${styles.requestBtn}`}>
+                                        Запросить цену
+                                    </Link>
+                                </div>
+                            </article>
                         )
                     })}
                 </div>
