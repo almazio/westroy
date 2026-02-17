@@ -3,10 +3,10 @@ import Link from 'next/link';
 import styles from './PopularMaterials.module.css';
 
 const MATERIALS = [
-    { name: 'Бетон М250', queries: '450', trend: '+12%' },
-    { name: 'Арматура A500C', queries: '320', trend: '+5%' },
-    { name: 'Песок мытый', queries: '280', trend: '+8%' },
-    { name: 'Щебень 20-40', queries: '180', trend: '+2%' },
+    { name: 'Бетон М250' },
+    { name: 'Арматура A500C' },
+    { name: 'Песок мытый' },
+    { name: 'Щебень 20-40' },
 ];
 
 export default function PopularMaterials() {
@@ -19,7 +19,7 @@ export default function PopularMaterials() {
                         <Link href={`/search?q=${m.name}`} key={i} className={styles.card}>
                             <div className={styles.info}>
                                 <h3 className={styles.name}>{m.name}</h3>
-                                <span className={styles.queries}>{m.queries} поисков сегодня</span>
+                                <span className={styles.queries}>Быстрый запрос поставщикам</span>
                             </div>
                             <div className={styles.arrow}>→</div>
                         </Link>

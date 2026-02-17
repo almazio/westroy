@@ -59,22 +59,6 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.badges {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-}
-
-.verifiedBadge {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34D399;
-    padding: 4px 8px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    backdrop-filter: blur(4px);
-}
 
 .cardBody {
     padding: 20px;
@@ -91,18 +75,6 @@
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 12px;
-}
-
-.rating {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #FBBF24;
-    font-size: 0.9rem;
-}
-
-.ratingCount {
-    color: var(--text-muted);
 }
 
 .actions {

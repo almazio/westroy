@@ -3,16 +3,17 @@
 }
 
 .hero {
-    padding: calc(var(--nav-height) + 44px) 0 28px;
+    padding: calc(var(--nav-height) + 34px) 0 24px;
 }
 
 .heroCard {
     border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 36px;
+    border-radius: 28px;
+    padding: 38px;
     background:
-        radial-gradient(circle at 10% 10%, rgba(var(--accent-rgb), 0.1), transparent 45%),
+        radial-gradient(circle at 10% 10%, rgba(var(--accent-rgb), 0.18), transparent 45%),
         linear-gradient(160deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+    box-shadow: var(--shadow-glow);
 }
 
 .badge {
@@ -27,16 +28,79 @@
 }
 
 .heroCard h1 {
-    margin: 0 0 12px;
+    margin: 0 0 14px;
     font-size: clamp(1.9rem, 4vw, 2.8rem);
     line-height: 1.15;
+    max-width: 860px;
 }
 
 .heroCard p {
-    margin: 0 0 20px;
+    margin: 0 0 24px;
     color: var(--text-secondary);
-    max-width: 720px;
+    max-width: 760px;
     line-height: 1.6;
+}
+
+.metrics {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    background: rgba(var(--accent-rgb), 0.08);
+    color: var(--text-primary);
+}
+
+.metric strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.metric span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.sectionTitle {
+    margin: 0 0 18px;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.benefitsSection {
+    padding: 16px 0 8px;
+}
+
+.benefitsGrid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.benefitCard {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    background: var(--bg-card);
+}
+
+.benefitCard h3 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+}
+
+.benefitCard p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.processSection {
+    padding: 18px 0 6px;
 }
 
 .steps {
@@ -48,8 +112,8 @@
 .step {
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 12px;
-    background: var(--bg-glass);
+    padding: 14px;
+    background: var(--bg-card);
     color: var(--text-primary);
 }
 
@@ -93,6 +157,34 @@
     resize: vertical;
 }
 
+.faqSection {
+    padding: 0 0 80px;
+}
+
+.faqGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.faqCard {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    background: var(--bg-card);
+}
+
+.faqCard h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+}
+
+.faqCard p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
 @media (max-width: 768px) {
     .hero {
         padding-top: calc(var(--nav-height) + 24px);
@@ -104,8 +196,11 @@
         padding: 18px;
     }
 
+    .metrics,
     .steps,
-    .row {
+    .row,
+    .benefitsGrid,
+    .faqGrid {
         grid-template-columns: 1fr;
     }
 }

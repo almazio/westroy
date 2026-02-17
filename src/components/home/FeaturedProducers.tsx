@@ -6,11 +6,12 @@ import { getCompanies, getCategories } from '@/lib/db';
 export default async function FeaturedProducers() {
     const companies = (await getCompanies()).filter(c => c.verified).slice(0, 4);
     const categories = await getCategories();
+    if (companies.length === 0) return null;
 
     return (
         <section className={styles.section}>
             <div className="container">
-                <h2 className={styles.sectionTitle}>Проверенные производители</h2>
+                <h2 className={styles.sectionTitle}>Поставщики в каталоге</h2>
                 <div className={styles.grid}>
                     {companies.map(company => {
                         const cat = categories.find(c => c.id === company.categoryId);
@@ -21,16 +22,10 @@ export default async function FeaturedProducers() {
                                     <div className={styles.logoPlaceholder}>
                                         {company.name[0]}
                                     </div>
-                                    <div className={styles.badges}>
-                                        <span className={styles.verifiedBadge}>✓ Проверен</span>
-                                    </div>
                                 </div>
                                 <div className={styles.cardBody}>
                                     <h3 className={styles.name}>{company.name}</h3>
                                     <p className={styles.category}>{cat?.nameRu}</p>
-                                    <div className={styles.rating}>
-                                        ★★★★★ <span className={styles.ratingCount}>(12 отзывов)</span>
-                                    </div>
                                 </div>
                                 </Link>
                                 <div className={styles.actions}>

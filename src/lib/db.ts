@@ -2,6 +2,16 @@
 import { PrismaClient } from '@prisma/client';
 import { Region, Category, Company, Product, User, Request, Offer } from './types';
 
+// Compatibility bridge:
+// - Vercel Supabase integration exposes POSTGRES_PRISMA_URL / POSTGRES_URL_NON_POOLING
+// - local setups often use DATABASE_URL / DIRECT_URL
+if (!process.env.POSTGRES_PRISMA_URL && process.env.DATABASE_URL) {
+    process.env.POSTGRES_PRISMA_URL = process.env.DATABASE_URL;
+}
+if (!process.env.POSTGRES_URL_NON_POOLING && process.env.DIRECT_URL) {
+    process.env.POSTGRES_URL_NON_POOLING = process.env.DIRECT_URL;
+}
+
 // Prisma Client Singleton for Next.js dev HMR
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 

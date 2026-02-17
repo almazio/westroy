@@ -53,16 +53,47 @@ export default function PartnersPage() {
                 <div className="container">
                     <div className={styles.heroCard}>
                         <span className={styles.badge}>Партнерская программа WESTROY</span>
-                        <h1>Подключение производителей через модерацию</h1>
+                        <h1>Подключайте компанию и получайте входящие заявки от клиентов</h1>
                         <p>
-                            Мы проверяем профиль компании перед выдачей доступа, чтобы в каталоге были только
-                            реальные поставщики и клиенты получали качественные отклики.
+                            Мы подключаем поставщиков через модерацию, чтобы в каталоге были реальные компании,
+                            а лиды приходили целевыми и с понятным запросом.
                         </p>
-                        <div className={styles.steps}>
-                            <div className={styles.step}><strong>1.</strong> Заявка</div>
-                            <div className={styles.step}><strong>2.</strong> Проверка</div>
-                            <div className={styles.step}><strong>3.</strong> Доступ в кабинет</div>
+                        <div className={styles.metrics}>
+                            <div className={styles.metric}><strong>1 день</strong><span>средний срок модерации</span></div>
+                            <div className={styles.metric}><strong>0%</strong><span>комиссии за подключение</span></div>
+                            <div className={styles.metric}><strong>100%</strong><span>заявки в одном кабинете</span></div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className={styles.benefitsSection}>
+                <div className="container">
+                    <h2 className={styles.sectionTitle}>Почему поставщики подключаются к WESTROY</h2>
+                    <div className={styles.benefitsGrid}>
+                        <article className={styles.benefitCard}>
+                            <h3>Целевые лиды</h3>
+                            <p>Получаете реальные запросы с категорией, объёмом и городом, а не случайные звонки.</p>
+                        </article>
+                        <article className={styles.benefitCard}>
+                            <h3>Управление в одном месте</h3>
+                            <p>Каталог, заявки, офферы и статусы клиентов ведутся в одном рабочем кабинете.</p>
+                        </article>
+                        <article className={styles.benefitCard}>
+                            <h3>Быстрый запуск каталога</h3>
+                            <p>Можно загрузить прайс массово и сразу начать отвечать на запросы клиентов.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section className={styles.processSection}>
+                <div className="container">
+                    <h2 className={styles.sectionTitle}>Как проходит подключение</h2>
+                    <div className={styles.steps}>
+                        <div className={styles.step}><strong>1.</strong> Оставляете заявку</div>
+                        <div className={styles.step}><strong>2.</strong> Проверяем компанию и контакты</div>
+                        <div className={styles.step}><strong>3.</strong> Открываем доступ в кабинет поставщика</div>
                     </div>
                 </div>
             </section>
@@ -128,6 +159,26 @@ export default function PartnersPage() {
                                 {state === 'loading' ? 'Отправка...' : 'Отправить заявку'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            </section>
+
+            <section className={styles.faqSection}>
+                <div className="container">
+                    <h2 className={styles.sectionTitle}>Частые вопросы</h2>
+                    <div className={styles.faqGrid}>
+                        <article className={styles.faqCard}>
+                            <h3>Сколько занимает подключение?</h3>
+                            <p>Обычно в течение одного рабочего дня после проверки данных компании.</p>
+                        </article>
+                        <article className={styles.faqCard}>
+                            <h3>Можно загрузить прайс листом?</h3>
+                            <p>Да. После активации кабинета можно массово загрузить каталог и обновлять цены.</p>
+                        </article>
+                        <article className={styles.faqCard}>
+                            <h3>Кому доступны заявки?</h3>
+                            <p>Только верифицированным поставщикам, подключенным к вашей категории и региону.</p>
+                        </article>
                     </div>
                 </div>
             </section>

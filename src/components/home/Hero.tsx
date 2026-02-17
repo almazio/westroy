@@ -16,8 +16,8 @@ export default function Hero() {
                     <span className={styles.highlight}>в одном месте</span>
                 </h1>
                 <p className={styles.subtitle}>
-                    Мгновенный поиск бетона, арматуры, инертных материалов и спецтехники.
-                    Прямые цены от производителей.
+                    Опишите задачу своими словами и получите предложения поставщиков.
+                    Без десятков звонков и долгого сравнения вручную.
                 </p>
 
                 <div className={styles.searchWrapper}>

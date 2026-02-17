@@ -353,6 +353,28 @@ export default function AdminPanel() {
         }
     };
 
+    const setPartnerApplicationStatus = async (
+        applicationId: string,
+        status: PartnerApplicationData['status']
+    ) => {
+        try {
+            const res = await fetch(`/api/partner-applications/${applicationId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed');
+            }
+            const updated: PartnerApplicationData = await res.json();
+            setPartnerApplications((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+        } catch (error) {
+            console.error('Failed to update partner application status:', error);
+            alert('Не удалось обновить статус заявки');
+        }
+    };
+
     const formatDate = (date: string) => new Date(date).toLocaleDateString('ru-RU');
 
     const requestStatusLabels: Record<string, string> = {
@@ -648,6 +670,7 @@ export default function AdminPanel() {
                                 <th>Категория</th>
                                 <th>Город</th>
                                 <th>Статус</th>
+                                <th>Действия</th>
                                 <th>Комментарий</th>
                                 <th>Дата</th>
                             </tr>
@@ -668,13 +691,31 @@ export default function AdminPanel() {
                                         {a.status === 'approved' && <span className="badge badge-success">approved</span>}
                                         {a.status === 'rejected' && <span className="badge badge-error">rejected</span>}
                                     </td>
+                                    <td>
+                                        <div className={styles.rowActions}>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => void setPartnerApplicationStatus(a.id, 'approved')}
+                                                disabled={a.status === 'approved'}
+                                            >
+                                                Одобрить
+                                            </button>
+                                            <button
+                                                className="btn btn-ghost btn-sm"
+                                                onClick={() => void setPartnerApplicationStatus(a.id, 'rejected')}
+                                                disabled={a.status === 'rejected'}
+                                            >
+                                                Отклонить
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td className={styles.applicationMessage}>{a.message || '—'}</td>
                                     <td>{formatDate(a.createdAt)}</td>
                                 </tr>
                             ))}
                             {partnerApplications.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="text-muted">Пока нет заявок</td>
+                                    <td colSpan={8} className="text-muted">Пока нет заявок</td>
                                 </tr>
                             )}
                         </tbody>

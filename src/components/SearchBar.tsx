@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './SearchBar.module.css';
 
 const PLACEHOLDERS = [
-    'Бетон М300 20 кубов с доставкой...',
+    'Например: нужно 10 кубов бетона М300 с доставкой в Абай районе',
     'Песок речной 30 тонн...',
     'Газоблок 600×200×300...',
     'Арматура 12 мм 5 тонн...',

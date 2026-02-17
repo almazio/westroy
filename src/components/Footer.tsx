@@ -15,7 +15,7 @@ export default function Footer() {
                             <span className={styles.logoTail}>STROY</span>
                         </span>
                     </div>
-                    <p className={styles.tagline}>AI-поиск строительных решений в Шымкенте</p>
+                    <p className={styles.tagline}>Маркетплейс строительных решений в Шымкенте</p>
                 </div>
 
                 <div className={styles.links}>
@@ -36,8 +36,8 @@ export default function Footer() {
                     <div className={styles.col}>
                         <h4>Контакты</h4>
                         <p>📍 г. Шымкент, Казахстан</p>
-                        <p>📧 info@westroy.kz</p>
-                        <p>📞 +7 (725) 000-00-00</p>
+                        <p>Подключение поставщиков: через форму на странице</p>
+                        <Link href="/partners">westroy.vercel.app/partners</Link>
                     </div>
                 </div>
 
