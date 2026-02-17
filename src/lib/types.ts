@@ -40,6 +40,7 @@ export interface Product {
   priceFrom: number; // ₸
   priceUnit: string; // "за м3", "за тонну"
   inStock: boolean;
+  updatedAt?: string;
 }
 
 export interface User {
@@ -107,6 +108,10 @@ export interface SearchResult {
   priceFrom: number;
   priceUnit: string;
   relevanceScore: number;
+  stats?: {
+    completedOrders: number;
+    avgResponseMinutes: number | null;
+  };
 }
 
 export interface SearchResponse {

@@ -23,7 +23,6 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 // Data Access Layer (Prisma)
 // ============================================
 
-type WithCreatedAt = { createdAt: Date };
 type CategoryDbRecord = Omit<Category, 'keywords'> & { keywords: string };
 type CompanyDbRecord = {
     id: string;
@@ -38,7 +37,19 @@ type CompanyDbRecord = {
     logoUrl: string | null;
     createdAt: Date;
 };
-type ProductDbRecord = Product & WithCreatedAt;
+type ProductDbRecord = {
+    id: string;
+    companyId: string;
+    categoryId: string;
+    name: string;
+    description: string;
+    unit: string;
+    priceFrom: number;
+    priceUnit: string;
+    inStock: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+};
 type UserDbRecord = {
     id: string;
     name: string;
@@ -99,9 +110,20 @@ const mapCompany = (c: CompanyDbRecord): Company => ({
     // Remove extra fields if strict
 });
 
-const mapProduct = (p: ProductDbRecord): Product => ({
-    ...p,
-});
+const mapProduct = (p: ProductDbRecord): Product => {
+    return {
+        id: p.id,
+        companyId: p.companyId,
+        categoryId: p.categoryId,
+        name: p.name,
+        description: p.description,
+        unit: p.unit,
+        priceFrom: p.priceFrom,
+        priceUnit: p.priceUnit,
+        inStock: p.inStock,
+        updatedAt: p.updatedAt.toISOString(),
+    };
+};
 
 const mapUser = (u: UserDbRecord): User => ({
     id: u.id,
@@ -322,4 +344,60 @@ export async function addOffer(data: Offer): Promise<Offer> {
         },
     });
     return mapOffer(offer as unknown as OfferDbRecord);
+}
+
+export async function getCompanyMarketStats(
+    companyIds: string[]
+): Promise<Record<string, { completedOrders: number; avgResponseMinutes: number | null }>> {
+    if (companyIds.length === 0) return {};
+
+    const offers = await prisma.offer.findMany({
+        where: { companyId: { in: companyIds } },
+        select: {
+            companyId: true,
+            status: true,
+            createdAt: true,
+            request: {
+                select: {
+                    createdAt: true,
+                },
+            },
+        },
+    });
+
+    const stats: Record<string, { completedOrders: number; totalResponseMinutes: number; responseCount: number }> = {};
+    for (const companyId of companyIds) {
+        stats[companyId] = { completedOrders: 0, totalResponseMinutes: 0, responseCount: 0 };
+    }
+
+    for (const offer of offers) {
+        const bucket = stats[offer.companyId];
+        if (!bucket) continue;
+
+        if (offer.status === 'accepted') {
+            bucket.completedOrders += 1;
+        }
+
+        const requestCreatedAt = offer.request?.createdAt;
+        if (requestCreatedAt) {
+            const responseMinutes = Math.max(
+                0,
+                Math.round((offer.createdAt.getTime() - requestCreatedAt.getTime()) / (1000 * 60))
+            );
+            bucket.totalResponseMinutes += responseMinutes;
+            bucket.responseCount += 1;
+        }
+    }
+
+    const result: Record<string, { completedOrders: number; avgResponseMinutes: number | null }> = {};
+    for (const [companyId, value] of Object.entries(stats)) {
+        result[companyId] = {
+            completedOrders: value.completedOrders,
+            avgResponseMinutes: value.responseCount > 0
+                ? Math.round(value.totalResponseMinutes / value.responseCount)
+                : null,
+        };
+    }
+
+    return result;
 }

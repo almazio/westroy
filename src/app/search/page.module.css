@@ -116,6 +116,221 @@
     gap: 12px;
 }
 
+.resultsHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sortSelect {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.filterToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+}
+
+.aiInsight {
+    margin-bottom: 20px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+}
+
+.aiInsight h3 {
+    margin-bottom: 8px;
+    font-size: 1.02rem;
+}
+
+.aiSummary {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.aiTips {
+    margin-bottom: 10px;
+}
+
+.aiTipsTitle {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.aiTips ul {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+}
+
+.aiTableWrap {
+    overflow-x: auto;
+}
+
+.aiTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.aiTable th,
+.aiTable td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.aiTable th {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.aiBestRow td {
+    background: var(--accent-bg);
+}
+
+.offersGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.offerCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: resultFadeIn 0.35s ease forwards;
+}
+
+.offerTitle {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.offerPrice {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-dark);
+}
+
+.offerPrice span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.offerDesc {
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    min-height: 44px;
+}
+
+.offerMeta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.offerTotal {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-bg);
+}
+
+.offerSupplier {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.offerSupplier a {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.offerAddress {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.offerUpdate {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+.offerActions {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.offerActions :global(.btn) {
+    flex: 1;
+}
+
+.offerSelectActive {
+    border-color: var(--accent) !important;
+    color: var(--accent-dark) !important;
+}
+
+.guestInline {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    background: var(--bg-tertiary);
+}
+
+.guestInline h4 {
+    font-size: 0.86rem;
+    margin-bottom: 8px;
+}
+
+.guestFields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.guestActions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.guestSuccess p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
 /* Smart Request Form */
 .requestForm {
     padding: 28px;
@@ -258,6 +473,20 @@
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
+    border: 1px solid transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.productChip:hover {
+    border-color: var(--border-accent);
+}
+
+.productChipSelected {
+    border-color: var(--accent);
+    background: var(--accent-bg);
 }
 
 .productPrice {
@@ -277,24 +506,31 @@
     border-left: 1px solid var(--border);
 }
 
+.priceMeta {
+    width: 100%;
+}
+
 .priceLabel {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-}
-
-.priceValue {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--accent-light);
-    line-height: 1.2;
-}
-
-.priceUnit {
     font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.priceUpdate {
+    font-size: 0.78rem;
     color: var(--text-muted);
+}
+
+.resultActions {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.resultActions :global(.btn) {
+    width: 100%;
 }
 
 .empty {
@@ -305,6 +541,26 @@
 }
 
 @media (max-width: 768px) {
+    .resultsHeaderActions {
+        width: 100%;
+    }
+
+    .sortSelect {
+        width: 100%;
+    }
+
+    .offersGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .offerActions {
+        flex-direction: column;
+    }
+
+    .guestActions :global(.btn) {
+        width: 100%;
+    }
+
     .resultCard {
         flex-direction: column;
     }

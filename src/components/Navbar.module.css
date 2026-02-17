@@ -5,9 +5,11 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 1200;
     background: var(--nav-bg);
     backdrop-filter: blur(12px);
+    isolation: isolate;
+    overflow: visible;
 }
 
 .inner {
@@ -232,11 +234,11 @@
 
     .overlay {
         display: block;
-        position: fixed;
+        position: absolute;
         inset: var(--nav-height) 0 0 0;
         background: rgba(0, 0, 0, 0.45);
         border: none;
-        z-index: 105;
+        z-index: 1210;
         touch-action: none;
     }
 
@@ -244,20 +246,21 @@
         display: flex;
         flex-direction: column;
         gap: 16px;
-        position: fixed;
+        position: absolute;
         top: var(--nav-height);
         right: 0;
-        bottom: 0;
-        width: min(88vw, 360px);
+        height: calc(100dvh - var(--nav-height));
+        width: 100vw;
         background: var(--bg-secondary);
-        border-left: 1px solid var(--border);
+        border-top: 1px solid var(--border);
         padding: 16px;
         padding-bottom: calc(16px + env(safe-area-inset-bottom));
         transform: translateX(105%);
         transition: transform var(--transition);
-        z-index: 110;
+        z-index: 1220;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        box-shadow: var(--shadow-md);
     }
 
     .mobileDrawerOpen {
@@ -267,18 +270,9 @@
     .mobileHeader {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         padding-bottom: 10px;
         border-bottom: 1px solid var(--border);
-    }
-
-    .mobileClose {
-        width: 36px;
-        height: 36px;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background: var(--bg-card);
-        color: var(--text-primary);
     }
 
     .mobileLinks {

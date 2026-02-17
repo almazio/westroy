@@ -3,36 +3,26 @@
 // ============================================
 
 import { ParsedQuery, SearchResult, SearchResponse } from './types';
-import { getCompaniesByCategory, getProductsByCategory, getProductsByCompany, getCompanies } from './db';
+import {
+    getCompaniesByCategory,
+    getProductsByCategory,
+    getCompanyMarketStats
+} from './db';
 
 export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
     const { categoryId, grade, delivery } = parsed;
 
     if (!categoryId) {
-        // No category found — return all companies with basic scoring
-        const allCompanies = await getCompanies();
-        const results: SearchResult[] = await Promise.all(allCompanies.map(async company => {
-            const products = await getProductsByCompany(company.id);
-            const minPrice = products.length > 0 ? Math.min(...products.map(p => p.priceFrom)) : 0;
-            const priceUnit = products.length > 0 ? products[0].priceUnit : '';
-            return {
-                company,
-                products,
-                priceFrom: minPrice,
-                priceUnit,
-                relevanceScore: 0.3,
-            };
-        }));
-
         return {
             parsed,
-            results: results.sort((a, b) => b.relevanceScore - a.relevanceScore),
-            totalResults: results.length,
+            results: [],
+            totalResults: 0,
         };
     }
 
     // Get companies and products for the category
     const companies = await getCompaniesByCategory(categoryId);
+    const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
     const categoryProducts = await getProductsByCategory(categoryId);
 
     const results: SearchResult[] = companies.map(company => {
@@ -74,6 +64,7 @@ export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
             priceFrom,
             priceUnit,
             relevanceScore: Math.min(relevanceScore, 1),
+            stats: companyStats[company.id],
         };
     });
 
