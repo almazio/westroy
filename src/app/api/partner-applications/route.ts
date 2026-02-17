@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { notificationService } from '@/lib/notifications';
+import { notifyOps } from '@/lib/notifications';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 
@@ -74,23 +74,11 @@ export async function POST(request: Request) {
             },
         });
 
-        const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SMTP_USER;
-        if (adminEmail) {
-            await notificationService.notify({
-                to: adminEmail,
-                subject: `Новая заявка партнера: ${companyName}`,
-                message:
-                    `Компания: ${companyName}\n` +
-                    `Контакт: ${name}\n` +
-                    `Email: ${email}\n` +
-                    `Телефон: ${phone}\n` +
-                    `Категория: ${category}\n` +
-                    `Город: ${city}\n` +
-                    `Комментарий: ${message || '—'}`,
-                type: 'request_new',
-                metadata: { applicationId: application.id },
-            });
-        }
+        await notifyOps(
+            `Новая заявка на подключение: ${companyName}`,
+            `Компания: ${companyName}\nКонтакт: ${name}\nEmail: ${email}\nТелефон: ${phone}\nКатегория: ${category}\nГород: ${city}\nКомментарий: ${message || '—'}\n\nОткрыть: /admin -> Партнеры`,
+            { applicationId: application.id, type: 'partner_application' }
+        );
 
         return NextResponse.json({ ok: true, received: true }, { status: 201 });
     } catch (error) {
