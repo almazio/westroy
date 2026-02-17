@@ -282,6 +282,10 @@ export default function AdminPanel() {
     const createUser = async () => {
         setCreatingUser(true);
         try {
+            if (!createUserForm.name.trim() || !createUserForm.email.trim() || !createUserForm.phone.trim() || !createUserForm.password.trim()) {
+                throw new Error('Заполните имя, email, телефон и пароль');
+            }
+
             const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -302,7 +306,7 @@ export default function AdminPanel() {
             });
         } catch (error) {
             console.error('Failed to create user:', error);
-            alert('Не удалось создать пользователя');
+            alert(error instanceof Error ? error.message : 'Не удалось создать пользователя');
         } finally {
             setCreatingUser(false);
         }
@@ -367,8 +371,31 @@ export default function AdminPanel() {
                 const err = await res.json().catch(() => ({}));
                 throw new Error(err.error || 'Failed');
             }
-            const updated: PartnerApplicationData = await res.json();
+            const data = await res.json();
+            const updated: PartnerApplicationData = data?.id ? data : data?.application;
+            if (!updated?.id) {
+                throw new Error('Invalid response');
+            }
             setPartnerApplications((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+
+            const onboarding = data?.onboarding as
+                | {
+                    email: string;
+                    phone: string;
+                    companyName: string;
+                    isNewUser: boolean;
+                    temporaryPassword: string | null;
+                }
+                | undefined;
+
+            if (status === 'approved' && onboarding) {
+                const passwordInfo = onboarding.temporaryPassword
+                    ? `\nВременный пароль: ${onboarding.temporaryPassword}`
+                    : '\nПароль: существующий (не менялся)';
+                alert(
+                    `Партнер одобрен и подключен.\n\nКомпания: ${onboarding.companyName}\nЛогин: ${onboarding.email}\nТелефон: ${onboarding.phone}${passwordInfo}`
+                );
+            }
         } catch (error) {
             console.error('Failed to update partner application status:', error);
             alert('Не удалось обновить статус заявки');

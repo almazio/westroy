@@ -101,6 +101,10 @@ export async function POST(request: Request) {
         return NextResponse.json(user, { status: 201 });
     } catch (error) {
         console.error('Failed to create user:', error);
+        if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2002') {
+            const target = (error as { meta?: { target?: string[] } }).meta?.target?.join(', ') || 'email/phone';
+            return NextResponse.json({ error: `Уже существует пользователь с полем: ${target}` }, { status: 409 });
+        }
         return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
     }
 }
