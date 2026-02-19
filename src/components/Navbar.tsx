@@ -17,23 +17,28 @@ export default function Navbar() {
     const navLinks = {
         client: [
             { href: '/', label: 'Главная' },
+            { href: '/hub', label: 'Hub' },
             { href: '/search', label: 'Поиск' },
             { href: '/dashboard/client', label: 'Мои заявки' },
         ],
         producer: [
             { href: '/', label: 'Главная' },
+            { href: '/hub', label: 'Hub' },
             { href: '/search', label: 'Заявки рынка' },
             { href: '/dashboard/producer', label: 'Кабинет' },
         ],
         admin: [
             { href: '/', label: 'Главная' },
+            { href: '/hub', label: 'Hub' },
             { href: '/search', label: 'Маркетплейс' },
             { href: '/admin', label: 'Админ-панель' },
+            { href: '/admin/analytics', label: 'Аналитика' },
         ],
     };
 
     const guestLinks = [
         { href: '/', label: 'Главная' },
+        { href: '/hub', label: 'Hub' },
         { href: '/search', label: 'Поиск' },
         { href: '/partners', label: 'Партнерам' },
     ];

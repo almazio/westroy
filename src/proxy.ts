@@ -12,6 +12,11 @@ export default auth((request) => {
     const host = (request.headers.get("host") || "").toLowerCase();
     const { pathname, search } = request.nextUrl;
 
+    const withAppNoIndex = (response: NextResponse) => {
+        response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+        return response;
+    };
+
     // Marketing domain: keep landing routes here, move app routes to app subdomain
     if (ROOT_HOSTS.has(host)) {
         const isAppPath = APP_PATH_PREFIXES.some((prefix) =>
@@ -27,7 +32,11 @@ export default auth((request) => {
     // App domain: open product app by default
     if (host === APP_HOST && pathname === "/") {
         const target = new URL(`https://${APP_HOST}/search${search}`);
-        return NextResponse.redirect(target);
+        return withAppNoIndex(NextResponse.redirect(target));
+    }
+
+    if (host === APP_HOST) {
+        return withAppNoIndex(NextResponse.next());
     }
 
     return NextResponse.next();
