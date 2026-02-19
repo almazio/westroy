@@ -9,6 +9,7 @@ interface GuestRequestBody {
     query?: string;
     companyName?: string;
     productName?: string;
+    sellerName?: string;
     city?: string;
 }
 
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
             body.address ? `Адрес: ${body.address}` : null,
             body.companyName ? `Поставщик: ${body.companyName}` : null,
             body.productName ? `Товар: ${body.productName}` : null,
+            body.sellerName ? `Канал продажи: ${body.sellerName}` : null,
             body.city ? `Город: ${body.city}` : null,
         ]
             .filter(Boolean)
@@ -50,4 +52,3 @@ export async function POST(request: NextRequest) {
         );
     }
 }
-

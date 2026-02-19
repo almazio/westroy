@@ -5,12 +5,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
+import { getDealersForOffer, type DealerCard } from '@/lib/test-dealers';
 import styles from './page.module.css';
 
 interface SearchResultData {
     company: {
         id: string; name: string; description: string; delivery: boolean;
-        verified: boolean; address: string; phone: string;
+        verified: boolean; address: string; phone: string; categoryId: string;
     };
     products: { id: string; name: string; description: string; priceFrom: number; priceUnit: string; unit: string; updatedAt?: string }[];
     priceFrom: number;
@@ -56,6 +57,15 @@ interface PendingAuthIntent {
 }
 
 const REQUEST_INTENT_KEY = 'westroy_request_intent';
+const CATEGORY_LABELS: Record<string, string> = {
+    concrete: 'Бетон',
+    aggregates: 'Инертные материалы',
+    blocks: 'Кирпич и блоки',
+    rebar: 'Арматура и металлопрокат',
+    machinery: 'Спецтехника',
+    'pvc-profiles': 'ПВХ профили и подоконники',
+    'general-materials': 'Общестроительные материалы',
+};
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -72,6 +82,7 @@ function SearchContent() {
     const [requestSubmitting, setRequestSubmitting] = useState(false);
     const [selectedProductIdsByCompany, setSelectedProductIdsByCompany] = useState<Record<string, string[]>>({});
     const [guestOfferId, setGuestOfferId] = useState<string | null>(null);
+    const [guestSeller, setGuestSeller] = useState<{ name: string; type: 'producer' | 'dealer' } | null>(null);
     const [guestSubmitting, setGuestSubmitting] = useState(false);
     const [guestSent, setGuestSent] = useState(false);
     const [guestForm, setGuestForm] = useState<GuestFormState>({
@@ -151,12 +162,27 @@ function SearchContent() {
         }, 0);
     };
 
-    const buildRequestPayload = (companyId: string | null, options?: { address?: string; deadline?: string; extraProductId?: string }) => {
-        if (!parsed?.categoryId || !parsed?.category) {
+    const buildRequestPayload = (
+        companyId: string | null,
+        options?: {
+            address?: string;
+            deadline?: string;
+            extraProductId?: string;
+            sellerName?: string;
+            sellerType?: 'producer' | 'dealer';
+        }
+    ) => {
+        const selectedCompany = companyId ? results.find((r) => r.company.id === companyId) : null;
+        const fallbackCompany = selectedCompany || results[0] || null;
+        const categoryId = parsed?.categoryId || fallbackCompany?.company.categoryId;
+        const parsedCategory = categoryId
+            ? (CATEGORY_LABELS[categoryId] || parsed?.category || fallbackCompany?.company.name || 'Строительные материалы')
+            : (parsed?.category || fallbackCompany?.company.name || 'Строительные материалы');
+
+        if (!categoryId) {
             throw new Error('Не удалось определить категорию запроса');
         }
 
-        const selectedCompany = companyId ? results.find((r) => r.company.id === companyId) : null;
         const selectedProductIds = companyId ? (selectedProductIdsByCompany[companyId] ?? []) : [];
         const mergedProductIds = options?.extraProductId && !selectedProductIds.includes(options.extraProductId)
             ? [...selectedProductIds, options.extraProductId]
@@ -166,21 +192,35 @@ function SearchContent() {
             : [];
         const supplierHint = selectedCompany ? `\nПредпочтительный поставщик: ${selectedCompany.company.name}` : '';
         const productHint = selectedProducts.length > 0 ? `\nВыбранные позиции: ${selectedProducts.join(', ')}` : '';
-        const queryWithSelection = `${parsed.originalQuery}${supplierHint}${productHint}`;
+        const sellerHint = options?.sellerName
+            ? `\nКанал покупки: ${options.sellerType === 'dealer' ? 'Дилер' : 'Производитель'} — ${options.sellerName}`
+            : '';
+        const baseQuery = parsed?.originalQuery || q || 'Запрос клиента';
+        const queryWithSelection = `${baseQuery}${supplierHint}${productHint}${sellerHint}`;
 
         return {
-            categoryId: parsed.categoryId,
+            categoryId,
             query: queryWithSelection,
-            parsedCategory: parsed.category,
-            parsedVolume: parsed.volume ? `${parsed.volume} ${parsed.unit || ''}`.trim() : undefined,
-            parsedCity: parsed.city,
-            deliveryNeeded: Boolean(parsed.delivery || false),
+            parsedCategory,
+            parsedVolume: parsed?.volume ? `${parsed.volume} ${parsed.unit || ''}`.trim() : undefined,
+            parsedCity: parsed?.city || 'Шымкент',
+            deliveryNeeded: Boolean(parsed?.delivery || false),
             address: options?.address,
             deadline: options?.deadline,
         };
     };
 
-    const submitRequest = async (companyId: string | null, options?: { address?: string; deadline?: string; extraProductId?: string; closeForm?: boolean }) => {
+    const submitRequest = async (
+        companyId: string | null,
+        options?: {
+            address?: string;
+            deadline?: string;
+            extraProductId?: string;
+            closeForm?: boolean;
+            sellerName?: string;
+            sellerType?: 'producer' | 'dealer';
+        }
+    ) => {
         if (!ensureAuthorized()) return;
         if (requestSubmitting) return;
 
@@ -305,12 +345,49 @@ function SearchContent() {
             'Сравнивайте не только цену, но и класс/диаметр арматуры.',
             'Уточняйте наличие сертификатов и длину прутка.',
         ],
+        'pvc-profiles': [
+            'Сверяйте количество камер и метраж профиля перед заказом.',
+            'Для ламинации заранее уточняйте доступные цвета и срок поставки.',
+        ],
+        'general-materials': [
+            'Для материалов без цены отправляйте заявку сразу нескольким поставщикам.',
+            'Перед оплатой уточняйте остатки, сроки и упаковку на складе.',
+        ],
     };
 
     const recommendations = recommendationByCategory[parsed?.categoryId || ''] || [
         'Сравнивайте цену, срок поставки и условия доставки.',
         'Перед заказом уточняйте остатки на складе.',
     ];
+
+    const getOfferImage = (offer: { productName: string; productDescription: string; companyName: string }) => {
+        const text = `${offer.productName} ${offer.productDescription} ${offer.companyName}`.toLowerCase();
+        if (text.includes('подокон') || text.includes('профил') || text.includes('ламбри') || text.includes('штапик') || text.includes('пвх')) {
+            return '/images/catalog/pvc-profile.jpg';
+        }
+        if (text.includes('фанер') || text.includes('осп') || text.includes('дсп') || text.includes('двп')) {
+            return '/images/catalog/wood-board.jpg';
+        }
+        if (text.includes('гипсокартон') || text.includes('штукатур') || text.includes('клей')) {
+            return '/images/catalog/drywall.jpg';
+        }
+        if (text.includes('керамогранит') || text.includes('плитк')) {
+            return '/images/catalog/tile.jpg';
+        }
+        if (text.includes('утепл') || text.includes('вата') || text.includes('подложк')) {
+            return '/images/catalog/insulation.jpg';
+        }
+        if (text.includes('труба') || text.includes('муфта') || text.includes('канализа')) {
+            return '/images/catalog/pipes.jpg';
+        }
+        if (text.includes('бетон') || text.includes('цемент')) {
+            return '/images/catalog/concrete.jpg';
+        }
+        if (text.includes('песок') || text.includes('щеб')) {
+            return '/images/catalog/aggregates.jpg';
+        }
+        return '/images/catalog/materials.jpg';
+    };
 
     const calculateEstimatedTotal = (result: SearchResultData) => {
         if (!hasRequestedQuantity) return null;
@@ -405,10 +482,15 @@ function SearchContent() {
         return sorted;
     }, [productOffers, onlyDelivery, sortBy]);
 
-    const handleProductRequestClick = async (companyId: string, productId: string) => {
+    const handleProductRequestClick = async (
+        companyId: string,
+        productId: string,
+        seller: { name: string; type: 'producer' | 'dealer' }
+    ) => {
         if (!session?.user?.id) {
             setGuestSent(false);
             setGuestOfferId(`${companyId}:${productId}`);
+            setGuestSeller(seller);
             return;
         }
         setSelectedProductIdsByCompany((prev) => {
@@ -416,7 +498,11 @@ function SearchContent() {
             if (current.includes(productId)) return prev;
             return { ...prev, [companyId]: [...current, productId] };
         });
-        await submitRequest(companyId, { extraProductId: productId });
+        await submitRequest(companyId, {
+            extraProductId: productId,
+            sellerName: seller.name,
+            sellerType: seller.type,
+        });
     };
 
     const handleGuestSubmit = async (offer: {
@@ -424,6 +510,8 @@ function SearchContent() {
         companyName: string;
         productId: string;
         productName: string;
+        sellerName: string;
+        sellerType: 'producer' | 'dealer';
     }) => {
         if (!guestForm.name.trim() || !guestForm.phone.trim()) {
             alert('Укажите имя и телефон');
@@ -432,7 +520,12 @@ function SearchContent() {
 
         setGuestSubmitting(true);
         try {
-            const basePayload = buildRequestPayload(offer.companyId, { extraProductId: offer.productId, address: guestForm.address || undefined });
+            const basePayload = buildRequestPayload(offer.companyId, {
+                extraProductId: offer.productId,
+                address: guestForm.address || undefined,
+                sellerName: offer.sellerName,
+                sellerType: offer.sellerType,
+            });
             const quantityLine = guestForm.quantity ? `\nКоличество: ${guestForm.quantity}` : '';
             const guestContactLine = `\nКонтакт гостя: ${guestForm.name}, ${guestForm.phone}`;
             const payloadForAuth = {
@@ -452,6 +545,7 @@ function SearchContent() {
                     query: basePayload.query,
                     companyName: offer.companyName,
                     productName: offer.productName,
+                    sellerName: offer.sellerName,
                     city: parsed?.city || 'Шымкент',
                 }),
             });
@@ -495,7 +589,7 @@ function SearchContent() {
                 {/* Results */}
                 {!loading && (
                     <>
-                        {parsed && results.length > 0 && (
+                        {parsed && (
                             <section className={styles.aiInsight}>
                                 <h3>🤖 Для вашего запроса &quot;{parsed.originalQuery}&quot;</h3>
                                 {renderQuantitySummary() && (
@@ -518,7 +612,9 @@ function SearchContent() {
                                         🚚 С доставкой по {parsed.city || 'Шымкент'}: от {formatPrice(minDeliveryTotal ?? minFallbackTotal ?? 0)} ₸
                                     </p>
                                 )}
-                                <p className={styles.aiSummary}>⬇️ Предложения от проверенных поставщиков:</p>
+                                <p className={styles.aiSummary}>
+                                    ⬇️ {filteredOffers.length > 0 ? 'Предложения от проверенных поставщиков:' : 'По запросу пока нет совпадений, попробуйте уточнить материал или объем.'}
+                                </p>
                             </section>
                         )}
 
@@ -609,8 +705,23 @@ function SearchContent() {
                                 const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
                                 const offerKey = `${offer.companyId}:${offer.productId}`;
                                 const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
+                                const sellerCards = getDealersForOffer({
+                                    companyId: offer.companyId,
+                                    companyName: offer.companyName,
+                                    priceFrom: offer.priceFrom,
+                                    priceUnit: offer.priceUnit,
+                                    companyDelivery: offer.companyDelivery,
+                                });
                                 return (
                                     <article key={`${offer.companyId}-${offer.productId}`} className={styles.offerCard} style={{ animationDelay: `${i * 0.04}s` }}>
+                                        <div className={styles.offerImageWrap}>
+                                            <img
+                                                src={getOfferImage(offer)}
+                                                alt={offer.productName}
+                                                className={styles.offerImage}
+                                                loading="lazy"
+                                            />
+                                        </div>
                                         <div className={styles.offerTitle}>{offer.productName}</div>
                                         <div className={styles.offerPrice}>{formatPrice(offer.priceFrom)} ₸ <span>{offer.priceUnit}</span></div>
                                         <p className={styles.offerDesc}>{offer.productDescription}</p>
@@ -641,14 +752,51 @@ function SearchContent() {
                                             >
                                                 {isSelected ? 'В заявке' : 'Добавить в заявку'}
                                             </button>
-                                            <button className="btn btn-primary btn-sm" onClick={() => handleProductRequestClick(offer.companyId, offer.productId)} disabled={requestSubmitting}>
-                                                {requestSubmitting ? '...' : 'Запросить цену'}
-                                            </button>
+                                        </div>
+
+                                        <div className={styles.sellersList}>
+                                            {sellerCards.map((seller: DealerCard) => {
+                                                const sellerPrice = seller.priceFrom > 0 ? `${formatPrice(seller.priceFrom)} ₸` : 'По запросу';
+                                                return (
+                                                    <div
+                                                        key={seller.id}
+                                                        className={`${styles.sellerRow} ${seller.type === 'producer' ? styles.sellerProducer : ''}`}
+                                                    >
+                                                        <div className={styles.sellerMain}>
+                                                            <div className={styles.sellerTitle}>
+                                                                {seller.type === 'producer' ? '🏭 Производитель' : '🏬 Дилер'}: {seller.name}
+                                                            </div>
+                                                            <div className={styles.sellerMeta}>
+                                                                <span>⭐ {seller.rating.toFixed(1)} ({seller.reviewCount})</span>
+                                                                <span>⚡ {seller.responseMinutes} мин</span>
+                                                                <span>{seller.delivery ? '🚚 Доставка' : 'Самовывоз'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className={styles.sellerBuy}>
+                                                            <div className={styles.sellerPrice}>
+                                                                {sellerPrice} <span>{seller.priceUnit}</span>
+                                                            </div>
+                                                            <button
+                                                                className="btn btn-primary btn-sm"
+                                                                onClick={() => handleProductRequestClick(offer.companyId, offer.productId, { name: seller.name, type: seller.type })}
+                                                                disabled={requestSubmitting}
+                                                            >
+                                                                {seller.type === 'producer' ? 'Заказать напрямую' : 'Заказать у дилера'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
 
                                         {showGuestInline && (
                                             <div className={styles.guestInline}>
                                                 <h4>📋 Запрос цены</h4>
+                                                {guestSeller && (
+                                                    <p className={styles.guestSellerHint}>
+                                                        Канал покупки: {guestSeller.type === 'producer' ? 'Производитель' : 'Дилер'} — {guestSeller.name}
+                                                    </p>
+                                                )}
                                                 <div className={styles.guestFields}>
                                                     <input
                                                         className="input"
@@ -680,7 +828,11 @@ function SearchContent() {
                                                     <div className={styles.guestActions}>
                                                         <button
                                                             className="btn btn-primary btn-sm"
-                                                            onClick={() => handleGuestSubmit(offer)}
+                                                            onClick={() => handleGuestSubmit({
+                                                                ...offer,
+                                                                sellerName: guestSeller?.name || offer.companyName,
+                                                                sellerType: guestSeller?.type || 'producer',
+                                                            })}
                                                             disabled={guestSubmitting}
                                                         >
                                                             {guestSubmitting ? 'Отправляем...' : 'Отправить как гость'}
@@ -691,6 +843,8 @@ function SearchContent() {
                                                                 const payload = buildRequestPayload(offer.companyId, {
                                                                     extraProductId: offer.productId,
                                                                     address: guestForm.address || undefined,
+                                                                    sellerName: guestSeller?.name || offer.companyName,
+                                                                    sellerType: guestSeller?.type || 'producer',
                                                                 });
                                                                 saveIntentAndRedirectToAuth(
                                                                     {
@@ -709,6 +863,8 @@ function SearchContent() {
                                                                 const payload = buildRequestPayload(offer.companyId, {
                                                                     extraProductId: offer.productId,
                                                                     address: guestForm.address || undefined,
+                                                                    sellerName: guestSeller?.name || offer.companyName,
+                                                                    sellerType: guestSeller?.type || 'producer',
                                                                 });
                                                                 saveIntentAndRedirectToAuth(
                                                                     {
@@ -732,6 +888,8 @@ function SearchContent() {
                                                                     const payload = buildRequestPayload(offer.companyId, {
                                                                         extraProductId: offer.productId,
                                                                         address: guestForm.address || undefined,
+                                                                        sellerName: guestSeller?.name || offer.companyName,
+                                                                        sellerType: guestSeller?.type || 'producer',
                                                                     });
                                                                     saveIntentAndRedirectToAuth(
                                                                         {
@@ -744,7 +902,14 @@ function SearchContent() {
                                                             >
                                                                 Создать аккаунт
                                                             </button>
-                                                            <button className="btn btn-ghost btn-sm" onClick={() => setGuestOfferId(null)}>
+                                                            <button
+                                                                className="btn btn-ghost btn-sm"
+                                                                onClick={() => {
+                                                                    setGuestOfferId(null);
+                                                                    setGuestSeller(null);
+                                                                    setGuestSent(false);
+                                                                }}
+                                                            >
                                                                 Продолжить поиск
                                                             </button>
                                                         </div>

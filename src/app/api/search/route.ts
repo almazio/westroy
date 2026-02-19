@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseQuery } from '@/lib/ai-parser';
+import { parseQuery, parseQueryRegex } from '@/lib/ai-parser';
 import { search } from '@/lib/search';
+
+const PARSER_TIMEOUT_MS = 1800;
+
+async function parseWithTimeout(query: string) {
+    if (!query.trim()) {
+        return parseQueryRegex(query);
+    }
+
+    return Promise.race([
+        parseQuery(query),
+        new Promise<ReturnType<typeof parseQueryRegex>>((resolve) =>
+            setTimeout(() => resolve(parseQueryRegex(query)), PARSER_TIMEOUT_MS)
+        ),
+    ]);
+}
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -11,8 +26,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Query parameter "q" or "category" is required' }, { status: 400 });
     }
 
-    // Parse the query with AI parser
-    let parsed = await parseQuery(q);
+    // Parse query with LLM, but do not block search on slow provider
+    let parsed = await parseWithTimeout(q);
 
     // Override category if explicitly provided
     if (categoryId && !parsed.categoryId) {

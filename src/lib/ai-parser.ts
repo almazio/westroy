@@ -41,6 +41,16 @@ const CATEGORY_SYNONYMS: Record<string, { id: string; label: string; keywords: s
             'бульдозер', 'бульдозера', 'погрузчик', 'погрузчика', 'автокран', 'автокрана',
             'миксер', 'миксера', 'самосвал', 'самосвала', 'техника', 'техники', 'аренда техники'],
     },
+    'pvc-profiles': {
+        id: 'pvc-profiles',
+        label: 'ПВХ профили и подоконники',
+        keywords: ['пвх', 'подоконник', 'подоконники', 'профиль', 'профили', 'ламбри', 'штапик', 'оконный профиль', 'дверной профиль'],
+    },
+    'general-materials': {
+        id: 'general-materials',
+        label: 'Общестроительные материалы',
+        keywords: ['осп', 'фанера', 'двп', 'дсп', 'гипсокартон', 'ламинат', 'керамогранит', 'утеплитель', 'штукатурка', 'кафельный клей', 'рубероид', 'труба', 'муфта'],
+    },
 };
 
 // Grade patterns (бетон/concrete specific)
@@ -234,6 +244,8 @@ export function parseQueryRegex(query: string): ParsedQuery {
             { type: 'category', label: 'Кирпич/блоки?', value: 'blocks' },
             { type: 'category', label: 'Арматура?', value: 'rebar' },
             { type: 'category', label: 'Спецтехника?', value: 'machinery' },
+            { type: 'category', label: 'ПВХ профили?', value: 'pvc-profiles' },
+            { type: 'category', label: 'Общестрой?', value: 'general-materials' },
         );
     }
 
