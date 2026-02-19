@@ -59,14 +59,26 @@ export default async function HubArticlePage({ params }: PageProps) {
     return (
         <div className={styles.pageWrap}>
             <div className="container">
-                <article className={styles.card}>
+                <article
+                    className={styles.card}
+                    itemScope
+                    itemType="https://schema.org/Article"
+                >
+                    <link itemProp="mainEntityOfPage" href={`https://westroy.kz/hub/${article.slug}`} />
+                    <meta itemProp="datePublished" content={article.publishedAt} />
+                    <meta itemProp="dateModified" content={article.updatedAt || article.publishedAt} />
+                    <meta itemProp="inLanguage" content="ru-KZ" />
                     <div className={styles.meta}>
-                        <span className="badge badge-info">{article.category}</span>
+                        <span className="badge badge-info" itemProp="articleSection">{article.category}</span>
                         <span className="badge">{new Date(article.publishedAt).toLocaleDateString("ru-RU")}</span>
                     </div>
-                    <h1>{article.title}</h1>
-                    <p className="text-secondary" style={{ marginTop: 8 }}>{article.description}</p>
+                    <h1 itemProp="headline">{article.title}</h1>
+                    <p className="text-secondary" style={{ marginTop: 8 }} itemProp="description">{article.description}</p>
+                    <span itemProp="author" itemScope itemType="https://schema.org/Organization" style={{ display: "none" }}>
+                        <span itemProp="name">WESTROY</span>
+                    </span>
                     <div
+                        itemProp="articleBody"
                         style={{ marginTop: 16 }}
                         dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
                     />
