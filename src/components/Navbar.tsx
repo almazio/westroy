@@ -14,34 +14,30 @@ export default function Navbar() {
     const pathname = usePathname();
     const [menuOpen, setMenuOpen] = useState(false);
     const isHomePage = pathname === '/';
+    const isAppHost = typeof window !== 'undefined' && window.location.hostname === 'app.westroy.kz';
 
     const navLinks = {
         client: [
-            { href: '/', label: 'Главная' },
-            { href: '/hub', label: 'Hub' },
-            { href: toAppUrl('/search'), label: 'Поиск', external: true },
+            ...(isAppHost ? [] : [{ href: '/', label: 'Главная' }]),
             { href: toAppUrl('/dashboard/client'), label: 'Мои заявки', external: true },
         ],
         producer: [
-            { href: '/', label: 'Главная' },
-            { href: '/hub', label: 'Hub' },
-            { href: toAppUrl('/search'), label: 'Заявки рынка', external: true },
+            ...(isAppHost ? [] : [{ href: '/', label: 'Главная' }]),
             { href: toAppUrl('/dashboard/producer'), label: 'Кабинет', external: true },
         ],
         admin: [
-            { href: '/', label: 'Главная' },
-            { href: '/hub', label: 'Hub' },
-            { href: toAppUrl('/search'), label: 'Маркетплейс', external: true },
+            ...(isAppHost ? [] : [{ href: '/', label: 'Главная' }]),
             { href: toAppUrl('/admin'), label: 'Админ-панель', external: true },
             { href: toAppUrl('/admin/analytics'), label: 'Аналитика', external: true },
         ],
     };
 
     const guestLinks = [
-        { href: '/', label: 'Главная' },
-        { href: '/hub', label: 'Hub' },
-        { href: toAppUrl('/search'), label: 'Поиск', external: true },
-        { href: '/partners', label: 'Партнерам' },
+        ...(isAppHost ? [] : [
+            { href: '/', label: 'Главная' },
+            { href: toAppUrl('/search'), label: 'Поиск', external: true },
+            { href: '/partners', label: 'Партнерам' },
+        ]),
     ];
 
     const currentLinks = user
@@ -121,15 +117,6 @@ export default function Navbar() {
                 </div>
 
                 <div className={styles.right}>
-                    <button
-                        onClick={toggleTheme}
-                        className={styles.themeBtn}
-                        aria-label="Переключить тему"
-                        title="Переключить тему"
-                    >
-                        <span suppressHydrationWarning>{theme === 'dark' ? '☀️' : '🌙'}</span>
-                    </button>
-
                     {user ? (
                         <div className={styles.userWrapper}>
                             <div className={styles.userInfo}>
@@ -151,11 +138,17 @@ export default function Navbar() {
                     ) : (
                         <div className={styles.authButtonsDesktop}>
                             <a href={toAppUrl('/login')} className="btn btn-sm btn-ghost">Войти</a>
-                            {!isHomePage && (
-                                <a href={toAppUrl('/register')} className="btn btn-sm btn-primary">Регистрация клиента</a>
-                            )}
                         </div>
                     )}
+
+                    <button
+                        onClick={toggleTheme}
+                        className={styles.themeBtn}
+                        aria-label="Переключить тему"
+                        title="Переключить тему"
+                    >
+                        <span suppressHydrationWarning>{theme === 'dark' ? '☀️' : '🌙'}</span>
+                    </button>
 
                     <button
                         className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
@@ -189,6 +182,17 @@ export default function Navbar() {
                     ))}
                 </div>
 
+                <div className={styles.mobileThemeRow}>
+                    <span className={styles.mobileThemeLabel}>Тема</span>
+                    <button
+                        onClick={toggleTheme}
+                        className={styles.mobileThemeBtn}
+                        aria-label="Переключить тему"
+                    >
+                        <span suppressHydrationWarning>{theme === 'dark' ? 'Светлая' : 'Темная'}</span>
+                    </button>
+                </div>
+
                 {user ? (
                     <div className={styles.mobileUserCard}>
                         <div>
@@ -213,9 +217,6 @@ export default function Navbar() {
                 ) : (
                     <div className={styles.mobileAuthRow}>
                         <a href={toAppUrl('/login')} className="btn btn-secondary" onClick={() => setMenuOpen(false)}>Войти</a>
-                        {!isHomePage && (
-                            <a href={toAppUrl('/register')} className="btn btn-primary" onClick={() => setMenuOpen(false)}>Регистрация клиента</a>
-                        )}
                     </div>
                 )}
             </div>

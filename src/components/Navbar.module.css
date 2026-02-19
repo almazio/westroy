@@ -190,6 +190,12 @@
     display: none;
 }
 
+.mobileThemeRow,
+.mobileThemeLabel,
+.mobileThemeBtn {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .inner {
         padding: 0 14px;
@@ -230,6 +236,7 @@
     .themeBtn {
         width: 34px;
         height: 34px;
+        display: none;
     }
 
     .overlay {
@@ -298,6 +305,36 @@
         background: linear-gradient(135deg, var(--accent), var(--accent-dark));
         color: #000;
         border-color: transparent;
+    }
+
+    .mobileThemeRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--bg-card);
+        padding: 10px 12px;
+    }
+
+    .mobileThemeLabel {
+        display: inline;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .mobileThemeBtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        height: 34px;
+        padding: 0 12px;
     }
 
     .mobileUserCard {
