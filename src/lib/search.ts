@@ -4,77 +4,157 @@
 
 import { ParsedQuery, SearchResult, SearchResponse } from './types';
 import {
+    getCompanies,
     getCompaniesByCategory,
+    getProducts,
     getProductsByCategory,
     getCompanyMarketStats
 } from './db';
 
-export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
-    const { categoryId, grade, delivery } = parsed;
+function normalizeText(text: string): string {
+    return text.toLowerCase().replace(/\s+/g, ' ').trim();
+}
 
-    if (!categoryId) {
-        return {
-            parsed,
-            results: [],
-            totalResults: 0,
-        };
+function priceForSort(value: number): number {
+    return value > 0 ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function buildResult({
+    company,
+    products,
+    grade,
+    delivery,
+    companyStats,
+}: {
+    company: Awaited<ReturnType<typeof getCompanies>>[number];
+    products: Awaited<ReturnType<typeof getProducts>>;
+    grade: string | null;
+    delivery: boolean | null;
+    companyStats: Awaited<ReturnType<typeof getCompanyMarketStats>>;
+}): SearchResult {
+    let relevanceScore = 0.5;
+    let matchedProducts = products;
+
+    if (grade) {
+        const gradeNormalized = grade.toLowerCase();
+        const gradeProducts = products.filter((p) =>
+            p.name.toLowerCase().includes(gradeNormalized) ||
+            p.description.toLowerCase().includes(gradeNormalized)
+        );
+        if (gradeProducts.length > 0) {
+            matchedProducts = gradeProducts;
+            relevanceScore += 0.3;
+        }
     }
 
-    // Get companies and products for the category
-    const companies = await getCompaniesByCategory(categoryId);
-    const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
-    const categoryProducts = await getProductsByCategory(categoryId);
+    if (delivery && company.delivery) relevanceScore += 0.1;
+    if (company.verified) relevanceScore += 0.1;
 
-    const results: SearchResult[] = companies.map(company => {
-        const companyProducts = categoryProducts.filter(p => p.companyId === company.id);
-        let relevanceScore = 0.5; // Base score for category match
+    const minPricedProduct = matchedProducts
+        .filter((p) => p.priceFrom > 0)
+        .sort((a, b) => a.priceFrom - b.priceFrom)[0];
 
-        // Filter/rank by grade if provided
-        let matchedProducts = companyProducts;
-        if (grade) {
-            const gradeProducts = companyProducts.filter(p =>
-                p.name.toLowerCase().includes(grade.toLowerCase()) ||
-                p.description.toLowerCase().includes(grade.toLowerCase())
-            );
-            if (gradeProducts.length > 0) {
-                matchedProducts = gradeProducts;
-                relevanceScore += 0.3;
-            }
-        }
+    return {
+        company,
+        products: matchedProducts,
+        priceFrom: minPricedProduct?.priceFrom ?? 0,
+        priceUnit: minPricedProduct?.priceUnit ?? (matchedProducts[0]?.priceUnit || ''),
+        relevanceScore: Math.min(relevanceScore, 1),
+        stats: companyStats[company.id],
+    };
+}
 
-        // Boost for delivery
-        if (delivery && company.delivery) {
-            relevanceScore += 0.1;
-        }
-
-        // Boost for verified
-        if (company.verified) {
-            relevanceScore += 0.1;
-        }
-
-        // Get minimum price
-        const priceFrom = matchedProducts.length > 0
-            ? Math.min(...matchedProducts.map(p => p.priceFrom))
-            : 0;
-        const priceUnit = matchedProducts.length > 0 ? matchedProducts[0].priceUnit : '';
-
-        return {
-            company,
-            products: matchedProducts,
-            priceFrom,
-            priceUnit,
-            relevanceScore: Math.min(relevanceScore, 1),
-            stats: companyStats[company.id],
-        };
-    });
-
-    // Sort by relevance, then by price
+function sortResults(results: SearchResult[]) {
     results.sort((a, b) => {
         if (Math.abs(a.relevanceScore - b.relevanceScore) > 0.1) {
             return b.relevanceScore - a.relevanceScore;
         }
-        return a.priceFrom - b.priceFrom;
+        return priceForSort(a.priceFrom) - priceForSort(b.priceFrom);
     });
+}
+
+async function searchByCategory(parsed: ParsedQuery): Promise<SearchResult[]> {
+    if (!parsed.categoryId) return [];
+
+    const companies = await getCompaniesByCategory(parsed.categoryId);
+    const categoryProducts = await getProductsByCategory(parsed.categoryId);
+    const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
+
+    const results = companies.map((company) =>
+        buildResult({
+            company,
+            products: categoryProducts.filter((p) => p.companyId === company.id),
+            grade: parsed.grade,
+            delivery: parsed.delivery,
+            companyStats,
+        })
+    );
+
+    sortResults(results);
+    return results;
+}
+
+async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
+    const query = normalizeText(parsed.originalQuery || '');
+    if (!query) return [];
+
+    const tokens = query.split(' ').filter((t) => t.length >= 2);
+    if (tokens.length === 0) return [];
+
+    const [companies, products] = await Promise.all([getCompanies(), getProducts()]);
+    const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
+
+    const productMatches = products.filter((product) => {
+        const haystack = normalizeText(`${product.name} ${product.description}`);
+        return tokens.some((token) => haystack.includes(token));
+    });
+
+    const companyMatches = companies.filter((company) => {
+        const haystack = normalizeText(`${company.name} ${company.description}`);
+        return tokens.some((token) => haystack.includes(token));
+    });
+
+    const matchedCompanyIds = new Set<string>([
+        ...productMatches.map((p) => p.companyId),
+        ...companyMatches.map((c) => c.id),
+    ]);
+
+    const results: SearchResult[] = [];
+    for (const company of companies) {
+        if (!matchedCompanyIds.has(company.id)) continue;
+        const productsForCompany = productMatches.filter((p) => p.companyId === company.id);
+        const fallbackProducts = productsForCompany.length > 0
+            ? productsForCompany
+            : products.filter((p) => p.companyId === company.id).slice(0, 6);
+
+        const result = buildResult({
+            company,
+            products: fallbackProducts,
+            grade: parsed.grade,
+            delivery: parsed.delivery,
+            companyStats,
+        });
+
+        if (companyMatches.some((c) => c.id === company.id)) {
+            result.relevanceScore = Math.min(1, result.relevanceScore + 0.2);
+        }
+        if (productsForCompany.length > 0) {
+            result.relevanceScore = Math.min(1, result.relevanceScore + 0.2);
+        }
+
+        results.push(result);
+    }
+
+    sortResults(results);
+    return results;
+}
+
+export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
+    let results = await searchByCategory(parsed);
+
+    if (results.length === 0) {
+        results = await searchByText(parsed);
+    }
 
     return {
         parsed,
