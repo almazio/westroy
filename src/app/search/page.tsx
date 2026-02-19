@@ -77,7 +77,7 @@ function SearchContent() {
 
     const [results, setResults] = useState<SearchResultData[]>([]);
     const [parsed, setParsed] = useState<ParsedData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [requestSent, setRequestSent] = useState(false);
     const [requestForm, setRequestForm] = useState({ address: '', deadline: '' });
@@ -117,7 +117,13 @@ function SearchContent() {
             });
             setLoading(false);
         }
-        if (q || categoryParam) fetchResults();
+        if (q || categoryParam) {
+            void fetchResults();
+        } else {
+            setResults([]);
+            setParsed(null);
+            setLoading(false);
+        }
     }, [q, categoryParam]);
 
     useEffect(() => {

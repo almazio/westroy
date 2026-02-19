@@ -1,6 +1,6 @@
 
-import Link from 'next/link';
 import styles from './PopularMaterials.module.css';
+import { toAppUrl } from '@/lib/urls';
 
 const MATERIALS = [
     { name: 'Бетон М250' },
@@ -16,13 +16,13 @@ export default function PopularMaterials() {
                 <h2 className={styles.title}>Популярные запросы</h2>
                 <div className={styles.grid}>
                     {MATERIALS.map((m, i) => (
-                        <Link href={`/search?q=${m.name}`} key={i} className={styles.card}>
+                        <a href={toAppUrl(`/search?q=${encodeURIComponent(m.name)}`)} key={i} className={styles.card}>
                             <div className={styles.info}>
                                 <h3 className={styles.name}>{m.name}</h3>
                                 <span className={styles.queries}>Быстрый запрос поставщикам</span>
                             </div>
                             <div className={styles.arrow}>→</div>
-                        </Link>
+                        </a>
                     ))}
                 </div>
             </div>

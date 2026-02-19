@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './SearchBar.module.css';
 import { trackEvent } from '@/lib/analytics';
+import { toAppUrl } from '@/lib/urls';
 
 const PLACEHOLDERS = [
     'Например: нужно 10 кубов бетона М300 с доставкой в Абай районе',
@@ -36,12 +37,21 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (query.trim()) {
+        const trimmed = query.trim();
+        if (trimmed) {
             trackEvent('search_submitted', {
-                query_length: query.trim().length,
+                query_length: trimmed.length,
                 source: size === 'hero' ? 'hero_search' : 'search_page',
             });
-            router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+            const relativeTarget = `/search?q=${encodeURIComponent(trimmed)}`;
+            const absoluteTarget = toAppUrl(relativeTarget);
+            if (typeof window !== 'undefined' && absoluteTarget.startsWith(window.location.origin)) {
+                router.push(relativeTarget);
+                return;
+            }
+            if (typeof window !== 'undefined') {
+                window.location.assign(absoluteTarget);
+            }
         }
     };
 

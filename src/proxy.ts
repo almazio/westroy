@@ -11,6 +11,7 @@ const APP_PATH_PREFIXES = ["/login", "/register", "/dashboard", "/admin", "/sear
 export default auth((request) => {
     const host = (request.headers.get("host") || "").toLowerCase();
     const { pathname, search } = request.nextUrl;
+    const isRscRequest = request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");
 
     const withAppNoIndex = (response: NextResponse) => {
         response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -23,16 +24,13 @@ export default auth((request) => {
             pathname === prefix || pathname.startsWith(`${prefix}/`)
         );
         if (isAppPath) {
+            if (isRscRequest) {
+                return NextResponse.next();
+            }
             const target = new URL(`https://${APP_HOST}${pathname}${search}`);
             return NextResponse.redirect(target);
         }
         return NextResponse.next();
-    }
-
-    // App domain: open product app by default
-    if (host === APP_HOST && pathname === "/") {
-        const target = new URL(`https://${APP_HOST}/search${search}`);
-        return withAppNoIndex(NextResponse.redirect(target));
     }
 
     if (host === APP_HOST) {

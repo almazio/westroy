@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { toAppUrl } from '@/lib/urls';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -21,17 +22,17 @@ export default function Footer() {
                 <div className={styles.links}>
                     <div className={styles.col}>
                         <h4>Категории</h4>
-                        <a href="/search?category=concrete">Бетон</a>
-                        <a href="/search?category=sand">Песок</a>
-                        <a href="/search?category=stone">Щебень</a>
-                        <a href="/search?category=brick">Кирпич</a>
-                        <a href="/search?category=cement">Цемент</a>
+                        <a href={toAppUrl('/search?category=concrete')}>Бетон</a>
+                        <a href={toAppUrl('/search?category=sand')}>Песок</a>
+                        <a href={toAppUrl('/search?category=stone')}>Щебень</a>
+                        <a href={toAppUrl('/search?category=brick')}>Кирпич</a>
+                        <a href={toAppUrl('/search?category=cement')}>Цемент</a>
                     </div>
                     <div className={styles.col}>
                         <h4>Платформа</h4>
-                        <Link href="/">Поиск</Link>
-                        <a href="/dashboard/client">Кабинет клиента</a>
-                        <a href="/dashboard/producer">Кабинет производителя</a>
+                        <a href={toAppUrl('/search')}>Поиск</a>
+                        <a href={toAppUrl('/dashboard/client')}>Кабинет клиента</a>
+                        <a href={toAppUrl('/dashboard/producer')}>Кабинет производителя</a>
                     </div>
                     <div className={styles.col}>
                         <h4>Контакты</h4>

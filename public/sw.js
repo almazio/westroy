@@ -36,6 +36,10 @@ self.addEventListener('fetch', (event) => {
   const isSameOrigin = url.origin === self.location.origin;
   const isApiRequest = url.pathname.startsWith('/api/');
   const isNextAsset = url.pathname.startsWith('/_next/');
+  const isRscRequest = request.headers.get('rsc') === '1' || url.searchParams.has('_rsc');
+
+  // Never intercept RSC/document fragment requests to avoid CORS issues on cross-domain redirects.
+  if (isRscRequest) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -48,7 +52,8 @@ self.addEventListener('fetch', (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
-          return caches.match(OFFLINE_URL);
+          const offline = await caches.match(OFFLINE_URL);
+          return offline || new Response('Offline', { status: 503, statusText: 'Offline' });
         })
     );
     return;
@@ -66,7 +71,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached);
+        .catch(() => cached || new Response('', { status: 504, statusText: 'Gateway Timeout' }));
 
       return cached || networkFetch;
     })

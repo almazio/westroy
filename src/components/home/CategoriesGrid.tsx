@@ -1,7 +1,7 @@
 
-import Link from 'next/link';
 import styles from './CategoriesGrid.module.css';
 import { getCategories } from '@/lib/db';
+import { toAppUrl } from '@/lib/urls';
 
 export default async function CategoriesGrid() {
     const categories = await getCategories();
@@ -11,23 +11,23 @@ export default async function CategoriesGrid() {
             <div className="container">
                 <div className={styles.header}>
                     <h2 className={styles.title}>Категории материалов</h2>
-                    <Link href="/categories" className={styles.viewAll}>
+                    <a href={toAppUrl('/search')} className={styles.viewAll}>
                         Все категории →
-                    </Link>
+                    </a>
                 </div>
 
                 <div className={styles.grid}>
                     {categories.map((cat) => (
-                        <Link
+                        <a
                             key={cat.id}
-                            href={`/search?category=${cat.id}`}
+                            href={toAppUrl(`/search?category=${cat.id}`)}
                             className={styles.card}
                         >
                             <div className={styles.iconWrapper}>
                                 <span className={styles.icon}>{cat.icon}</span>
                             </div>
                             <h3 className={styles.cardTitle}>{cat.nameRu}</h3>
-                        </Link>
+                        </a>
                     ))}
                 </div>
             </div>

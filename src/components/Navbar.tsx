@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
+import { toAppUrl } from '@/lib/urls';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -18,28 +19,28 @@ export default function Navbar() {
         client: [
             { href: '/', label: 'Главная' },
             { href: '/hub', label: 'Hub' },
-            { href: '/search', label: 'Поиск' },
-            { href: '/dashboard/client', label: 'Мои заявки' },
+            { href: toAppUrl('/search'), label: 'Поиск', external: true },
+            { href: toAppUrl('/dashboard/client'), label: 'Мои заявки', external: true },
         ],
         producer: [
             { href: '/', label: 'Главная' },
             { href: '/hub', label: 'Hub' },
-            { href: '/search', label: 'Заявки рынка' },
-            { href: '/dashboard/producer', label: 'Кабинет' },
+            { href: toAppUrl('/search'), label: 'Заявки рынка', external: true },
+            { href: toAppUrl('/dashboard/producer'), label: 'Кабинет', external: true },
         ],
         admin: [
             { href: '/', label: 'Главная' },
             { href: '/hub', label: 'Hub' },
-            { href: '/search', label: 'Маркетплейс' },
-            { href: '/admin', label: 'Админ-панель' },
-            { href: '/admin/analytics', label: 'Аналитика' },
+            { href: toAppUrl('/search'), label: 'Маркетплейс', external: true },
+            { href: toAppUrl('/admin'), label: 'Админ-панель', external: true },
+            { href: toAppUrl('/admin/analytics'), label: 'Аналитика', external: true },
         ],
     };
 
     const guestLinks = [
         { href: '/', label: 'Главная' },
         { href: '/hub', label: 'Hub' },
-        { href: '/search', label: 'Поиск' },
+        { href: toAppUrl('/search'), label: 'Поиск', external: true },
         { href: '/partners', label: 'Партнерам' },
     ];
 
@@ -48,12 +49,15 @@ export default function Navbar() {
         : guestLinks;
 
     const visibleLinks = currentLinks.filter((link) => {
+        if (link.external) return true;
         if (pathname === link.href) return false;
         if (link.href !== '/' && pathname.startsWith(`${link.href}/`)) return false;
         return true;
     });
 
-    const fallbackLinks = visibleLinks.length > 0 ? visibleLinks : currentLinks.filter((link) => link.href !== pathname);
+    const fallbackLinks = visibleLinks.length > 0
+        ? visibleLinks
+        : currentLinks.filter((link) => link.external || link.href !== pathname);
 
     useEffect(() => {
         if (!menuOpen) return;
@@ -104,9 +108,15 @@ export default function Navbar() {
 
                 <div className={styles.desktopLinks}>
                     {fallbackLinks.map(link => (
-                        <Link key={link.href} href={link.href} className={styles.link} onClick={() => setMenuOpen(false)}>
-                            {link.label}
-                        </Link>
+                        link.external ? (
+                            <a key={link.href} href={link.href} className={styles.link} onClick={() => setMenuOpen(false)}>
+                                {link.label}
+                            </a>
+                        ) : (
+                            <Link key={link.href} href={link.href} className={styles.link} onClick={() => setMenuOpen(false)}>
+                                {link.label}
+                            </Link>
+                        )
                     ))}
                 </div>
 
@@ -140,9 +150,9 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <div className={styles.authButtonsDesktop}>
-                            <Link href="/login" className="btn btn-sm btn-ghost">Войти</Link>
+                            <a href={toAppUrl('/login')} className="btn btn-sm btn-ghost">Войти</a>
                             {!isHomePage && (
-                                <Link href="/register" className="btn btn-sm btn-primary">Регистрация клиента</Link>
+                                <a href={toAppUrl('/register')} className="btn btn-sm btn-primary">Регистрация клиента</a>
                             )}
                         </div>
                     )}
@@ -167,9 +177,15 @@ export default function Navbar() {
 
                 <div className={styles.mobileLinks}>
                     {fallbackLinks.map(link => (
-                        <Link key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-                            {link.label}
-                        </Link>
+                        link.external ? (
+                            <a key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+                                {link.label}
+                            </a>
+                        ) : (
+                            <Link key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+                                {link.label}
+                            </Link>
+                        )
                     ))}
                 </div>
 
@@ -196,9 +212,9 @@ export default function Navbar() {
                     </div>
                 ) : (
                     <div className={styles.mobileAuthRow}>
-                        <Link href="/login" className="btn btn-secondary" onClick={() => setMenuOpen(false)}>Войти</Link>
+                        <a href={toAppUrl('/login')} className="btn btn-secondary" onClick={() => setMenuOpen(false)}>Войти</a>
                         {!isHomePage && (
-                            <Link href="/register" className="btn btn-primary" onClick={() => setMenuOpen(false)}>Регистрация клиента</Link>
+                            <a href={toAppUrl('/register')} className="btn btn-primary" onClick={() => setMenuOpen(false)}>Регистрация клиента</a>
                         )}
                     </div>
                 )}
