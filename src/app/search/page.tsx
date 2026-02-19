@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
 import { getDealersForOffer, type DealerCard } from '@/lib/test-dealers';
+import { trackEvent } from '@/lib/analytics';
 import styles from './page.module.css';
 
 interface SearchResultData {
@@ -62,6 +63,7 @@ const CATEGORY_LABELS: Record<string, string> = {
     aggregates: 'Инертные материалы',
     blocks: 'Кирпич и блоки',
     rebar: 'Арматура и металлопрокат',
+    cement: 'Цемент',
     machinery: 'Спецтехника',
     'pvc-profiles': 'ПВХ профили и подоконники',
     'general-materials': 'Общестроительные материалы',
@@ -94,6 +96,7 @@ function SearchContent() {
     const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'supplier'>('price_asc');
     const [onlyDelivery, setOnlyDelivery] = useState(false);
     const requestFormRef = useRef<HTMLDivElement | null>(null);
+    const seenProductCardsRef = useRef<Set<string>>(new Set());
     const { data: session } = useSession();
 
     useEffect(() => {
@@ -107,6 +110,11 @@ function SearchContent() {
             const data = await res.json();
             setResults(data.results || []);
             setParsed(data.parsed || null);
+            trackEvent('search_results_viewed', {
+                total_results: Array.isArray(data.results) ? data.results.length : 0,
+                category_id: data?.parsed?.categoryId || '',
+                has_query: Boolean(q),
+            });
             setLoading(false);
         }
         if (q || categoryParam) fetchResults();
@@ -155,6 +163,11 @@ function SearchContent() {
     const openRequestForm = () => {
         if (!ensureAuthorized()) return;
 
+        trackEvent('request_started', {
+            source: 'search_results',
+            mode: 'smart_request',
+            has_query: Boolean(parsed?.originalQuery),
+        });
         setRequestSent(false);
         setShowRequestForm(true);
         setTimeout(() => {
@@ -235,16 +248,28 @@ function SearchContent() {
 
             if (res.ok) {
                 setRequestSent(true);
+                trackEvent('request_submitted', {
+                    source: 'search_results',
+                    category_id: payload.categoryId,
+                });
                 if (options?.closeForm) {
                     setShowRequestForm(false);
                 }
             } else {
                 const err = await res.json();
                 console.error('Failed to send request:', err);
+                trackEvent('request_submit_failed', {
+                    source: 'search_results',
+                    category_id: payload.categoryId,
+                });
                 alert(`Ошибка при отправке заявки: ${err.details || err.error}`);
             }
         } catch (e) {
             console.error('Error sending request:', e);
+            trackEvent('request_submit_failed', {
+                source: 'search_results',
+                category_id: parsed?.categoryId || '',
+            });
             alert('Произошла ошибка при отправке заявки. Попробуйте позже.');
         } finally {
             setRequestSubmitting(false);
@@ -344,6 +369,10 @@ function SearchContent() {
         rebar: [
             'Сравнивайте не только цену, но и класс/диаметр арматуры.',
             'Уточняйте наличие сертификатов и длину прутка.',
+        ],
+        cement: [
+            'Уточняйте марку цемента и дату фасовки перед заказом.',
+            'Для больших объемов лучше сразу сравнивать навал и мешки.',
         ],
         'pvc-profiles': [
             'Сверяйте количество камер и метраж профиля перед заказом.',
@@ -482,11 +511,29 @@ function SearchContent() {
         return sorted;
     }, [productOffers, onlyDelivery, sortBy]);
 
+    useEffect(() => {
+        for (const offer of filteredOffers.slice(0, 12)) {
+            if (seenProductCardsRef.current.has(offer.productId)) continue;
+            seenProductCardsRef.current.add(offer.productId);
+            trackEvent('product_card_viewed', {
+                product_id: offer.productId,
+                company_id: offer.companyId,
+                category_id: parsed?.categoryId || '',
+            });
+        }
+    }, [filteredOffers, parsed?.categoryId]);
+
     const handleProductRequestClick = async (
         companyId: string,
         productId: string,
         seller: { name: string; type: 'producer' | 'dealer' }
     ) => {
+        trackEvent('request_started', {
+            source: 'product_card',
+            company_id: companyId,
+            product_id: productId,
+            seller_type: seller.type,
+        });
         if (!session?.user?.id) {
             setGuestSent(false);
             setGuestOfferId(`${companyId}:${productId}`);
@@ -552,10 +599,21 @@ function SearchContent() {
 
             if (!guestRes.ok) {
                 const err = await guestRes.json().catch(() => ({}));
+                trackEvent('request_submit_failed', {
+                    source: 'guest_inline',
+                    company_id: offer.companyId,
+                    product_id: offer.productId,
+                });
                 alert(err.error || 'Не удалось отправить гостевую заявку');
                 return;
             }
 
+            trackEvent('request_submitted', {
+                source: 'guest_inline',
+                company_id: offer.companyId,
+                product_id: offer.productId,
+                seller_type: offer.sellerType,
+            });
             setGuestSent(true);
             setGuestOfferId(`${offer.companyId}:${offer.productId}`);
             sessionStorage.setItem(REQUEST_INTENT_KEY, JSON.stringify({ payload: payloadForAuth } satisfies PendingAuthIntent));

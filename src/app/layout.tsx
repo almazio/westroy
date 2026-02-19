@@ -24,9 +24,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-WN7K3LQ';
+  const ymId = process.env.NEXT_PUBLIC_YANDEX_METRICA_ID || '106920149';
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <body>
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+        <noscript>
+          <div>
+            <img src={`https://mc.yandex.ru/watch/${ymId}`} style={{ position: 'absolute', left: '-9999px' }} alt="" />
+          </div>
+        </noscript>
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('westroy-theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';var v=(t==='light'||t==='dark')?t:m;document.documentElement.setAttribute('data-theme',v);document.documentElement.style.colorScheme=v;}catch(e){}})();`,

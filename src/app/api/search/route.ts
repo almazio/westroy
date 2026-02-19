@@ -9,12 +9,24 @@ async function parseWithTimeout(query: string) {
         return parseQueryRegex(query);
     }
 
-    return Promise.race([
+    const llmParsed = await Promise.race([
         parseQuery(query),
         new Promise<ReturnType<typeof parseQueryRegex>>((resolve) =>
             setTimeout(() => resolve(parseQueryRegex(query)), PARSER_TIMEOUT_MS)
         ),
     ]);
+
+    const regexParsed = parseQueryRegex(query);
+    if (regexParsed.categoryId && llmParsed.categoryId !== regexParsed.categoryId) {
+        return {
+            ...llmParsed,
+            categoryId: regexParsed.categoryId,
+            category: regexParsed.category,
+            suggestions: regexParsed.suggestions,
+        };
+    }
+
+    return llmParsed;
 }
 
 export async function GET(request: NextRequest) {

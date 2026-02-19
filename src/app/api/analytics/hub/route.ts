@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 type HubAnalyticsBody = {
+    source?: string;
     eventName?: string;
     payload?: Record<string, unknown>;
     pageUrl?: string;
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
     try {
         const body = (await request.json()) as HubAnalyticsBody;
         const eventName = String(body.eventName || '').trim();
+        const source = String(body.source || 'web').trim() || 'web';
         const payload = body.payload || {};
         const pageUrl = String(body.pageUrl || '').trim();
         const ts = body.ts || new Date().toISOString();
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
         }
 
         const record = {
-            source: 'hub',
+            source,
             eventName,
             payload,
             pageUrl,
@@ -48,4 +50,3 @@ export async function POST(request: Request) {
         );
     }
 }
-

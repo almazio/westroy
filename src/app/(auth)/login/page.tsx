@@ -1,10 +1,11 @@
 
 'use client'
 
-import { useState, Suspense, FormEvent } from 'react'
+import { useEffect, useState, Suspense, FormEvent } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
+import { trackEvent } from '@/lib/analytics'
 import styles from './page.module.css'
 
 function LoginPageContent() {
@@ -12,6 +13,12 @@ function LoginPageContent() {
     const [pending, setPending] = useState(false)
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
+    const registered = searchParams.get('registered') === '1'
+
+    useEffect(() => {
+        if (!registered) return;
+        trackEvent('register_success', { source: 'register_redirect' });
+    }, [registered]);
 
     async function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -33,9 +40,11 @@ function LoginPageContent() {
 
         if (!result || result.error) {
             setErrorMessage('Invalid credentials.');
+            trackEvent('login_failed', { source: 'credentials' });
             return;
         }
 
+        trackEvent('login_success', { source: 'credentials' });
         window.location.href = result.url || callbackUrl;
     }
 

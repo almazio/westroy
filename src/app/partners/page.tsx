@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import styles from './page.module.css';
+import { trackEvent } from '@/lib/analytics';
 
 type SubmitState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -40,10 +41,17 @@ export default function PartnersPage() {
             }
 
             setState('success');
+            trackEvent('partner_application_submitted', {
+                category_id: payload.category,
+                city: payload.city,
+            });
             form.reset();
         } catch (submitError) {
             setState('error');
             setError(submitError instanceof Error ? submitError.message : 'Ошибка отправки');
+            trackEvent('request_submit_failed', {
+                source: 'partner_application',
+            });
         }
     }
 

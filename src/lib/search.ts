@@ -15,6 +15,23 @@ function normalizeText(text: string): string {
     return text.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+const SEARCH_STOP_TOKENS = new Set([
+    'шымкент',
+    'шимкент',
+    'туркестан',
+    'казахстан',
+    'нужно',
+    'купить',
+    'заказать',
+    'цена',
+    'цены',
+    'доставка',
+    'с',
+    'в',
+    'на',
+    'и',
+]);
+
 function priceForSort(value: number): number {
     return value > 0 ? value : Number.MAX_SAFE_INTEGER;
 }
@@ -98,7 +115,10 @@ async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
     const query = normalizeText(parsed.originalQuery || '');
     if (!query) return [];
 
-    const tokens = query.split(' ').filter((t) => t.length >= 2);
+    const tokens = query
+        .split(' ')
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2 && !SEARCH_STOP_TOKENS.has(t));
     if (tokens.length === 0) return [];
 
     const [companies, products] = await Promise.all([getCompanies(), getProducts()]);
@@ -151,7 +171,6 @@ async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
 
 export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
     let results = await searchByCategory(parsed);
-
     if (results.length === 0) {
         results = await searchByText(parsed);
     }

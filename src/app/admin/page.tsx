@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import styles from './page.module.css';
+import { trackEvent } from '@/lib/analytics';
 
 interface CategoryRef {
     id: string;
@@ -18,6 +19,8 @@ interface CompanyData {
     delivery: boolean;
     phone: string;
     address: string;
+    createdAt?: string;
+    updatedAt?: string;
     _count?: {
         products: number;
         offers: number;
@@ -118,7 +121,7 @@ interface IntegrationSyncLog {
 }
 
 export default function AdminPanel() {
-    const [tab, setTab] = useState<'companies' | 'users' | 'requests' | 'categories' | 'partnerApplications' | 'catalogQuality' | 'integrations'>('companies');
+    const [tab, setTab] = useState<'companies' | 'users' | 'requests' | 'categories' | 'partnerApplications' | 'catalogQuality' | 'integrations' | 'webImports'>('companies');
     const [companies, setCompanies] = useState<CompanyData[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
     const [requests, setRequests] = useState<RequestData[]>([]);
@@ -237,6 +240,29 @@ export default function AdminPanel() {
         };
     }, [companies, offers, requests]);
 
+    const webImportRows = useMemo(() => {
+        const sourceRegex = /Источник:\s*(https?:\/\/\S+)/i;
+        return companies
+            .map((company) => {
+                const source = company.description?.match(sourceRegex)?.[1] || '';
+                if (!source) return null;
+                const category = categories.find((cat) => cat.id === company.categoryId);
+                return {
+                    id: company.id,
+                    name: company.name,
+                    source,
+                    categoryLabel: `${category?.icon || ''} ${category?.nameRu || company.categoryId}`.trim(),
+                    updatedAt: company.updatedAt || company.createdAt || '',
+                };
+            })
+            .filter((row): row is { id: string; name: string; source: string; categoryLabel: string; updatedAt: string } => Boolean(row))
+            .sort((a, b) => {
+                const left = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+                const right = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+                return right - left;
+            });
+    }, [categories, companies]);
+
     const startCompanyEdit = (company: CompanyData) => {
         setEditingCompanyId(company.id);
         setCompanyForm({
@@ -260,6 +286,7 @@ export default function AdminPanel() {
             setCompanies((prev) =>
                 prev.map((company) => (company.id === companyId ? { ...company, ...companyForm } : company))
             );
+            trackEvent('admin_action', { action: 'company_update', company_id: companyId });
             setEditingCompanyId(null);
         } catch (error) {
             console.error('Failed to update company:', error);
@@ -273,6 +300,7 @@ export default function AdminPanel() {
             const res = await fetch(`/api/companies/${companyId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete company');
             setCompanies((prev) => prev.filter((c) => c.id !== companyId));
+            trackEvent('admin_action', { action: 'company_delete', company_id: companyId });
         } catch (error) {
             console.error('Failed to delete company:', error);
             alert('Не удалось удалить компанию');
@@ -297,6 +325,7 @@ export default function AdminPanel() {
             }
             const created: UserData = await res.json();
             setUsers((prev) => [created, ...prev]);
+            trackEvent('admin_action', { action: 'user_create', user_id: created.id, role: created.role });
             setCreateUserForm({
                 name: '',
                 email: '',
@@ -335,6 +364,7 @@ export default function AdminPanel() {
             }
             const updated: UserData = await res.json();
             setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...updated } : u)));
+            trackEvent('admin_action', { action: 'user_update', user_id: userId, role: updated.role });
             setEditingUserId(null);
         } catch (error) {
             console.error('Failed to update user:', error);
@@ -351,6 +381,7 @@ export default function AdminPanel() {
                 throw new Error(err.error || 'Failed');
             }
             setUsers((prev) => prev.filter((u) => u.id !== userId));
+            trackEvent('admin_action', { action: 'user_delete', user_id: userId });
         } catch (error) {
             console.error('Failed to delete user:', error);
             alert('Не удалось удалить пользователя');
@@ -377,6 +408,7 @@ export default function AdminPanel() {
                 throw new Error('Invalid response');
             }
             setPartnerApplications((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+            trackEvent('admin_action', { action: 'partner_application_status', application_id: applicationId, status });
 
             const onboarding = data?.onboarding as
                 | {
@@ -450,7 +482,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div className={styles.tabs}>
-                    {(['companies', 'users', 'requests', 'categories', 'partnerApplications', 'catalogQuality', 'integrations'] as const).map((t) => (
+                    {(['companies', 'users', 'requests', 'categories', 'partnerApplications', 'catalogQuality', 'integrations', 'webImports'] as const).map((t) => (
                         <button
                             key={t}
                             className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
@@ -463,6 +495,7 @@ export default function AdminPanel() {
                             {t === 'partnerApplications' && 'Партнеры'}
                             {t === 'catalogQuality' && 'Качество каталога'}
                             {t === 'integrations' && 'Интеграции'}
+                            {t === 'webImports' && 'Web imports'}
                         </button>
                     ))}
                 </div>
@@ -820,6 +853,40 @@ export default function AdminPanel() {
                                             <td>{log.totalReceived}</td>
                                             <td>+{log.created} / ~{log.updated} / -{log.skipped}</td>
                                             <td className={styles.applicationMessage}>{log.errors?.slice(0, 2).join(' | ') || '—'}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {!loading && tab === 'webImports' && (
+                    <div className={styles.integrationSection}>
+                        <div className={styles.hintBox}>
+                            Компании, добавленные из веб-источников (поле <code>Источник:</code> в описании).
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Компания</th>
+                                    <th>Категория</th>
+                                    <th>Источник</th>
+                                    <th>Обновлено</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {webImportRows.length === 0 ? (
+                                    <tr><td colSpan={4} className="text-muted">Web-импортов пока нет</td></tr>
+                                ) : (
+                                    webImportRows.map((row) => (
+                                        <tr key={row.id}>
+                                            <td>{row.name}</td>
+                                            <td>{row.categoryLabel}</td>
+                                            <td className={styles.applicationMessage}>
+                                                <a href={row.source} target="_blank" rel="noreferrer">{row.source}</a>
+                                            </td>
+                                            <td>{row.updatedAt ? formatDate(row.updatedAt) : '—'}</td>
                                         </tr>
                                     ))
                                 )}

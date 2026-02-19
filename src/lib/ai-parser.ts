@@ -34,6 +34,11 @@ const CATEGORY_SYNONYMS: Record<string, { id: string; label: string; keywords: s
         keywords: ['арматура', 'арматуры', 'арматуру', 'металл', 'металла', 'прокат', 'проката', 'металлопрокат',
             'швеллер', 'швеллера', 'уголок', 'уголка', 'труба', 'трубу', 'трубы', 'лист', 'балка', 'сетка', 'сетки'],
     },
+    cement: {
+        id: 'cement',
+        label: 'Цемент',
+        keywords: ['цемент', 'цемента', 'портландцемент', 'пц400', 'пц500', 'м400', 'м500'],
+    },
     machinery: {
         id: 'machinery',
         label: 'Спецтехника',
@@ -243,6 +248,7 @@ export function parseQueryRegex(query: string): ParsedQuery {
             { type: 'category', label: 'Инертные?', value: 'aggregates' },
             { type: 'category', label: 'Кирпич/блоки?', value: 'blocks' },
             { type: 'category', label: 'Арматура?', value: 'rebar' },
+            { type: 'category', label: 'Цемент?', value: 'cement' },
             { type: 'category', label: 'Спецтехника?', value: 'machinery' },
             { type: 'category', label: 'ПВХ профили?', value: 'pvc-profiles' },
             { type: 'category', label: 'Общестрой?', value: 'general-materials' },

@@ -4,6 +4,7 @@
 import { register } from '@/app/actions/auth'
 import { useFormState, useFormStatus } from 'react-dom'
 import Link from 'next/link'
+import { trackEvent } from '@/lib/analytics'
 import styles from '../login/page.module.css'
 
 function SubmitButton() {
@@ -26,7 +27,11 @@ export default function RegisterPage() {
                 <p style={{ marginBottom: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     Регистрация доступна для заказчиков. Производители подключаются через заявку.
                 </p>
-                <form action={dispatch} className="flex flex-col gap-16">
+                <form
+                    action={dispatch}
+                    className="flex flex-col gap-16"
+                    onSubmit={() => trackEvent('register_submitted', { source: 'register_form' })}
+                >
                     <div className="form-group">
                         <label htmlFor="name">Имя</label>
                         <input className="input" id="name" type="text" name="name" placeholder="Иван Иванов" required />
