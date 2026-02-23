@@ -4,6 +4,23 @@ import { search } from '@/lib/search';
 import type { SearchFilters } from '@/lib/types';
 
 const PARSER_TIMEOUT_MS = 1800;
+const CATEGORY_LABELS: Record<string, string> = {
+    concrete: 'Бетон',
+    aggregates: 'Инертные материалы',
+    blocks: 'Кирпич и блоки',
+    rebar: 'Арматура и металлопрокат',
+    cement: 'Цемент',
+    machinery: 'Спецтехника',
+    'pvc-profiles': 'ПВХ профили и подоконники',
+    'general-materials': 'Общестроительные материалы',
+    'painting-tools': 'Малярный инструмент',
+    'hand-tools': 'Ручной инструмент',
+    fasteners: 'Крепеж и метизы',
+    electrical: 'Электрика',
+    plumbing: 'Сантехника и трубы',
+    safety: 'СИЗ и безопасность',
+    'adhesives-sealants': 'Клеи и герметики',
+};
 
 async function parseWithTimeout(query: string) {
     if (!query.trim()) {
@@ -45,12 +62,25 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Query parameter "q" or "category" is required' }, { status: 400 });
     }
 
-    // Parse query with LLM, but do not block search on slow provider
-    let parsed = await parseWithTimeout(q);
+    const isCategoryBrowse = Boolean(categoryId && !q.trim());
+    let parsed = isCategoryBrowse
+        ? {
+            category: categoryId ? (CATEGORY_LABELS[categoryId] || categoryId) : null,
+            categoryId: categoryId || null,
+            volume: null,
+            unit: null,
+            city: 'Шымкент',
+            delivery: null,
+            grade: null,
+            confidence: 1,
+            suggestions: [],
+            originalQuery: '',
+        }
+        : await parseWithTimeout(q);
 
     // Override category if explicitly provided
-    if (categoryId && !parsed.categoryId) {
-        parsed = { ...parsed, categoryId, category: categoryId };
+    if (categoryId) {
+        parsed = { ...parsed, categoryId, category: CATEGORY_LABELS[categoryId] || categoryId };
     }
 
     // Search

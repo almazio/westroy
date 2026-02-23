@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './page.module.css';
 import { trackEvent } from '@/lib/analytics';
@@ -447,8 +448,13 @@ export default function AdminPanel() {
         <div className="page">
             <div className="container">
                 <div className={styles.header}>
-                    <h1>Админ-панель</h1>
-                    <p className="text-secondary">Управление компаниями, аккаунтами и оперативной аналитикой</p>
+                    <div>
+                        <h1>Админ-панель</h1>
+                        <p className="text-secondary">Управление компаниями, аккаунтами и оперативной аналитикой</p>
+                    </div>
+                    <div className={styles.headerActions}>
+                        <Link href="/admin/knowledge" className="btn btn-secondary">База знаний KZ</Link>
+                    </div>
                 </div>
 
                 <div className={styles.stats}>

@@ -1,5 +1,14 @@
 .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
     margin-bottom: 24px;
+}
+
+.headerActions {
+    display: flex;
+    gap: 8px;
 }
 
 .stats {
@@ -182,6 +191,10 @@
 }
 
 @media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+    }
+
     .tabs {
         width: 100%;
         overflow-x: auto;

@@ -1,0 +1,180 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.headerActions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.errorBox {
+    margin-bottom: 12px;
+    border: 1px solid var(--danger);
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text-primary);
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.card {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card span {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.card strong {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.formSection,
+.listSection {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.formSection h2,
+.listSection h2 {
+    margin-bottom: 10px;
+    font-size: 1.06rem;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.formActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.listHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.entries {
+    display: grid;
+    gap: 10px;
+}
+
+.entryCard {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    background: var(--bg-secondary);
+}
+
+.entryTop {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.entryTop h3 {
+    margin: 0 0 4px;
+}
+
+.badges {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.metaRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.codeBox {
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.sourceLine,
+.sourceList {
+    font-size: 0.88rem;
+    margin-bottom: 8px;
+}
+
+.sourceList {
+    display: grid;
+    gap: 4px;
+}
+
+.entryActions {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 1024px) {
+    .summaryGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+    }
+
+    .summaryGrid,
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .listHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .entryTop {
+        flex-direction: column;
+    }
+}
