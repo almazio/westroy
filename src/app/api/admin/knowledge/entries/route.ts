@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { slugifyKnowledgeTitle, type KnowledgeItemStatus, type KnowledgeItemType, type KnowledgeSourceType } from '@/lib/knowledge-base';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 interface EntrySourceInput {
     type?: KnowledgeSourceType;
@@ -166,7 +169,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json(created, { status: 201 });
     } catch (error) {
-        console.error('Failed to create knowledge base item:', error);
+        log.error('Failed to create knowledge base item:', error);
 
         if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2002') {
             return NextResponse.json({ error: 'slug уже существует' }, { status: 409 });

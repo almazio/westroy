@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 type HubAnalyticsBody = {
     source?: string;

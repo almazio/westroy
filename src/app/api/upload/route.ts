@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 export async function POST(request: Request) {
     const session = await auth();
@@ -49,7 +52,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ url });
 
     } catch (error) {
-        console.error('Upload failed:', error);
+        log.error('Upload failed:', error);
         return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
 }

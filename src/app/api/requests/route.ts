@@ -3,6 +3,10 @@ import { prisma } from '@/lib/db';
 import { notifyProducersOfRequest } from '@/lib/notifications';
 import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+import { RequestCreateSchema, parseBody } from '@/lib/schemas';
+
+const log = createLogger('api');
 
 export async function GET(request: NextRequest) {
     const session = await auth();
@@ -43,7 +47,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(enriched);
     } catch (error) {
-        console.error('Failed to fetch requests:', error);
+        log.error('Failed to fetch requests:', error);
         return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
     }
 }
@@ -56,15 +60,17 @@ export async function POST(request: NextRequest) {
         }
 
         const session = await auth();
-        const body = await request.json();
 
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (!body.categoryId || !body.query || !body.parsedCategory) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        const raw = await request.json();
+        const parsed = parseBody(RequestCreateSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
+        const body = parsed.data;
 
         const saved = await prisma.request.create({
             data: {
@@ -74,7 +80,7 @@ export async function POST(request: NextRequest) {
                 parsedCategory: body.parsedCategory,
                 parsedVolume: body.parsedVolume || null,
                 parsedCity: body.parsedCity || 'Шымкент',
-                deliveryNeeded: Boolean(body.deliveryNeeded),
+                deliveryNeeded: body.deliveryNeeded,
                 address: body.address || null,
                 deadline: body.deadline || null,
                 status: 'active',
@@ -83,12 +89,12 @@ export async function POST(request: NextRequest) {
 
         // Notify matching producers (async)
         notifyProducersOfRequest(saved.id).catch(err => {
-            console.error('[Notification Error] Failed to notify producers:', err);
+            log.error('[Notification Error] Failed to notify producers:', err);
         });
 
         return NextResponse.json(saved, { status: 201 });
     } catch (error) {
-        console.error('[API Requests POST Error]:', error);
+        log.error('[API Requests POST Error]:', error);
         return NextResponse.json(
             { error: 'Failed to create request', details: error instanceof Error ? error.message : String(error) },
             { status: 500 }

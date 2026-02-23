@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { notifyProducerOfOfferStatus } from '@/lib/notifications';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 // PUT /api/offers/[id] - Accept/Reject offer
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +44,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             });
 
             if (status === 'accepted') {
+                // Reject all other pending offers
                 await tx.offer.updateMany({
                     where: {
                         requestId: offer.requestId,
@@ -49,9 +53,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                     },
                     data: { status: 'rejected' }
                 });
+                // Move request to in_progress
                 await tx.request.update({
                     where: { id: offer.requestId },
                     data: { status: 'in_progress' }
+                });
+                // Auto-create Order
+                await tx.order.create({
+                    data: {
+                        offerId: id,
+                        clientId: offer.request.userId,
+                        companyId: offer.companyId,
+                        totalPrice: offer.price + (offer.deliveryPrice || 0),
+                        deliveryPrice: offer.deliveryPrice,
+                        deliveryAddress: offer.request.address,
+                        status: 'confirmed',
+                    },
                 });
             }
 
@@ -59,12 +76,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         });
 
         // Notify the producer who made the offer
-        notifyProducerOfOfferStatus(id).catch(console.error);
+        notifyProducerOfOfferStatus(id).catch(err => log.error('Notify error', err));
 
         return NextResponse.json(updatedOffer);
 
     } catch (error) {
-        console.error('Failed to update offer:', error);
+        log.error('Failed to update offer:', error);
         return NextResponse.json({ error: 'Failed to update offer' }, { status: 500 });
     }
 }

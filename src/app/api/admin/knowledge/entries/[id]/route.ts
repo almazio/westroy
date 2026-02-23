@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { slugifyKnowledgeTitle, type KnowledgeItemStatus, type KnowledgeItemType, type KnowledgeSourceType } from '@/lib/knowledge-base';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 interface EntrySourceInput {
     type?: KnowledgeSourceType;
@@ -163,7 +166,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
         return NextResponse.json(result);
     } catch (error) {
-        console.error('Failed to update knowledge base item:', error);
+        log.error('Failed to update knowledge base item:', error);
         if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2002') {
             return NextResponse.json({ error: 'slug уже существует' }, { status: 409 });
         }
@@ -182,7 +185,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
         await prisma.knowledgeBaseItem.delete({ where: { id } });
         return NextResponse.json({ ok: true });
     } catch (error) {
-        console.error('Failed to delete knowledge base item:', error);
+        log.error('Failed to delete knowledge base item:', error);
         return NextResponse.json({ error: 'Failed to delete knowledge base item' }, { status: 500 });
     }
 }

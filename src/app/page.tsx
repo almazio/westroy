@@ -5,7 +5,7 @@ import FeaturedProducers from '@/components/home/FeaturedProducers';
 import PopularMaterials from '@/components/home/PopularMaterials';
 import styles from './page.module.css';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // ISR: regenerate every hour
 
 export default async function Home() {
   return (

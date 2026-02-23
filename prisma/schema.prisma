@@ -15,24 +15,10 @@ datasource db {
 // WESTROY — Database Schema
 // ============================================
 
-enum UserRole {
-  client
-  producer
-  admin
-}
-
-enum RequestStatus {
-  active
-  in_progress
-  completed
-  cancelled
-}
-
-enum OfferStatus {
-  pending
-  accepted
-  rejected
-}
+// Roles & statuses stored as String to match existing DB
+// Valid UserRole values: 'client' | 'producer' | 'admin'
+// Valid RequestStatus values: 'active' | 'in_progress' | 'completed' | 'cancelled'
+// Valid OfferStatus values: 'pending' | 'accepted' | 'rejected'
 
 enum KnowledgeItemType {
   standard
@@ -63,11 +49,13 @@ model User {
   email         String    @unique
   phone         String    @unique
   passwordHash  String?
-  role          UserRole  // "client", "producer", "admin"
+  role          String    // 'client' | 'producer' | 'admin'
   
   // Relations
   company       Company?
   requests      Request[]
+  orders        Order[]   @relation("OrderClient")
+  reviews       Review[]  @relation("ReviewAuthor")
   knowledgeItemsCreated KnowledgeBaseItem[] @relation("KnowledgeItemCreatedBy")
   knowledgeItemsUpdated KnowledgeBaseItem[] @relation("KnowledgeItemUpdatedBy")
   
@@ -92,9 +80,10 @@ model Category {
   keywords  String    // Stored as JSON string or comma-separated
   
   // Relations
-  companies Company[]
-  products  Product[]
-  requests  Request[]
+  companies         Company[]
+  products          Product[]
+  requests          Request[]
+  companyCategories CompanyCategory[]
 }
 
 model Company {
@@ -118,6 +107,9 @@ model Company {
   
   products    Product[]
   offers      Offer[]
+  orders      Order[]
+  reviews     Review[]
+  categories  CompanyCategory[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -146,6 +138,10 @@ model Product {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([name])
 }
 
 model Request {
@@ -161,7 +157,7 @@ model Request {
   address        String?
   deadline       String?
   
-  status         RequestStatus   // "active", "in_progress", "completed", "cancelled"
+  status         String          // 'active' | 'in_progress' | 'completed' | 'cancelled'
   
   // Relations
   userId         String
@@ -173,6 +169,9 @@ model Request {
   
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([categoryId])
 }
 
 model Offer {
@@ -184,20 +183,72 @@ model Offer {
   deliveryPrice    Float?
   validUntil       String
   
-  status           OfferStatus   // "pending", "accepted", "rejected"
+  status           String        // 'pending' | 'accepted' | 'rejected'
   
   // Relations
   requestId        String
   request          Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
   companyId        String
   company          Company  @relation(fields: [companyId], references: [id])
+  order            Order?
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([requestId])
+  @@index([companyId])
+}
+
+// --- Order Lifecycle ---
+// Created when an offer is accepted.
+// Status flow: confirmed → delivering → delivered → completed
+model Order {
+  id             String   @id @default(cuid())
+  status         String   @default("confirmed") // 'confirmed' | 'delivering' | 'delivered' | 'completed' | 'cancelled'
+  
+  totalPrice     Float
+  deliveryPrice  Float?
+  deliveryAddress String?
+  notes          String?
+  
+  // Relations
+  offerId        String   @unique
+  offer          Offer    @relation(fields: [offerId], references: [id])
+  clientId       String
+  client         User     @relation("OrderClient", fields: [clientId], references: [id])
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id])
+  review         Review?
+  
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([clientId, status])
+  @@index([companyId, status])
+}
+
+// --- Reviews & Ratings ---
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  
+  // Relations
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  clientId  String
+  client    User     @relation("ReviewAuthor", fields: [clientId], references: [id])
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
 }
 
 model PartnerApplication {
-  id          String   @id @default(cuid())
+  id          String                   @id @default(cuid())
   name        String
   email       String
   phone       String
@@ -205,9 +256,35 @@ model PartnerApplication {
   category    String
   city        String
   message     String?
-  status      String   @default("pending") // "pending", "approved", "rejected"
+  status      String   @default("pending")
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+}
+
+model GuestRequest {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  query       String
+  quantity    String?
+  address     String?
+  companyName String?
+  productName String?
+  sellerName  String?
+  city        String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+}
+
+model CompanyCategory {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([companyId, categoryId])
+  @@index([categoryId])
 }
 
 model KnowledgeBaseItem {

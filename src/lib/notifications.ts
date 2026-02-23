@@ -2,6 +2,7 @@
 import nodemailer, { type Transporter } from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import { createLogger } from './logger';
 
 export interface NotificationPayload {
     to: string;
@@ -16,15 +17,17 @@ export interface NotificationTransport {
 }
 
 class ConsoleTransport implements NotificationTransport {
+    private log = createLogger('ConsoleTransport');
+
     async send(payload: NotificationPayload) {
         const logEntry = `[${new Date().toISOString()}] ${payload.type.toUpperCase()} | To: ${payload.to} | Subject: ${payload.subject}\nMessage: ${payload.message}\n---\n`;
         const logPath = path.join(process.cwd(), 'notifications.log');
         try {
             fs.appendFileSync(logPath, logEntry);
         } catch (e) {
-            console.error('Failed to write to notifications.log', e);
+            this.log.error('Failed to write to notifications.log', e);
         }
-        console.log(`[Notification Console] To: ${payload.to} | Subject: ${payload.subject}`);
+        this.log.info(`To: ${payload.to} | Subject: ${payload.subject}`);
     }
 }
 
@@ -63,7 +66,7 @@ class EmailTransport implements NotificationTransport {
                 `,
             });
         } catch (error) {
-            console.error('[EmailTransport Error]:', error);
+            createLogger('EmailTransport').error('Failed to send email', error);
         }
     }
 }
@@ -98,10 +101,10 @@ class TelegramTransport implements NotificationTransport {
 
                 if (!response.ok) {
                     const body = await response.text().catch(() => '');
-                    console.error('[TelegramTransport Error]:', response.status, body);
+                    createLogger('TelegramTransport').error('Send failed', null, { status: response.status, body });
                 }
             } catch (error) {
-                console.error('[TelegramTransport Error]:', error);
+                createLogger('TelegramTransport').error('Send failed', error);
             }
         }));
     }
@@ -124,6 +127,7 @@ function getTelegramChatIds() {
 
 export class NotificationService {
     private transports: NotificationTransport[] = [];
+    private log = createLogger('NotificationService');
 
     constructor() {
         // Always include console for dev monitoring
@@ -131,18 +135,18 @@ export class NotificationService {
 
         if (process.env.SMTP_HOST) {
             this.transports.push(new EmailTransport());
-            console.log('[NotificationService] Email transport initialized');
+            this.log.info('Email transport initialized');
         } else {
-            console.log('[NotificationService] SMTP_HOST not set, using console fallback only');
+            this.log.info('SMTP_HOST not set, using console fallback only');
         }
 
         const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
         const telegramChatIds = getTelegramChatIds();
         if (telegramBotToken && telegramChatIds.length > 0) {
             this.transports.push(new TelegramTransport(telegramBotToken, telegramChatIds));
-            console.log('[NotificationService] Telegram transport initialized');
+            this.log.info('Telegram transport initialized');
         } else {
-            console.log('[NotificationService] Telegram not configured (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_IDS)');
+            this.log.info('Telegram not configured');
         }
     }
 

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { Product, Category } from '@/lib/types'; // We need these types exported or defined locally if not
 
 interface ProductsTabProps {
@@ -365,11 +366,15 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                                             {product.priceFrom > 0 ? `${product.priceFrom} ₸ / ${product.unit}` : 'Цена по запросу'}
                                         </div>
                                         {product.imageUrl && (
-                                            <img
-                                                src={product.imageUrl}
-                                                alt={product.name}
-                                                style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 8, marginTop: 8, border: '1px solid var(--border)' }}
-                                            />
+                                            <div style={{ position: 'relative', width: '100%', height: 140, marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                                                <Image
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    fill
+                                                    style={{ objectFit: 'cover' }}
+                                                    sizes="(max-width: 768px) 100vw, 280px"
+                                                />
+                                            </div>
                                         )}
                                         <details style={{ marginTop: 8 }}>
                                             <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Подробнее</summary>

@@ -4,67 +4,11 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './page.module.css';
 import { trackEvent } from '@/lib/analytics';
-
-interface CategoryRef {
-    id: string;
-    nameRu: string;
-    icon: string;
-}
-
-interface CompanyData {
-    id: string;
-    name: string;
-    description: string;
-    categoryId: string;
-    verified: boolean;
-    delivery: boolean;
-    phone: string;
-    address: string;
-    createdAt?: string;
-    updatedAt?: string;
-    _count?: {
-        products: number;
-        offers: number;
-    };
-}
-
-interface RequestData {
-    id: string;
-    query: string;
-    parsedCategory: string;
-    status: string;
-    createdAt: string;
-    offerCount: number;
-}
-
-interface OfferData {
-    id: string;
-    status: 'pending' | 'accepted' | 'rejected';
-}
-
-interface UserData {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    role: 'client' | 'producer' | 'admin';
-    createdAt: string;
-    company?: { id: string; name: string } | null;
-    _count?: { requests: number };
-}
-
-interface PartnerApplicationData {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    companyName: string;
-    category: string;
-    city: string;
-    message: string;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: string;
-}
+import type {
+    CategoryRef, CompanyData, RequestData, OfferData, UserData,
+    PartnerApplicationData, CatalogQualityData, IntegrationSyncLog,
+} from './types';
+import { formatDate, requestStatusLabels } from './types';
 
 interface CompanyEditForm {
     name: string;
@@ -87,38 +31,6 @@ interface UserEditForm {
     phone: string;
     role: 'client' | 'producer' | 'admin';
     password: string;
-}
-
-interface CatalogQualityData {
-    totals: {
-        products: number;
-        companies: number;
-        companiesWithoutProducts: number;
-    };
-    quality: {
-        missingDescription: number;
-        missingPriceUnit: number;
-        invalidPrice: number;
-        invalidUnit: number;
-        staleProducts: number;
-        outOfStock: number;
-    };
-    staleDays: number;
-    samples: {
-        companiesWithoutProducts: Array<{ id: string; name: string }>;
-    };
-}
-
-interface IntegrationSyncLog {
-    id: string;
-    createdAt: string;
-    source: string;
-    companyId: string;
-    totalReceived: number;
-    created: number;
-    updated: number;
-    skipped: number;
-    errors: string[];
 }
 
 export default function AdminPanel() {
@@ -435,14 +347,9 @@ export default function AdminPanel() {
         }
     };
 
-    const formatDate = (date: string) => new Date(date).toLocaleDateString('ru-RU');
 
-    const requestStatusLabels: Record<string, string> = {
-        active: '🟢 Активна',
-        in_progress: '🟡 В работе',
-        completed: '🔵 Завершена',
-        cancelled: '⚫ Отменена',
-    };
+
+
 
     return (
         <div className="page">

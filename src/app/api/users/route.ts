@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 function isValidRole(role: string): role is 'client' | 'producer' | 'admin' {
     return role === 'client' || role === 'producer' || role === 'admin';
@@ -39,7 +42,7 @@ export async function GET() {
 
         return NextResponse.json(users);
     } catch (error) {
-        console.error('Failed to fetch users:', error);
+        log.error('Failed to fetch users:', error);
         return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 }
@@ -100,7 +103,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json(user, { status: 201 });
     } catch (error) {
-        console.error('Failed to create user:', error);
+        log.error('Failed to create user:', error);
         if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2002') {
             const target = (error as { meta?: { target?: string[] } }).meta?.target?.join(', ') || 'email/phone';
             return NextResponse.json({ error: `Уже существует пользователь с полем: ${target}` }, { status: 409 });

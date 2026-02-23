@@ -2,27 +2,9 @@
 // WESTROY — Search Page Utilities & Constants
 // ============================================
 
-import type { DealerCard } from '@/lib/test-dealers';
-
 export const REQUEST_INTENT_KEY = 'westroy_request_intent';
 
-export const CATEGORY_LABELS: Record<string, string> = {
-    concrete: 'Бетон',
-    aggregates: 'Инертные материалы',
-    blocks: 'Кирпич и блоки',
-    rebar: 'Арматура и металлопрокат',
-    cement: 'Цемент',
-    machinery: 'Спецтехника',
-    'pvc-profiles': 'ПВХ профили и подоконники',
-    'general-materials': 'Общестроительные материалы',
-    'painting-tools': 'Малярный инструмент',
-    'hand-tools': 'Ручной инструмент',
-    fasteners: 'Крепеж и метизы',
-    electrical: 'Электрика',
-    plumbing: 'Сантехника и трубы',
-    safety: 'СИЗ и безопасность',
-    'adhesives-sealants': 'Клеи и герметики',
-};
+export { CATEGORY_LABELS } from '@/lib/constants';
 
 export const recommendationByCategory: Record<string, string[]> = {
     aggregates: [
@@ -183,8 +165,8 @@ export function normalizeUnit(value?: string | null): UnitType {
     if (!value) return null;
     const normalized = value.toLowerCase();
     if (normalized.includes('м3') || normalized.includes('м³') || normalized.includes('куб')) return 'm3';
-    if (normalized.includes('т')) return 't';
     if (normalized.includes('шт')) return 'pcs';
+    if (normalized.includes('т')) return 't';
     return null;
 }
 

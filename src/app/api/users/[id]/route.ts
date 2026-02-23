@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 function isValidRole(role: string): role is 'client' | 'producer' | 'admin' {
     return role === 'client' || role === 'producer' || role === 'admin';
@@ -76,7 +79,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
         return NextResponse.json(updated);
     } catch (error) {
-        console.error('Failed to update user:', error);
+        log.error('Failed to update user:', error);
         return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
     }
 }
@@ -113,7 +116,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Failed to delete user:', error);
+        log.error('Failed to delete user:', error);
         return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
     }
 }

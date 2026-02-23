@@ -8,6 +8,9 @@ import {
     toPriceUnit,
     type ImportedCatalogRow
 } from '@/lib/catalog';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 type InputRow = Partial<{
     name: string;
@@ -289,7 +292,7 @@ export async function POST(request: Request) {
                 .slice(0, 120),
         });
     } catch (error) {
-        console.error('Failed to import products:', error);
+        log.error('Failed to import products:', error);
         return NextResponse.json({ error: 'Failed to import products' }, { status: 500 });
     }
 }

@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 // GET /api/companies/[id] - Get company details
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         return NextResponse.json(company);
     } catch (error) {
-        console.error('Failed to fetch company:', error);
+        log.error('Failed to fetch company:', error);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }
@@ -67,7 +70,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
         return NextResponse.json(updatedCompany);
     } catch (error) {
-        console.error('Failed to update company:', error);
+        log.error('Failed to update company:', error);
         return NextResponse.json({ error: 'Failed to update company' }, { status: 500 });
     }
 }
@@ -110,7 +113,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Failed to delete company:', error);
+        log.error('Failed to delete company:', error);
         return NextResponse.json({ error: 'Failed to delete company' }, { status: 500 });
     }
 }

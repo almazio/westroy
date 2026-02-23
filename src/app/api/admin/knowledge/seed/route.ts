@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { slugifyKnowledgeTitle, STARTER_KZ_KNOWLEDGE_BASE } from '@/lib/knowledge-base';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 export async function POST() {
     const session = await auth();
@@ -83,7 +86,7 @@ export async function POST() {
 
         return NextResponse.json({ ok: true, ...result });
     } catch (error) {
-        console.error('Failed to seed knowledge base:', error);
+        log.error('Failed to seed knowledge base:', error);
         if (typeof error === 'object' && error !== null && 'code' in error) {
             const code = String((error as { code?: string }).code || '');
             if (code === 'P2021') {

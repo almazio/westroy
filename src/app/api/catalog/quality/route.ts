@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { ALLOWED_UNITS } from '@/lib/catalog';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 const STALE_DAYS = 14;
 
@@ -68,7 +71,7 @@ export async function GET() {
             }
         });
     } catch (error) {
-        console.error('Failed to load catalog quality:', error);
+        log.error('Failed to load catalog quality:', error);
         return NextResponse.json({ error: 'Failed to load catalog quality' }, { status: 500 });
     }
 }

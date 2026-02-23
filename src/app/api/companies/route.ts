@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 export async function GET() {
     const session = await auth();
@@ -30,7 +33,7 @@ export async function GET() {
 
         return NextResponse.json(companies);
     } catch (error) {
-        console.error('Failed to fetch companies:', error);
+        log.error('Failed to fetch companies:', error);
         return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
     }
 }
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
         return NextResponse.json(newCompany, { status: 201 });
 
     } catch (error) {
-        console.error('Failed to create company:', error);
+        log.error('Failed to create company:', error);
         return NextResponse.json({ error: 'Failed to create company' }, { status: 500 });
     }
 }

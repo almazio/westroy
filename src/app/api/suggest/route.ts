@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchProductsByText } from '@/lib/db/companies';
 import { parseQueryRegex } from '@/lib/ai-parser';
+import { CATEGORY_LABELS } from '@/lib/constants';
+import { createLogger } from '@/lib/logger';
 
-// Category labels for human-readable suggestions
-const CATEGORY_LABELS: Record<string, string> = {
-    concrete: 'Бетон',
-    aggregates: 'Инертные материалы',
-    blocks: 'Кирпич и блоки',
-    rebar: 'Арматура и металлопрокат',
-    cement: 'Цемент',
-    machinery: 'Спецтехника',
-    'pvc-profiles': 'ПВХ профили и подоконники',
-    'general-materials': 'Общестроительные материалы',
-    'painting-tools': 'Малярный инструмент',
-    'hand-tools': 'Ручной инструмент',
-    fasteners: 'Крепеж и метизы',
-    electrical: 'Электрика',
-    plumbing: 'Сантехника и трубы',
-    safety: 'СИЗ и безопасность',
-    'adhesives-sealants': 'Клеи и герметики',
-};
+const log = createLogger('api');
 
 export interface SuggestItem {
     type: 'category' | 'product' | 'query';
@@ -79,7 +64,7 @@ export async function GET(request: NextRequest) {
             });
         }
     } catch (error) {
-        console.warn('[suggest] product search error:', error);
+        log.warn('Product search error', { error: String(error) });
     }
 
     // 4. Add original query as "search for" item

@@ -4,6 +4,9 @@ import path from 'path';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { normalizeUnit, toPriceUnit } from '@/lib/catalog';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 type OneCProduct = {
     name: string;
@@ -278,7 +281,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json(responsePayload);
     } catch (error) {
-        console.error('1C sync failed:', error);
+        log.error('1C sync failed:', error);
         return NextResponse.json({ error: '1C sync failed' }, { status: 500 });
     }
 }

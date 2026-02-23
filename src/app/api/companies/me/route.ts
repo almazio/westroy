@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 export async function GET() {
     const session = await auth();
@@ -21,7 +24,7 @@ export async function GET() {
 
         return NextResponse.json(company);
     } catch (error) {
-        console.error('Failed to fetch company:', error);
+        log.error('Failed to fetch company:', error);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }

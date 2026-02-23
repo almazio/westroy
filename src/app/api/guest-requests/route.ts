@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { notifyOps } from '@/lib/notifications';
 import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
+import { GuestRequestSchema, parseBody } from '@/lib/schemas';
 
 interface GuestRequestBody {
     name?: string;
@@ -21,15 +23,29 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
 
-        const body = (await request.json()) as GuestRequestBody;
-
-        if (!body.name || !body.phone || !body.query) {
-            return NextResponse.json(
-                { error: 'Missing required fields: name, phone, query' },
-                { status: 400 }
-            );
+        const raw = await request.json();
+        const parsed = parseBody(GuestRequestSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
+        const body = parsed.data;
 
+        // Persist to DB first — never lose a lead
+        const saved = await prisma.guestRequest.create({
+            data: {
+                name: body.name,
+                phone: body.phone,
+                query: body.query,
+                quantity: body.quantity || null,
+                address: body.address || null,
+                companyName: body.companyName || null,
+                productName: body.productName || null,
+                sellerName: body.sellerName || null,
+                city: body.city || null,
+            },
+        });
+
+        // Notify ops (best-effort, don't fail if notification fails)
         const message = [
             `Имя: ${body.name}`,
             `Телефон: ${body.phone}`,
@@ -44,11 +60,11 @@ export async function POST(request: NextRequest) {
             .filter(Boolean)
             .join('\n');
 
-        await notifyOps(
+        notifyOps(
             'Новая гостевая заявка',
             `${message}\n\nИсточник: /search (guest inline flow)`,
-            { source: 'guest_request' }
-        );
+            { source: 'guest_request', guestRequestId: saved.id }
+        ).catch(() => { /* notification failure is non-critical */ });
 
         return NextResponse.json({ ok: true }, { status: 201 });
     } catch (error) {

@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { notifyOps } from '@/lib/notifications';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 function isValidStatus(value: string): value is 'pending' | 'approved' | 'rejected' {
     return value === 'pending' || value === 'approved' || value === 'rejected';
@@ -10,9 +14,10 @@ function isValidStatus(value: string): value is 'pending' | 'approved' | 'reject
 
 function generateTemporaryPassword(length = 12) {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    const bytes = crypto.randomBytes(length);
     let password = '';
     for (let i = 0; i < length; i += 1) {
-        password += alphabet[Math.floor(Math.random() * alphabet.length)];
+        password += alphabet[bytes[i] % alphabet.length];
     }
     return password;
 }
@@ -197,7 +202,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             },
         });
     } catch (error) {
-        console.error('Failed to update partner application:', error);
+        log.error('Failed to update partner application:', error);
         return NextResponse.json({ error: 'Failed to update partner application' }, { status: 500 });
     }
 }

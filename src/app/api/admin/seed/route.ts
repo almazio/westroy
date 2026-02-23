@@ -1,8 +1,17 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('api');
 
 export async function GET() {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     try {
         // Seed Regions
         const regions = [
@@ -37,7 +46,7 @@ export async function GET() {
 
         return NextResponse.json({ success: true, message: 'Seeding completed' });
     } catch (error) {
-        console.error('Seeding error:', error);
+        log.error('Seeding error:', error);
         return NextResponse.json({ error: 'Seeding failed', details: String(error) }, { status: 500 });
     }
 }

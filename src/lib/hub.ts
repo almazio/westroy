@@ -52,96 +52,12 @@ function parseTags(raw?: string) {
         .filter(Boolean);
 }
 
-function escapeHtml(value: string) {
-    return value
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-}
+import { remark } from 'remark';
+import remarkHtml from 'remark-html';
 
-function formatInlineMarkdown(value: string) {
-    return value
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-        .replace(/`(.*?)`/g, "<code>$1</code>");
-}
-
-function markdownToHtml(raw: string) {
-    const lines = raw.split("\n");
-    const html: string[] = [];
-    let inList = false;
-    let inTable = false;
-
-    const closeList = () => {
-        if (inList) {
-            html.push("</ul>");
-            inList = false;
-        }
-    };
-
-    const closeTable = () => {
-        if (inTable) {
-            html.push("</tbody></table>");
-            inTable = false;
-        }
-    };
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) {
-            closeList();
-            closeTable();
-            continue;
-        }
-
-        if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
-            closeList();
-            const cells = trimmed
-                .slice(1, -1)
-                .split("|")
-                .map((c) => `<td>${formatInlineMarkdown(escapeHtml(c.trim()))}</td>`)
-                .join("");
-            if (!inTable) {
-                html.push('<table><tbody>');
-                inTable = true;
-            }
-            html.push(`<tr>${cells}</tr>`);
-            continue;
-        }
-
-        if (trimmed.startsWith("- ")) {
-            closeTable();
-            if (!inList) {
-                html.push("<ul>");
-                inList = true;
-            }
-            html.push(`<li>${formatInlineMarkdown(escapeHtml(trimmed.slice(2)))}</li>`);
-            continue;
-        }
-
-        closeList();
-        closeTable();
-
-        if (trimmed.startsWith("### ")) {
-            html.push(`<h3>${formatInlineMarkdown(escapeHtml(trimmed.slice(4)))}</h3>`);
-            continue;
-        }
-        if (trimmed.startsWith("## ")) {
-            html.push(`<h2>${formatInlineMarkdown(escapeHtml(trimmed.slice(3)))}</h2>`);
-            continue;
-        }
-        if (trimmed.startsWith("# ")) {
-            html.push(`<h1>${formatInlineMarkdown(escapeHtml(trimmed.slice(2)))}</h1>`);
-            continue;
-        }
-
-        html.push(`<p>${formatInlineMarkdown(escapeHtml(trimmed))}</p>`);
-    }
-
-    closeList();
-    closeTable();
-
-    return html.join("\n");
+async function markdownToHtml(raw: string) {
+    const result = await remark().use(remarkHtml, { sanitize: false }).process(raw);
+    return result.toString();
 }
 
 async function readHubFile(fileName: string): Promise<HubArticle> {
@@ -167,7 +83,7 @@ async function readHubFile(fileName: string): Promise<HubArticle> {
         updatedAt: updatedAt || undefined,
         featured,
         body,
-        bodyHtml: markdownToHtml(body),
+        bodyHtml: await markdownToHtml(body),
     };
 }
 

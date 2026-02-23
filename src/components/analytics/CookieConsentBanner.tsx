@@ -1,16 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getAnalyticsConsent, setAnalyticsConsent } from '@/lib/analytics';
 import styles from './CookieConsentBanner.module.css';
 
 export default function CookieConsentBanner() {
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        const consent = getAnalyticsConsent();
-        setVisible(consent === 'unknown');
-    }, []);
+    const [visible, setVisible] = useState(() => getAnalyticsConsent() === 'unknown');
 
     if (!visible) return null;
 

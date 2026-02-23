@@ -3,6 +3,10 @@ import { prisma } from '@/lib/db';
 import { notifyClientOfOffer } from '@/lib/notifications';
 import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
 import { auth } from '@/auth';
+import { createLogger } from '@/lib/logger';
+import { OfferCreateSchema, parseBody } from '@/lib/schemas';
+
+const log = createLogger('api');
 
 export async function GET(request: NextRequest) {
     const session = await auth();
@@ -61,7 +65,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(offers);
     } catch (error) {
-        console.error('Failed to fetch offers:', error);
+        log.error('Failed to fetch offers:', error);
         return NextResponse.json({ error: 'Failed to fetch offers' }, { status: 500 });
     }
 }
@@ -80,15 +84,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = parseBody(OfferCreateSchema, raw);
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+    const body = parsed.data;
+
     const company = await prisma.company.findUnique({
         where: { ownerId: session.user.id }
     });
     if (!company && session.user.role !== 'admin') {
         return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-    }
-    if (!body.requestId || body.price == null) {
-        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const targetCompanyId = session.user.role === 'admin'

@@ -9,16 +9,17 @@ const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-WN7K3LQ';
 const YM_ID = process.env.NEXT_PUBLIC_YANDEX_METRICA_ID || '106920149';
 
 export default function AnalyticsManager() {
-    const [consent, setConsent] = useState<'granted' | 'denied' | 'unknown'>('unknown');
+    const [consent, setConsent] = useState<'granted' | 'denied' | 'unknown'>(() => {
+        if (typeof window !== 'undefined') {
+            const current = getAnalyticsConsent();
+            window.__westroyAnalyticsConsent = current;
+            return current;
+        }
+        return 'unknown';
+    });
     const pathname = usePathname();
 
     useEffect(() => {
-        const current = getAnalyticsConsent();
-        setConsent(current);
-        if (typeof window !== 'undefined') {
-            window.__westroyAnalyticsConsent = current;
-        }
-
         const onConsentUpdated = (event: Event) => {
             const detail = (event as CustomEvent<'granted' | 'denied'>).detail;
             const nextConsent = detail === 'granted' || detail === 'denied' ? detail : getAnalyticsConsent();
