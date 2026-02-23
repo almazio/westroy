@@ -1,7 +1,7 @@
 
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { parseQuery } from './src/lib/ai-parser';
+import { parseQuery } from '../src/lib/ai-parser';
 
 async function test() {
     const queries = [

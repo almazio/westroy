@@ -15,13 +15,32 @@ datasource db {
 // WESTROY — Database Schema
 // ============================================
 
+enum UserRole {
+  client
+  producer
+  admin
+}
+
+enum RequestStatus {
+  active
+  in_progress
+  completed
+  cancelled
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  rejected
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
   phone         String    @unique
   passwordHash  String?
-  role          String    // "client", "producer", "admin"
+  role          UserRole  // "client", "producer", "admin"
   
   // Relations
   company       Company?
@@ -111,7 +130,7 @@ model Request {
   address        String?
   deadline       String?
   
-  status         String   // "active", "in_progress", "completed", "cancelled"
+  status         RequestStatus   // "active", "in_progress", "completed", "cancelled"
   
   // Relations
   userId         String
@@ -134,7 +153,7 @@ model Offer {
   deliveryPrice    Float?
   validUntil       String
   
-  status           String   // "pending", "accepted", "rejected"
+  status           OfferStatus   // "pending", "accepted", "rejected"
   
   // Relations
   requestId        String

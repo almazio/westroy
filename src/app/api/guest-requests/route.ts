@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { notifyOps } from '@/lib/notifications';
+import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
 
 interface GuestRequestBody {
     name?: string;
@@ -15,6 +16,11 @@ interface GuestRequestBody {
 
 export async function POST(request: NextRequest) {
     try {
+        const rl = checkRateLimit(getClientIp(request), rateLimits.guestForm);
+        if (!rl.success) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
         const body = (await request.json()) as GuestRequestBody;
 
         if (!body.name || !body.phone || !body.query) {

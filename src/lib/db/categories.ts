@@ -1,0 +1,41 @@
+import { prisma } from '../db';
+import { Category, Region } from '../types';
+import { mapCategory, mapRegion } from './mappers';
+
+function hasConfiguredDatabaseUrl() {
+    return Boolean(process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL);
+}
+
+export async function getRegions(): Promise<Region[]> {
+    const regions = await prisma.region.findMany();
+    return regions.map(mapRegion);
+}
+
+export async function getCategories(): Promise<Category[]> {
+    try {
+        const categories = await prisma.category.findMany();
+        return categories.map(mapCategory);
+    } catch (error) {
+        if (!hasConfiguredDatabaseUrl()) {
+            console.warn('[DB] getCategories fallback (no DB url):', error);
+            return [
+                { id: 'concrete', name: 'concrete', nameRu: 'Бетон', icon: '🧱', keywords: ['бетон', 'м300'] },
+                { id: 'rebar', name: 'rebar', nameRu: 'Арматура', icon: '🔩', keywords: ['арматура', 'a500'] },
+                { id: 'aggregates', name: 'aggregates', nameRu: 'Инертные', icon: '⛰️', keywords: ['щебень', 'песок'] },
+                { id: 'blocks', name: 'blocks', nameRu: 'Блоки и кирпич', icon: '🧱', keywords: ['блок', 'кирпич'] },
+            ];
+        }
+        throw error;
+    }
+}
+
+export async function getCategoryById(id: string): Promise<Category | undefined> {
+    try {
+        const category = await prisma.category.findUnique({ where: { id } });
+        return category ? mapCategory(category) : undefined;
+    } catch (error) {
+        if (hasConfiguredDatabaseUrl()) throw error;
+        console.warn('[DB] getCategoryById fallback (no DB url):', error);
+        return (await getCategories()).find((c) => c.id === id);
+    }
+}

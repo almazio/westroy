@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { notifyClientOfOffer } from '@/lib/notifications';
+import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
 import { auth } from '@/auth';
 
 export async function GET(request: NextRequest) {
@@ -66,6 +67,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const rl = checkRateLimit(getClientIp(request), rateLimits.api);
+    if (!rl.success) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const session = await auth();
     if (!session?.user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
