@@ -84,6 +84,16 @@ export async function POST() {
         return NextResponse.json({ ok: true, ...result });
     } catch (error) {
         console.error('Failed to seed knowledge base:', error);
-        return NextResponse.json({ error: 'Failed to seed knowledge base' }, { status: 500 });
+        if (typeof error === 'object' && error !== null && 'code' in error) {
+            const code = String((error as { code?: string }).code || '');
+            if (code === 'P2021') {
+                return NextResponse.json(
+                    { error: 'Knowledge tables are missing. Run Prisma migrations first (npx prisma migrate deploy).' },
+                    { status: 500 }
+                );
+            }
+        }
+
+        return NextResponse.json({ error: 'Failed to seed knowledge base', details: String(error) }, { status: 500 });
     }
 }

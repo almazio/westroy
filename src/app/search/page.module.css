@@ -123,6 +123,50 @@
     flex-wrap: wrap;
 }
 
+.resultsLayout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.filtersSidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + 16px);
+}
+
+.sidebarCard {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebarTitle {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.sidebarField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebarField label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.viewSwitch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
 .sortSelect {
     height: 38px;
     padding: 0 12px;
@@ -212,6 +256,18 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+}
+
+.offersGrid3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.offersList {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
 }
 
 .offerCard {
@@ -316,67 +372,18 @@
     color: var(--accent-dark) !important;
 }
 
-.sellersList {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.offerCardList {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 14px;
 }
 
-.sellerRow {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    background: var(--bg-secondary);
+.offerCardList .offerImageWrap {
+    height: 170px;
 }
 
-.sellerProducer {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, var(--bg-secondary));
-}
-
-.sellerMain {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.sellerTitle {
-    font-size: 0.83rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.sellerMeta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.sellerBuy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-    min-width: 172px;
-}
-
-.sellerPrice {
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    text-align: right;
-}
-
-.sellerPrice span {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: 600;
+.offerCardList .offerActions {
+    margin-top: 8px;
 }
 
 .guestInline {
@@ -626,6 +633,14 @@
 }
 
 @media (max-width: 768px) {
+    .resultsLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .filtersSidebar {
+        position: static;
+    }
+
     .resultsHeaderActions {
         width: 100%;
     }
@@ -634,7 +649,8 @@
         width: 100%;
     }
 
-    .offersGrid {
+    .offersGrid,
+    .offersGrid3 {
         grid-template-columns: 1fr;
     }
 
@@ -642,18 +658,12 @@
         flex-direction: column;
     }
 
-    .sellerRow {
-        flex-direction: column;
+    .offerCardList {
+        grid-template-columns: 1fr;
     }
 
-    .sellerBuy {
-        width: 100%;
-        align-items: stretch;
-        min-width: 0;
-    }
-
-    .sellerPrice {
-        text-align: left;
+    .offerCardList .offerImageWrap {
+        height: 150px;
     }
 
     .guestActions :global(.btn) {

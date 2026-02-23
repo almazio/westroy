@@ -3,7 +3,6 @@
 import styles from './page.module.css';
 
 interface SearchFiltersProps {
-    filteredOffersCount: number;
     onlyDelivery: boolean;
     setOnlyDelivery: (v: boolean) => void;
     inStockOnly: boolean;
@@ -16,15 +15,11 @@ interface SearchFiltersProps {
     setBrandFilter: (v: string) => void;
     sortBy: 'price_asc' | 'price_desc' | 'supplier';
     setSortBy: (v: 'price_asc' | 'price_desc' | 'supplier') => void;
-    hasResults: boolean;
-    requestSent: boolean;
-    requestSubmitting: boolean;
-    onQuickRequest: () => void;
-    onDetailedRequest: () => void;
+    viewMode: 'grid-2' | 'grid-3' | 'list';
+    setViewMode: (v: 'grid-2' | 'grid-3' | 'list') => void;
 }
 
 export default function SearchFilters({
-    filteredOffersCount,
     onlyDelivery,
     setOnlyDelivery,
     inStockOnly,
@@ -37,59 +32,42 @@ export default function SearchFilters({
     setBrandFilter,
     sortBy,
     setSortBy,
-    hasResults,
-    requestSent,
-    requestSubmitting,
-    onQuickRequest,
-    onDetailedRequest,
+    viewMode,
+    setViewMode,
 }: SearchFiltersProps) {
-    const getResultsTitle = () => {
-        return `Найдено ${filteredOffersCount} предложени${filteredOffersCount === 1 ? 'е' : filteredOffersCount < 5 ? 'я' : 'й'}`;
-    };
-
     return (
-        <div className={styles.resultsHeader}>
-            <h2>{getResultsTitle()}</h2>
-            <div className={styles.resultsHeaderActions}>
-                <label className={styles.filterToggle}>
-                    <input
-                        type="checkbox"
-                        checked={onlyDelivery}
-                        onChange={(e) => setOnlyDelivery(e.target.checked)}
-                    />
-                    Только с доставкой
-                </label>
-                <label className={styles.filterToggle}>
-                    <input
-                        type="checkbox"
-                        checked={inStockOnly}
-                        onChange={(e) => setInStockOnly(e.target.checked)}
-                    />
-                    Только в наличии
-                </label>
-                <label className={styles.filterToggle}>
-                    <input
-                        type="checkbox"
-                        checked={withImageOnly}
-                        onChange={(e) => setWithImageOnly(e.target.checked)}
-                    />
-                    Только с фото
-                </label>
-                <label className={styles.filterToggle}>
-                    <input
-                        type="checkbox"
-                        checked={withArticleOnly}
-                        onChange={(e) => setWithArticleOnly(e.target.checked)}
-                    />
-                    Только с артикулом
-                </label>
+        <div className={styles.sidebarCard}>
+            <h3 className={styles.sidebarTitle}>Фильтры</h3>
+
+            <label className={styles.filterToggle}>
+                <input type="checkbox" checked={onlyDelivery} onChange={(e) => setOnlyDelivery(e.target.checked)} />
+                Только с доставкой
+            </label>
+            <label className={styles.filterToggle}>
+                <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
+                Только в наличии
+            </label>
+            <label className={styles.filterToggle}>
+                <input type="checkbox" checked={withImageOnly} onChange={(e) => setWithImageOnly(e.target.checked)} />
+                Только с фото
+            </label>
+            <label className={styles.filterToggle}>
+                <input type="checkbox" checked={withArticleOnly} onChange={(e) => setWithArticleOnly(e.target.checked)} />
+                Только с артикулом
+            </label>
+
+            <div className={styles.sidebarField}>
+                <label>Бренд</label>
                 <input
                     className="input"
-                    style={{ minWidth: 170, maxWidth: 220, height: 38 }}
-                    placeholder="Фильтр по бренду"
+                    placeholder="Например: ExProfil"
                     value={brandFilter}
                     onChange={(e) => setBrandFilter(e.target.value)}
                 />
+            </div>
+
+            <div className={styles.sidebarField}>
+                <label>Сортировка</label>
                 <select
                     className={styles.sortSelect}
                     value={sortBy}
@@ -99,29 +77,33 @@ export default function SearchFilters({
                     <option value="price_desc">Сначала дороже</option>
                     <option value="supplier">По поставщику</option>
                 </select>
-                {hasResults && !requestSent && (
-                    <>
-                        <button
-                            className="btn btn-primary"
-                            onClick={onQuickRequest}
-                            disabled={requestSubmitting}
-                        >
-                            📨 {requestSubmitting ? 'Отправляем...' : 'Отправить заявку поставщикам'}
-                        </button>
-                        <button
-                            className="btn btn-secondary"
-                            onClick={onDetailedRequest}
-                            disabled={requestSubmitting}
-                        >
-                            Уточнить детали
-                        </button>
-                    </>
-                )}
-                {requestSent && (
-                    <span className="badge badge-success" style={{ padding: '8px 16px', fontSize: '0.88rem' }}>
-                        ✓ Заявка отправлена!
-                    </span>
-                )}
+            </div>
+
+            <div className={styles.sidebarField}>
+                <label>Вид</label>
+                <div className={styles.viewSwitch}>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${viewMode === 'grid-2' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setViewMode('grid-2')}
+                    >
+                        Сетка 2
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${viewMode === 'grid-3' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setViewMode('grid-3')}
+                    >
+                        Сетка 3
+                    </button>
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setViewMode('list')}
+                    >
+                        Список
+                    </button>
+                </div>
             </div>
         </div>
     );

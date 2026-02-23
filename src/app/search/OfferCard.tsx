@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { getDealersForOffer, type DealerCard } from '@/lib/test-dealers';
 import { ProductOffer, GuestFormState, formatPrice, formatRelativePriceUpdate, getOfferImage, normalizeUnit, convertQuantity } from './search-utils';
 import GuestRequestForm from './GuestRequestForm';
 import styles from './page.module.css';
@@ -21,6 +20,7 @@ interface OfferCardProps {
     hasRequestedQuantity: boolean;
     requestedUnit: 'm3' | 't' | 'pcs' | null;
     isAggregatesCategory: boolean;
+    viewMode: 'grid-2' | 'grid-3' | 'list';
     onToggleProduct: (companyId: string, productId: string) => void;
     onProductRequest: (companyId: string, productId: string, seller: { name: string; type: 'producer' | 'dealer' }) => void;
     onGuestSubmit: () => void;
@@ -45,6 +45,7 @@ export default function OfferCard({
     hasRequestedQuantity,
     requestedUnit,
     isAggregatesCategory,
+    viewMode,
     onToggleProduct,
     onProductRequest,
     onGuestSubmit,
@@ -68,16 +69,8 @@ export default function OfferCard({
     };
 
     const estimatedTotal = calculateEstimatedTotalByOffer(offer.priceFrom, offer.priceUnit);
-    const sellerCards = getDealersForOffer({
-        companyId: offer.companyId,
-        companyName: offer.companyName,
-        priceFrom: offer.priceFrom,
-        priceUnit: offer.priceUnit,
-        companyDelivery: offer.companyDelivery,
-    });
-
     return (
-        <article className={styles.offerCard} style={{ animationDelay: `${index * 0.04}s` }}>
+        <article className={`${styles.offerCard} ${viewMode === 'list' ? styles.offerCardList : ''}`} style={{ animationDelay: `${index * 0.04}s` }}>
             <div className={styles.offerImageWrap}>
                 <img
                     src={offer.imageUrl || getOfferImage(offer)}
@@ -125,41 +118,13 @@ export default function OfferCard({
                 >
                     {isSelected ? 'В заявке' : 'Добавить в заявку'}
                 </button>
-            </div>
-
-            <div className={styles.sellersList}>
-                {sellerCards.map((seller: DealerCard) => {
-                    const sellerPrice = seller.priceFrom > 0 ? `${formatPrice(seller.priceFrom)} ₸` : 'По запросу';
-                    return (
-                        <div
-                            key={seller.id}
-                            className={`${styles.sellerRow} ${seller.type === 'producer' ? styles.sellerProducer : ''}`}
-                        >
-                            <div className={styles.sellerMain}>
-                                <div className={styles.sellerTitle}>
-                                    {seller.type === 'producer' ? '🏭 Производитель' : '🏬 Дилер'}: {seller.name}
-                                </div>
-                                <div className={styles.sellerMeta}>
-                                    <span>⭐ {seller.rating.toFixed(1)} ({seller.reviewCount})</span>
-                                    <span>⚡ {seller.responseMinutes} мин</span>
-                                    <span>{seller.delivery ? '🚚 Доставка' : 'Самовывоз'}</span>
-                                </div>
-                            </div>
-                            <div className={styles.sellerBuy}>
-                                <div className={styles.sellerPrice}>
-                                    {sellerPrice} <span>{seller.priceUnit}</span>
-                                </div>
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => onProductRequest(offer.companyId, offer.productId, { name: seller.name, type: seller.type })}
-                                    disabled={requestSubmitting}
-                                >
-                                    {seller.type === 'producer' ? 'Заказать напрямую' : 'Заказать у дилера'}
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
+                <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => onProductRequest(offer.companyId, offer.productId, { name: offer.companyName, type: 'producer' })}
+                    disabled={requestSubmitting}
+                >
+                    Запросить цену
+                </button>
             </div>
 
             {showGuestInline && (

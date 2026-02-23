@@ -188,31 +188,56 @@ function resolveCategoryId(name: string): string {
   return DEFAULT_CATEGORY_ID;
 }
 
-function getPdfImagePool(): string[] {
+function getPdfImageSet(): Set<string> {
   try {
-    return readdirSync(EXPROFIL_IMAGES_DIR)
-      .filter((file) => file.endsWith('.png'))
-      .map((file) => `/images/exprofil/pdf/${file}`)
-      .sort();
+    return new Set(
+      readdirSync(EXPROFIL_IMAGES_DIR).filter((file) => file.endsWith('.png'))
+    );
   } catch {
-    return [];
+    return new Set<string>();
   }
 }
 
-function hashText(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
+function resolveImageUrl(article: string | undefined, name: string, categoryId: string, imageSet: Set<string>) {
+  const normalizedArticle = (article || '').replace(/\D/g, '');
+  if (normalizedArticle) {
+    const articleCandidates = [
+      `exprof-${normalizedArticle}.png`,
+      `exprof-${normalizedArticle.padStart(3, '0')}.png`,
+      `exprof-${normalizedArticle.padStart(4, '0')}.png`,
+      `exprof-${normalizedArticle.padStart(5, '0')}.png`,
+    ];
 
-function inferImageByName(name: string, categoryId: string, pool: string[]) {
-  if (pool.length > 0) {
-    const idx = hashText(`${categoryId}:${name}`) % pool.length;
-    return pool[idx];
+    for (const file of articleCandidates) {
+      if (imageSet.has(file)) {
+        return `/images/exprofil/pdf/${file}`;
+      }
+    }
   }
+
+  const normalizedName = canonicalName(name);
+  if (normalizedName.includes('труба') || normalizedName.includes('муфта') || normalizedName.includes('фитинг')) {
+    return '/images/catalog/pipes.jpg';
+  }
+  if (normalizedName.includes('пвх') || normalizedName.includes('профил') || normalizedName.includes('подокон')) {
+    return '/images/catalog/pvc-profile.jpg';
+  }
+  if (normalizedName.includes('клей') || normalizedName.includes('герметик') || normalizedName.includes('пена')) {
+    return '/images/catalog/drywall.jpg';
+  }
+  if (normalizedName.includes('щеб') || normalizedName.includes('песок') || normalizedName.includes('грав')) {
+    return '/images/catalog/aggregates.jpg';
+  }
+  if (normalizedName.includes('цемент') || normalizedName.includes('бетон')) {
+    return '/images/catalog/concrete.jpg';
+  }
+  if (normalizedName.includes('кабель') || normalizedName.includes('провод') || normalizedName.includes('розет')) {
+    return '/images/catalog/pipes.jpg';
+  }
+  if (normalizedName.includes('кирпич') || normalizedName.includes('блок')) {
+    return '/images/catalog/tile.jpg';
+  }
+
   return FALLBACK_CATEGORY_IMAGES[categoryId] || FALLBACK_CATEGORY_IMAGES[DEFAULT_CATEGORY_ID];
 }
 
@@ -223,7 +248,7 @@ function extractItemsFromText(rawText: string): ParsedItem[] {
     .filter(Boolean);
 
   const items: ParsedItem[] = [];
-  const imagePool = getPdfImagePool();
+  const imageSet = getPdfImageSet();
 
   for (let i = 0; i < lines.length; i += 1) {
     const current = lines[i].toLowerCase();
@@ -285,7 +310,7 @@ function extractItemsFromText(rawText: string): ParsedItem[] {
         name,
         categoryId,
         boxQuantity: quantities[k] || undefined,
-        imageUrl: inferImageByName(name, categoryId, imagePool),
+        imageUrl: resolveImageUrl(articles[k], name, categoryId, imageSet),
       });
     }
   }

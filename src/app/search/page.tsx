@@ -36,6 +36,7 @@ function SearchContent() {
     const [guestSent, setGuestSent] = useState(false);
     const [guestForm, setGuestForm] = useState<GuestFormState>({ name: '', phone: '', quantity: '', address: '' });
     const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'supplier'>('price_asc');
+    const [viewMode, setViewMode] = useState<'grid-2' | 'grid-3' | 'list'>('grid-2');
     const [onlyDelivery, setOnlyDelivery] = useState(false);
     const [inStockOnly, setInStockOnly] = useState(true);
     const [withImageOnly, setWithImageOnly] = useState(false);
@@ -44,6 +45,7 @@ function SearchContent() {
     const requestFormRef = useRef<HTMLDivElement | null>(null);
     const seenProductCardsRef = useRef<Set<string>>(new Set());
     const { data: session } = useSession();
+    const isCategoryBrowseOnly = Boolean(categoryParam && !q.trim());
 
     // --- Data fetching ---
     useEffect(() => {
@@ -362,13 +364,13 @@ function SearchContent() {
                 {loading && (
                     <div className={styles.loading}>
                         <div className={styles.loadingDots}><span></span><span></span><span></span></div>
-                        <p>AI анализирует ваш запрос...</p>
+                        <p>{isCategoryBrowseOnly ? 'Загружаем предложения по категории...' : 'AI анализирует ваш запрос...'}</p>
                     </div>
                 )}
 
                 {!loading && (
                     <>
-                        {parsed && (
+                        {parsed && q.trim() && (
                             <AiInsightPanel
                                 parsed={parsed}
                                 avgPrice={avgPrice}
@@ -379,26 +381,36 @@ function SearchContent() {
                             />
                         )}
 
-                        <SearchFilters
-                            filteredOffersCount={filteredOffers.length}
-                            onlyDelivery={onlyDelivery}
-                            setOnlyDelivery={setOnlyDelivery}
-                            inStockOnly={inStockOnly}
-                            setInStockOnly={setInStockOnly}
-                            withImageOnly={withImageOnly}
-                            setWithImageOnly={setWithImageOnly}
-                            withArticleOnly={withArticleOnly}
-                            setWithArticleOnly={setWithArticleOnly}
-                            brandFilter={brandFilter}
-                            setBrandFilter={setBrandFilter}
-                            sortBy={sortBy}
-                            setSortBy={setSortBy}
-                            hasResults={results.length > 0}
-                            requestSent={requestSent}
-                            requestSubmitting={requestSubmitting}
-                            onQuickRequest={() => submitRequest(null)}
-                            onDetailedRequest={openRequestForm}
-                        />
+                        <div className={styles.resultsHeader}>
+                            <h2>
+                                Найдено {filteredOffers.length} предложени{filteredOffers.length === 1 ? 'е' : filteredOffers.length < 5 ? 'я' : 'й'}
+                            </h2>
+                            <div className={styles.resultsHeaderActions}>
+                                {results.length > 0 && !requestSent && (
+                                    <>
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() => submitRequest(null)}
+                                            disabled={requestSubmitting}
+                                        >
+                                            📨 {requestSubmitting ? 'Отправляем...' : 'Отправить заявку поставщикам'}
+                                        </button>
+                                        <button
+                                            className="btn btn-secondary"
+                                            onClick={openRequestForm}
+                                            disabled={requestSubmitting}
+                                        >
+                                            Уточнить детали
+                                        </button>
+                                    </>
+                                )}
+                                {requestSent && (
+                                    <span className="badge badge-success" style={{ padding: '8px 16px', fontSize: '0.88rem' }}>
+                                        ✓ Заявка отправлена!
+                                    </span>
+                                )}
+                            </div>
+                        </div>
 
                         {showRequestForm && (
                             <div ref={requestFormRef}>
@@ -411,47 +423,76 @@ function SearchContent() {
                             </div>
                         )}
 
-                        <div className={styles.offersGrid}>
-                            {filteredOffers.map((offer, i) => {
-                                const offerKey = `${offer.companyId}:${offer.productId}`;
-                                const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
-                                const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
+                        <div className={styles.resultsLayout}>
+                            <aside className={styles.filtersSidebar}>
+                                <SearchFilters
+                                    onlyDelivery={onlyDelivery}
+                                    setOnlyDelivery={setOnlyDelivery}
+                                    inStockOnly={inStockOnly}
+                                    setInStockOnly={setInStockOnly}
+                                    withImageOnly={withImageOnly}
+                                    setWithImageOnly={setWithImageOnly}
+                                    withArticleOnly={withArticleOnly}
+                                    setWithArticleOnly={setWithArticleOnly}
+                                    brandFilter={brandFilter}
+                                    setBrandFilter={setBrandFilter}
+                                    sortBy={sortBy}
+                                    setSortBy={setSortBy}
+                                    viewMode={viewMode}
+                                    setViewMode={setViewMode}
+                                />
+                            </aside>
+                            <div
+                                className={
+                                    viewMode === 'list'
+                                        ? styles.offersList
+                                        : viewMode === 'grid-3'
+                                            ? styles.offersGrid3
+                                            : styles.offersGrid
+                                }
+                            >
+                                {filteredOffers.map((offer, i) => {
+                                    const offerKey = `${offer.companyId}:${offer.productId}`;
+                                    const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
+                                    const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
 
-                                return (
-                                    <OfferCard
-                                        key={offerKey}
-                                        offer={offer}
-                                        index={i}
-                                        isSelected={!!isSelected}
-                                        showGuestInline={showGuestInline}
-                                        requestSubmitting={requestSubmitting}
-                                        guestForm={guestForm}
-                                        setGuestForm={setGuestForm}
-                                        guestSent={guestSent}
-                                        guestSubmitting={guestSubmitting}
-                                        guestSeller={guestSeller}
-                                        requestedQuantity={requestedQuantity}
-                                        hasRequestedQuantity={hasRequestedQuantity}
-                                        requestedUnit={requestedUnit}
-                                        isAggregatesCategory={isAggregatesCategory}
-                                        onToggleProduct={(cid, pid) => {
-                                            setSelectedProductIdsByCompany((prev) => {
-                                                const current = prev[cid] ?? [];
-                                                return {
-                                                    ...prev,
-                                                    [cid]: current.includes(pid) ? current.filter((id) => id !== pid) : [...current, pid],
-                                                };
-                                            });
-                                        }}
-                                        onProductRequest={handleProductRequestClick}
-                                        onGuestSubmit={() => handleGuestSubmit(offer)}
-                                        onGuestRegister={makeGuestAuthHandler(offer, 'register')}
-                                        onGuestLogin={makeGuestAuthHandler(offer, 'login')}
-                                        onGuestContinue={() => { setGuestOfferId(null); setGuestSeller(null); setGuestSent(false); }}
-                                        onGuestPostRegister={makeGuestAuthHandler(offer, 'register')}
-                                    />
-                                );
-                            })}
+                                    return (
+                                        <OfferCard
+                                            key={offerKey}
+                                            offer={offer}
+                                            index={i}
+                                            isSelected={!!isSelected}
+                                            showGuestInline={showGuestInline}
+                                            requestSubmitting={requestSubmitting}
+                                            guestForm={guestForm}
+                                            setGuestForm={setGuestForm}
+                                            guestSent={guestSent}
+                                            guestSubmitting={guestSubmitting}
+                                            guestSeller={guestSeller}
+                                            requestedQuantity={requestedQuantity}
+                                            hasRequestedQuantity={hasRequestedQuantity}
+                                            requestedUnit={requestedUnit}
+                                            isAggregatesCategory={isAggregatesCategory}
+                                            viewMode={viewMode}
+                                            onToggleProduct={(cid, pid) => {
+                                                setSelectedProductIdsByCompany((prev) => {
+                                                    const current = prev[cid] ?? [];
+                                                    return {
+                                                        ...prev,
+                                                        [cid]: current.includes(pid) ? current.filter((id) => id !== pid) : [...current, pid],
+                                                    };
+                                                });
+                                            }}
+                                            onProductRequest={handleProductRequestClick}
+                                            onGuestSubmit={() => handleGuestSubmit(offer)}
+                                            onGuestRegister={makeGuestAuthHandler(offer, 'register')}
+                                            onGuestLogin={makeGuestAuthHandler(offer, 'login')}
+                                            onGuestContinue={() => { setGuestOfferId(null); setGuestSeller(null); setGuestSent(false); }}
+                                            onGuestPostRegister={makeGuestAuthHandler(offer, 'register')}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {filteredOffers.length === 0 && (
