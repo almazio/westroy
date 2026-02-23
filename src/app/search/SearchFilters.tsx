@@ -6,6 +6,14 @@ interface SearchFiltersProps {
     filteredOffersCount: number;
     onlyDelivery: boolean;
     setOnlyDelivery: (v: boolean) => void;
+    inStockOnly: boolean;
+    setInStockOnly: (v: boolean) => void;
+    withImageOnly: boolean;
+    setWithImageOnly: (v: boolean) => void;
+    withArticleOnly: boolean;
+    setWithArticleOnly: (v: boolean) => void;
+    brandFilter: string;
+    setBrandFilter: (v: string) => void;
     sortBy: 'price_asc' | 'price_desc' | 'supplier';
     setSortBy: (v: 'price_asc' | 'price_desc' | 'supplier') => void;
     hasResults: boolean;
@@ -19,6 +27,14 @@ export default function SearchFilters({
     filteredOffersCount,
     onlyDelivery,
     setOnlyDelivery,
+    inStockOnly,
+    setInStockOnly,
+    withImageOnly,
+    setWithImageOnly,
+    withArticleOnly,
+    setWithArticleOnly,
+    brandFilter,
+    setBrandFilter,
     sortBy,
     setSortBy,
     hasResults,
@@ -43,6 +59,37 @@ export default function SearchFilters({
                     />
                     Только с доставкой
                 </label>
+                <label className={styles.filterToggle}>
+                    <input
+                        type="checkbox"
+                        checked={inStockOnly}
+                        onChange={(e) => setInStockOnly(e.target.checked)}
+                    />
+                    Только в наличии
+                </label>
+                <label className={styles.filterToggle}>
+                    <input
+                        type="checkbox"
+                        checked={withImageOnly}
+                        onChange={(e) => setWithImageOnly(e.target.checked)}
+                    />
+                    Только с фото
+                </label>
+                <label className={styles.filterToggle}>
+                    <input
+                        type="checkbox"
+                        checked={withArticleOnly}
+                        onChange={(e) => setWithArticleOnly(e.target.checked)}
+                    />
+                    Только с артикулом
+                </label>
+                <input
+                    className="input"
+                    style={{ minWidth: 170, maxWidth: 220, height: 38 }}
+                    placeholder="Фильтр по бренду"
+                    value={brandFilter}
+                    onChange={(e) => setBrandFilter(e.target.value)}
+                />
                 <select
                     className={styles.sortSelect}
                     value={sortBy}

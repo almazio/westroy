@@ -2,10 +2,9 @@
 // WESTROY — Search Engine
 // ============================================
 
-import { ParsedQuery, SearchResult, SearchResponse } from './types';
+import { ParsedQuery, SearchFilters, SearchResult, SearchResponse } from './types';
 import {
     getCompanies,
-    getCompaniesByCategory,
     getProducts,
     getProductsByCategory,
     getCompanyMarketStats
@@ -34,6 +33,20 @@ const SEARCH_STOP_TOKENS = new Set([
 
 function priceForSort(value: number): number {
     return value > 0 ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function applyProductFilters(
+    products: Awaited<ReturnType<typeof getProducts>>,
+    filters: SearchFilters
+) {
+    const brandNeedle = filters.brand?.trim().toLowerCase();
+    return products.filter((product) => {
+        if (filters.inStockOnly && !product.inStock) return false;
+        if (filters.withImageOnly && !product.imageUrl) return false;
+        if (filters.withArticleOnly && !product.article) return false;
+        if (brandNeedle && !(product.brand || '').toLowerCase().includes(brandNeedle)) return false;
+        return true;
+    });
 }
 
 function buildResult({
@@ -93,25 +106,56 @@ function sortResults(results: SearchResult[]) {
 async function searchByCategory(parsed: ParsedQuery): Promise<SearchResult[]> {
     if (!parsed.categoryId) return [];
 
-    const companies = await getCompaniesByCategory(parsed.categoryId);
     const categoryProducts = await getProductsByCategory(parsed.categoryId);
-    const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
+    if (categoryProducts.length === 0) return [];
 
-    const results = companies.map((company) =>
-        buildResult({
-            company,
-            products: categoryProducts.filter((p) => p.companyId === company.id),
-            grade: parsed.grade,
-            delivery: parsed.delivery,
-            companyStats,
-        })
-    );
+    const companyIds = [...new Set(categoryProducts.map((product) => product.companyId))];
+    const companies = (await getCompanies()).filter((company) => companyIds.includes(company.id));
+    const companyStats = await getCompanyMarketStats(companyIds);
+
+    const results = companies
+        .map((company) =>
+            buildResult({
+                company,
+                products: categoryProducts.filter((p) => p.companyId === company.id),
+                grade: parsed.grade,
+                delivery: parsed.delivery,
+                companyStats,
+            })
+        )
+        .filter((result) => result.products.length > 0);
 
     sortResults(results);
     return results;
 }
 
-async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
+async function searchByCategoryWithFilters(parsed: ParsedQuery, filters: SearchFilters): Promise<SearchResult[]> {
+    if (!parsed.categoryId) return [];
+
+    const categoryProducts = applyProductFilters(await getProductsByCategory(parsed.categoryId), filters);
+    if (categoryProducts.length === 0) return [];
+
+    const companyIds = [...new Set(categoryProducts.map((product) => product.companyId))];
+    const companies = (await getCompanies()).filter((company) => companyIds.includes(company.id));
+    const companyStats = await getCompanyMarketStats(companyIds);
+
+    const results = companies
+        .map((company) =>
+            buildResult({
+                company,
+                products: categoryProducts.filter((p) => p.companyId === company.id),
+                grade: parsed.grade,
+                delivery: parsed.delivery,
+                companyStats,
+            })
+        )
+        .filter((result) => result.products.length > 0);
+
+    sortResults(results);
+    return results;
+}
+
+async function searchByText(parsed: ParsedQuery, filters: SearchFilters): Promise<SearchResult[]> {
     const query = normalizeText(parsed.originalQuery || '');
     if (!query) return [];
 
@@ -121,7 +165,8 @@ async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
         .filter((t) => t.length >= 2 && !SEARCH_STOP_TOKENS.has(t));
     if (tokens.length === 0) return [];
 
-    const [companies, products] = await Promise.all([getCompanies(), getProducts()]);
+    const [companies, rawProducts] = await Promise.all([getCompanies(), getProducts()]);
+    const products = applyProductFilters(rawProducts, filters);
     const companyStats = await getCompanyMarketStats(companies.map((company) => company.id));
 
     const productMatches = products.filter((product) => {
@@ -169,10 +214,13 @@ async function searchByText(parsed: ParsedQuery): Promise<SearchResult[]> {
     return results;
 }
 
-export async function search(parsed: ParsedQuery): Promise<SearchResponse> {
-    let results = await searchByCategory(parsed);
+export async function search(parsed: ParsedQuery, filters: SearchFilters = {}): Promise<SearchResponse> {
+    let results = await searchByCategoryWithFilters(parsed, filters);
     if (results.length === 0) {
-        results = await searchByText(parsed);
+        results = await searchByCategory(parsed);
+    }
+    if (results.length === 0) {
+        results = await searchByText(parsed, filters);
     }
 
     return {

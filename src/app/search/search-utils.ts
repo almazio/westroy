@@ -15,6 +15,13 @@ export const CATEGORY_LABELS: Record<string, string> = {
     machinery: 'Спецтехника',
     'pvc-profiles': 'ПВХ профили и подоконники',
     'general-materials': 'Общестроительные материалы',
+    'painting-tools': 'Малярный инструмент',
+    'hand-tools': 'Ручной инструмент',
+    fasteners: 'Крепеж и метизы',
+    electrical: 'Электрика',
+    plumbing: 'Сантехника и трубы',
+    safety: 'СИЗ и безопасность',
+    'adhesives-sealants': 'Клеи и герметики',
 };
 
 export const recommendationByCategory: Record<string, string[]> = {
@@ -46,6 +53,34 @@ export const recommendationByCategory: Record<string, string[]> = {
         'Для материалов без цены отправляйте заявку сразу нескольким поставщикам.',
         'Перед оплатой уточняйте остатки, сроки и упаковку на складе.',
     ],
+    'painting-tools': [
+        'Выбирайте инструмент под тип покрытия: ворс для краски, резина для шпаклевки.',
+        'Проверяйте расходники и совместимость с вашими материалами.',
+    ],
+    'hand-tools': [
+        'Сравнивайте комплектацию и материал рукоятки для интенсивных работ.',
+        'Для бригад выгоднее брать наборы с запасом расходников.',
+    ],
+    fasteners: [
+        'Для внешних работ выбирайте оцинкованный крепеж.',
+        'Проверяйте шаг резьбы и длину под конкретное основание.',
+    ],
+    electrical: [
+        'Уточняйте сечение кабеля и класс защиты перед покупкой.',
+        'Для щитов и автоматики проверяйте совместимость серий.',
+    ],
+    plumbing: [
+        'Проверяйте диаметр и тип резьбы перед заказом фитингов.',
+        'Сразу уточняйте наличие комплектующих для монтажа.',
+    ],
+    safety: [
+        'Подбирайте СИЗ по типу работ и уровню защиты.',
+        'Для постоянных объектов выгодно брать упаковками.',
+    ],
+    'adhesives-sealants': [
+        'Выбирайте состав по температуре эксплуатации и типу основания.',
+        'Проверяйте срок годности и условия хранения.',
+    ],
 };
 
 // --- Types ---
@@ -55,7 +90,21 @@ export interface SearchResultData {
         id: string; name: string; description: string; delivery: boolean;
         verified: boolean; address: string; phone: string; categoryId: string;
     };
-    products: { id: string; name: string; description: string; priceFrom: number; priceUnit: string; unit: string; updatedAt?: string }[];
+    products: {
+        id: string;
+        name: string;
+        description: string;
+        article?: string;
+        brand?: string;
+        boxQuantity?: number;
+        imageUrl?: string;
+        source?: string;
+        priceFrom: number;
+        priceUnit: string;
+        unit: string;
+        updatedAt?: string;
+        inStock?: boolean;
+    }[];
     priceFrom: number;
     priceUnit: string;
     relevanceScore: number;
@@ -102,6 +151,11 @@ export interface ProductOffer {
     productId: string;
     productName: string;
     productDescription: string;
+    productArticle?: string;
+    productBrand?: string;
+    boxQuantity?: number;
+    imageUrl?: string;
+    source?: string;
     priceFrom: number;
     priceUnit: string;
     inStock: boolean;

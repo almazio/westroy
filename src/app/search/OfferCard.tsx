@@ -80,7 +80,7 @@ export default function OfferCard({
         <article className={styles.offerCard} style={{ animationDelay: `${index * 0.04}s` }}>
             <div className={styles.offerImageWrap}>
                 <img
-                    src={getOfferImage(offer)}
+                    src={offer.imageUrl || getOfferImage(offer)}
                     alt={offer.productName}
                     className={styles.offerImage}
                     loading="lazy"
@@ -89,10 +89,18 @@ export default function OfferCard({
             <div className={styles.offerTitle}>{offer.productName}</div>
             <div className={styles.offerPrice}>{formatPrice(offer.priceFrom)} ₸ <span>{offer.priceUnit}</span></div>
             <p className={styles.offerDesc}>{offer.productDescription}</p>
+            {(offer.productArticle || offer.productBrand || offer.boxQuantity) && (
+                <div className={styles.offerMeta}>
+                    {offer.productArticle && <span className="badge">Артикул: {offer.productArticle}</span>}
+                    {offer.productBrand && <span className="badge">{offer.productBrand}</span>}
+                    {offer.boxQuantity && <span className="badge">Упаковка: {offer.boxQuantity} шт</span>}
+                </div>
+            )}
 
             <div className={styles.offerMeta}>
                 {offer.companyDelivery && <span className="badge badge-success">🚚 Доставка</span>}
                 {offer.companyVerified && <span className="badge badge-info">✓ Проверен</span>}
+                {offer.inStock ? <span className="badge badge-success">В наличии</span> : <span className="badge">Под заказ</span>}
                 {offer.companyStats?.avgResponseMinutes !== null && offer.companyStats?.avgResponseMinutes !== undefined && (
                     <span className="badge badge-warning">⚡ {offer.companyStats.avgResponseMinutes} мин</span>
                 )}
@@ -107,6 +115,7 @@ export default function OfferCard({
             </div>
             <div className={styles.offerAddress}>{offer.companyAddress}</div>
             <div className={styles.offerUpdate}>Прайс обновлен: {formatRelativePriceUpdate(offer.updatedAt) || 'недавно'}</div>
+            {offer.source && <div className={styles.offerUpdate}>Источник: {offer.source}</div>}
 
             <div className={styles.offerActions}>
                 <button

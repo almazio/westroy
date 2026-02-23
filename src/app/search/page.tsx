@@ -37,6 +37,10 @@ function SearchContent() {
     const [guestForm, setGuestForm] = useState<GuestFormState>({ name: '', phone: '', quantity: '', address: '' });
     const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'supplier'>('price_asc');
     const [onlyDelivery, setOnlyDelivery] = useState(false);
+    const [inStockOnly, setInStockOnly] = useState(true);
+    const [withImageOnly, setWithImageOnly] = useState(false);
+    const [withArticleOnly, setWithArticleOnly] = useState(false);
+    const [brandFilter, setBrandFilter] = useState('');
     const requestFormRef = useRef<HTMLDivElement | null>(null);
     const seenProductCardsRef = useRef<Set<string>>(new Set());
     const { data: session } = useSession();
@@ -48,6 +52,10 @@ function SearchContent() {
             const params = new URLSearchParams();
             if (q) params.set('q', q);
             if (categoryParam) params.set('category', categoryParam);
+            if (inStockOnly) params.set('inStock', 'true');
+            if (withImageOnly) params.set('withImage', 'true');
+            if (withArticleOnly) params.set('withArticle', 'true');
+            if (brandFilter.trim()) params.set('brand', brandFilter.trim());
 
             const res = await fetch(`/api/search?${params}`);
             const data = await res.json();
@@ -67,7 +75,7 @@ function SearchContent() {
             setParsed(null);
             setLoading(false);
         }
-    }, [q, categoryParam]);
+    }, [q, categoryParam, inStockOnly, withImageOnly, withArticleOnly, brandFilter]);
 
     // --- Auth intent replay ---
     useEffect(() => {
@@ -188,9 +196,14 @@ function SearchContent() {
                 productId: product.id,
                 productName: product.name,
                 productDescription: product.description,
+                productArticle: product.article,
+                productBrand: product.brand,
+                boxQuantity: product.boxQuantity,
+                imageUrl: product.imageUrl,
+                source: product.source,
                 priceFrom: product.priceFrom,
                 priceUnit: product.priceUnit || product.unit,
-                inStock: true,
+                inStock: product.inStock ?? true,
                 updatedAt: product.updatedAt,
                 companyId: result.company.id,
                 companyName: result.company.name,
@@ -370,6 +383,14 @@ function SearchContent() {
                             filteredOffersCount={filteredOffers.length}
                             onlyDelivery={onlyDelivery}
                             setOnlyDelivery={setOnlyDelivery}
+                            inStockOnly={inStockOnly}
+                            setInStockOnly={setInStockOnly}
+                            withImageOnly={withImageOnly}
+                            setWithImageOnly={setWithImageOnly}
+                            withArticleOnly={withArticleOnly}
+                            setWithArticleOnly={setWithArticleOnly}
+                            brandFilter={brandFilter}
+                            setBrandFilter={setBrandFilter}
                             sortBy={sortBy}
                             setSortBy={setSortBy}
                             hasResults={results.length > 0}

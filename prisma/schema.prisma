@@ -34,6 +34,29 @@ enum OfferStatus {
   rejected
 }
 
+enum KnowledgeItemType {
+  standard
+  snippet
+  calculation
+  measurement
+  hack
+}
+
+enum KnowledgeItemStatus {
+  draft
+  reviewed
+  published
+  archived
+}
+
+enum KnowledgeSourceType {
+  standard
+  law
+  article
+  vendor
+  internal
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -45,6 +68,8 @@ model User {
   // Relations
   company       Company?
   requests      Request[]
+  knowledgeItemsCreated KnowledgeBaseItem[] @relation("KnowledgeItemCreatedBy")
+  knowledgeItemsUpdated KnowledgeBaseItem[] @relation("KnowledgeItemUpdatedBy")
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -102,6 +127,12 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   description String
+  article     String?
+  brand       String?
+  boxQuantity Int?
+  imageUrl    String?
+  source      String?
+  specsJson   String?
   unit        String
   priceFrom   Float
   priceUnit   String
@@ -177,4 +208,48 @@ model PartnerApplication {
   status      String   @default("pending") // "pending", "approved", "rejected"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model KnowledgeBaseItem {
+  id               String              @id @default(cuid())
+  title            String
+  slug             String              @unique
+  market           String              @default("kz")
+  type             KnowledgeItemType
+  status           KnowledgeItemStatus @default(draft)
+  topic            String?
+  summary          String?
+  contentMd        String
+  formula          String?
+  inputSchemaJson  String?
+  outputSchemaJson String?
+  tagsJson         String              @default("[]")
+  regionCode       String?
+  sourceName       String?
+  sourceUrl        String?
+  verificationNote String?
+  effectiveFrom    DateTime?
+  effectiveTo      DateTime?
+  createdById      String?
+  createdBy        User?               @relation("KnowledgeItemCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById      String?
+  updatedBy        User?               @relation("KnowledgeItemUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  sources          KnowledgeSource[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model KnowledgeSource {
+  id          String              @id @default(cuid())
+  itemId       String
+  item         KnowledgeBaseItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type         KnowledgeSourceType @default(standard)
+  title        String
+  url          String?
+  publisher    String?
+  publishedAt  DateTime?
+  checkedAt    DateTime?
+  notes        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }

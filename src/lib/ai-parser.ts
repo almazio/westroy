@@ -56,6 +56,41 @@ const CATEGORY_SYNONYMS: Record<string, { id: string; label: string; keywords: s
         label: 'Общестроительные материалы',
         keywords: ['осп', 'фанера', 'двп', 'дсп', 'гипсокартон', 'ламинат', 'керамогранит', 'утеплитель', 'штукатурка', 'кафельный клей', 'рубероид', 'труба', 'муфта'],
     },
+    'painting-tools': {
+        id: 'painting-tools',
+        label: 'Малярный инструмент',
+        keywords: ['валик', 'кисть', 'шпатель', 'кельма', 'терка', 'малярный инструмент'],
+    },
+    'hand-tools': {
+        id: 'hand-tools',
+        label: 'Ручной инструмент',
+        keywords: ['молоток', 'рулетка', 'уровень', 'отвертка', 'ножовка', 'плоскогубцы', 'инструмент'],
+    },
+    fasteners: {
+        id: 'fasteners',
+        label: 'Крепеж и метизы',
+        keywords: ['саморез', 'дюбель', 'гвоздь', 'болт', 'гайка', 'анкер', 'шуруп', 'метизы'],
+    },
+    electrical: {
+        id: 'electrical',
+        label: 'Электрика',
+        keywords: ['кабель', 'провод', 'розетка', 'выключатель', 'лампа', 'автомат', 'электрика'],
+    },
+    plumbing: {
+        id: 'plumbing',
+        label: 'Сантехника и трубы',
+        keywords: ['сантехника', 'труба', 'фитинг', 'кран', 'смеситель', 'муфта'],
+    },
+    safety: {
+        id: 'safety',
+        label: 'СИЗ и безопасность',
+        keywords: ['перчатки', 'очки', 'каска', 'респиратор', 'маска', 'сиз'],
+    },
+    'adhesives-sealants': {
+        id: 'adhesives-sealants',
+        label: 'Клеи и герметики',
+        keywords: ['клей', 'герметик', 'монтажная пена', 'силикон', 'эпоксидный'],
+    },
 };
 
 // Grade patterns (бетон/concrete specific)
@@ -252,6 +287,9 @@ export function parseQueryRegex(query: string): ParsedQuery {
             { type: 'category', label: 'Спецтехника?', value: 'machinery' },
             { type: 'category', label: 'ПВХ профили?', value: 'pvc-profiles' },
             { type: 'category', label: 'Общестрой?', value: 'general-materials' },
+            { type: 'category', label: 'Малярка?', value: 'painting-tools' },
+            { type: 'category', label: 'Ручной инструмент?', value: 'hand-tools' },
+            { type: 'category', label: 'Крепеж?', value: 'fasteners' },
         );
     }
 

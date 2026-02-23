@@ -38,7 +38,8 @@ export async function GET() {
         const staleProducts = products.filter((p) => new Date(p.updatedAt).getTime() < staleThreshold).length;
         const missingDescription = products.filter((p) => !p.description?.trim()).length;
         const missingPriceUnit = products.filter((p) => !p.priceUnit?.trim()).length;
-        const invalidPrice = products.filter((p) => !Number.isFinite(p.priceFrom) || p.priceFrom <= 0).length;
+        const invalidPrice = products.filter((p) => !Number.isFinite(p.priceFrom) || p.priceFrom < 0).length;
+        const priceOnRequest = products.filter((p) => Number.isFinite(p.priceFrom) && p.priceFrom === 0).length;
         const invalidUnit = products.filter((p) => !ALLOWED_UNITS.includes(p.unit as (typeof ALLOWED_UNITS)[number])).length;
         const outOfStock = products.filter((p) => !p.inStock).length;
         const companiesWithoutProducts = companies.filter((c) => c._count.products === 0);
@@ -53,6 +54,7 @@ export async function GET() {
                 missingDescription,
                 missingPriceUnit,
                 invalidPrice,
+                priceOnRequest,
                 invalidUnit,
                 staleProducts,
                 outOfStock,

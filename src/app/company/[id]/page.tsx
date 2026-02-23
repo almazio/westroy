@@ -1,4 +1,4 @@
-import { getCompanyById, getProductsByCompany, getCategoryById } from '@/lib/db';
+import { getCompanyById, getProductsByCompany, getCategoryById, getCategories } from '@/lib/db';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import styles from './page.module.css';
@@ -10,6 +10,22 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
     const products = await getProductsByCompany(id);
     const category = await getCategoryById(company.categoryId);
+    const categories = await getCategories();
+    const categoryMap = new Map(categories.map((item) => [item.id, item]));
+
+    const groupedProducts = [...products]
+        .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+        .reduce<Record<string, typeof products>>((acc, product) => {
+            if (!acc[product.categoryId]) acc[product.categoryId] = [];
+            acc[product.categoryId].push(product);
+            return acc;
+        }, {});
+
+    const groupedEntries = Object.entries(groupedProducts).sort((a, b) => {
+        const nameA = categoryMap.get(a[0])?.nameRu || a[0];
+        const nameB = categoryMap.get(b[0])?.nameRu || b[0];
+        return nameA.localeCompare(nameB, 'ru');
+    });
 
     const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(price);
 
@@ -47,21 +63,52 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                         {/* Products */}
                         <div className={styles.productsSection}>
                             <h3>Товары и услуги</h3>
-                            <div className={styles.products}>
-                                {products.map(product => (
-                                    <div key={product.id} className={styles.productCard}>
-                                        <div className={styles.productInfo}>
-                                            <h4>{product.name}</h4>
-                                            <p>{product.description}</p>
-                                        </div>
-                                        <div className={styles.productPrice}>
-                                            <div className={styles.priceFrom}>от {formatPrice(product.priceFrom)} ₸</div>
-                                            <div className={styles.priceUnit}>{product.priceUnit}</div>
-                                            {product.inStock && <span className="badge badge-success">В наличии</span>}
-                                        </div>
+                            {groupedEntries.map(([categoryId, categoryProducts]) => (
+                                <section key={categoryId} className={styles.productsGroup}>
+                                    <div className={styles.productsGroupHeader}>
+                                        <h4>{categoryMap.get(categoryId)?.nameRu || 'Без категории'}</h4>
+                                        <span className="badge">{categoryProducts.length}</span>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className={styles.products}>
+                                        {categoryProducts.map(product => (
+                                            <div key={product.id} className={styles.productCard}>
+                                                {product.imageUrl && (
+                                                    <img
+                                                        src={product.imageUrl}
+                                                        alt={product.name}
+                                                        className={styles.productImage}
+                                                        loading="lazy"
+                                                    />
+                                                )}
+                                                <div className={styles.productInfo}>
+                                                    <h4>{product.name}</h4>
+                                                    <p>{product.description}</p>
+                                                    <div className={styles.productMeta}>
+                                                        {product.article && <span className="badge">Артикул: {product.article}</span>}
+                                                        {product.brand && <span className="badge">{product.brand}</span>}
+                                                        {product.boxQuantity != null && <span className="badge">Упаковка: {product.boxQuantity} шт</span>}
+                                                    </div>
+                                                    <details className={styles.productDetails}>
+                                                        <summary>Подробнее</summary>
+                                                        <div className={styles.productDetailsBody}>
+                                                            <div>Ед. изм.: {product.unit}</div>
+                                                            <div>{product.inStock ? 'В наличии' : 'Под заказ'}</div>
+                                                            {product.source && <div>Источник: {product.source}</div>}
+                                                        </div>
+                                                    </details>
+                                                </div>
+                                                <div className={styles.productPrice}>
+                                                    <div className={styles.priceFrom}>
+                                                        {product.priceFrom > 0 ? `от ${formatPrice(product.priceFrom)} ₸` : 'Цена по запросу'}
+                                                    </div>
+                                                    <div className={styles.priceUnit}>{product.priceUnit}</div>
+                                                    {product.inStock && <span className="badge badge-success">В наличии</span>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            ))}
                         </div>
                     </div>
 

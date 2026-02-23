@@ -36,6 +36,12 @@ export interface Product {
   categoryId: string;
   name: string;
   description: string;
+  article?: string;
+  brand?: string;
+  boxQuantity?: number;
+  imageUrl?: string;
+  source?: string;
+  specs?: Record<string, unknown>;
   unit: string; // м3, тонн, шт
   priceFrom: number; // ₸
   priceUnit: string; // "за м3", "за тонну"
@@ -118,4 +124,11 @@ export interface SearchResponse {
   parsed: ParsedQuery;
   results: SearchResult[];
   totalResults: number;
+}
+
+export interface SearchFilters {
+  inStockOnly?: boolean;
+  withImageOnly?: boolean;
+  withArticleOnly?: boolean;
+  brand?: string;
 }

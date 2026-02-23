@@ -10,6 +10,11 @@ export interface ImportedCatalogRow {
     unit: AllowedUnit;
     priceUnit: string;
     inStock: boolean;
+    article?: string;
+    brand?: string;
+    boxQuantity?: number;
+    imageUrl?: string;
+    source?: string;
 }
 
 export interface CatalogRowError {
@@ -23,10 +28,10 @@ export interface ParsedCatalogRow {
     data: ImportedCatalogRow;
 }
 
-export const CATALOG_CSV_TEMPLATE = `name,description,category,priceFrom,unit,priceUnit,inStock
-Бетон М300,Тяжелый бетон,Бетон,28000,м3,за м3,true
-Арматура A500C 12мм,Рифленая арматура,Арматура,345000,т,за т,true
-Песок мытый,Фракция 0-5,Инертные,12000,т,за т,true
+export const CATALOG_CSV_TEMPLATE = `name,description,category,priceFrom,unit,priceUnit,inStock,article,brand,boxQuantity,imageUrl,source
+Бетон М300,Тяжелый бетон,Бетон,28000,м3,за м3,true,BN-300,Best Beton,,https://example.com/бетон-м300.jpg,Прайс 2026
+Арматура A500C 12мм,Рифленая арматура,Арматура,345000,т,за т,true,ARM-A500-12,Metal Group,20,,Импорт 1С
+Песок мытый,Фракция 0-5,Инертные,0,т,цена по запросу,true,,,,
 `;
 
 function normalizeHeader(value: string) {
@@ -100,6 +105,11 @@ export function parseCsvCatalog(csv: string): { rows: ParsedCatalogRow[]; errors
         unit: headers.indexOf('unit'),
         priceUnit: headers.indexOf('priceunit'),
         inStock: headers.indexOf('instock'),
+        article: headers.indexOf('article'),
+        brand: headers.indexOf('brand'),
+        boxQuantity: headers.indexOf('boxquantity'),
+        imageUrl: headers.indexOf('imageurl'),
+        source: headers.indexOf('source'),
     };
 
     if (idx.name === -1 || idx.priceFrom === -1 || idx.unit === -1 || (idx.category === -1 && idx.categoryId === -1)) {
@@ -136,7 +146,7 @@ export function parseCsvCatalog(csv: string): { rows: ParsedCatalogRow[]; errors
         }
 
         const priceFrom = Number(priceRaw.replace(',', '.'));
-        if (!Number.isFinite(priceFrom) || priceFrom <= 0) {
+        if (!Number.isFinite(priceFrom) || priceFrom < 0) {
             errors.push({ row: rowNo, column: 'priceFrom', message: `Некорректная цена: "${priceRaw}"` });
             continue;
         }
@@ -146,6 +156,12 @@ export function parseCsvCatalog(csv: string): { rows: ParsedCatalogRow[]; errors
             errors.push({ row: rowNo, column: 'unit', message: `Некорректная единица измерения: "${unitRaw}"` });
             continue;
         }
+
+        const boxQuantityRaw = idx.boxQuantity >= 0 ? (raw[idx.boxQuantity] || '') : '';
+        const parsedBoxQuantity = boxQuantityRaw ? Number(boxQuantityRaw.replace(',', '.')) : NaN;
+        const boxQuantity = Number.isFinite(parsedBoxQuantity) && parsedBoxQuantity > 0
+            ? Math.floor(parsedBoxQuantity)
+            : undefined;
 
         rows.push({
             row: rowNo,
@@ -157,6 +173,11 @@ export function parseCsvCatalog(csv: string): { rows: ParsedCatalogRow[]; errors
                 unit,
                 priceUnit: priceUnit || toPriceUnit(unit),
                 inStock: parseBoolean(inStockRaw),
+                article: idx.article >= 0 && raw[idx.article] ? raw[idx.article] : undefined,
+                brand: idx.brand >= 0 && raw[idx.brand] ? raw[idx.brand] : undefined,
+                boxQuantity,
+                imageUrl: idx.imageUrl >= 0 && raw[idx.imageUrl] ? raw[idx.imageUrl] : undefined,
+                source: idx.source >= 0 && raw[idx.source] ? raw[idx.source] : undefined,
             },
         });
     }

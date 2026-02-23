@@ -18,6 +18,11 @@ type InputRow = Partial<{
     unit: string;
     priceUnit: string;
     inStock: boolean | string | number;
+    article: string;
+    brand: string;
+    boxQuantity: number | string;
+    imageUrl: string;
+    source: string;
 }>;
 
 function boolValue(value: unknown) {
@@ -112,7 +117,7 @@ export async function POST(request: Request) {
 
                 if (!name) rowErrors.push({ row: rowNo, column: 'name', message: 'Пустое поле name' });
                 if (!categoryRef) rowErrors.push({ row: rowNo, column: 'category', message: 'Пустое поле category/categoryId' });
-                if (!Number.isFinite(priceFrom) || priceFrom <= 0) {
+                if (!Number.isFinite(priceFrom) || priceFrom < 0) {
                     rowErrors.push({ row: rowNo, column: 'priceFrom', message: `Некорректная цена: "${String(row.priceFrom || '')}"` });
                 }
                 if (!unit) rowErrors.push({ row: rowNo, column: 'unit', message: `Некорректная единица: "${unitRaw}"` });
@@ -127,10 +132,15 @@ export async function POST(request: Request) {
                         unit: (unit || 'шт') as ImportedCatalogRow['unit'],
                         priceUnit: String(row.priceUnit || '').trim() || toPriceUnit((unit || 'шт') as ImportedCatalogRow['unit']),
                         inStock: boolValue(row.inStock),
+                        article: String(row.article || '').trim() || undefined,
+                        brand: String(row.brand || '').trim() || undefined,
+                        boxQuantity: Number.isFinite(Number(row.boxQuantity)) ? Number(row.boxQuantity) : undefined,
+                        imageUrl: String(row.imageUrl || '').trim() || undefined,
+                        source: String(row.source || '').trim() || undefined,
                     }
                 };
             }).filter((r) => {
-                return r.data.name && r.data.categoryRef && r.data.priceFrom > 0 && normalizeUnit(r.data.unit);
+                return r.data.name && r.data.categoryRef && r.data.priceFrom >= 0 && normalizeUnit(r.data.unit);
             });
         } else {
             return NextResponse.json({ error: 'Передайте csv или rows' }, { status: 400 });
@@ -222,6 +232,11 @@ export async function POST(request: Request) {
                         unit: data.unit,
                         priceUnit: data.priceUnit,
                         inStock: data.inStock,
+                        article: data.article || null,
+                        brand: data.brand || null,
+                        boxQuantity: data.boxQuantity ?? null,
+                        imageUrl: data.imageUrl || null,
+                        source: data.source || null,
                     },
                 });
                 updated += 1;
@@ -243,6 +258,11 @@ export async function POST(request: Request) {
                         unit: data.unit,
                         priceUnit: data.priceUnit,
                         inStock: data.inStock,
+                        article: data.article || null,
+                        brand: data.brand || null,
+                        boxQuantity: data.boxQuantity ?? null,
+                        imageUrl: data.imageUrl || null,
+                        source: data.source || null,
                     },
                 });
                 created += 1;

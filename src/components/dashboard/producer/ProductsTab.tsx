@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Product, Category } from '@/lib/types'; // We need these types exported or defined locally if not
 
 interface ProductsTabProps {
@@ -32,6 +32,8 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
     }>(null);
     const [importLoading, setImportLoading] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [catalogQuery, setCatalogQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'price_asc' | 'price_desc'>('name_asc');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -41,6 +43,11 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
         priceFrom: '',
         unit: 'м3',
         inStock: true,
+        article: '',
+        brand: '',
+        boxQuantity: '',
+        imageUrl: '',
+        source: '',
     });
 
     const loadData = useCallback(async () => {
@@ -109,6 +116,11 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                 priceFrom: String(product.priceFrom),
                 unit: product.unit,
                 inStock: product.inStock,
+                article: product.article || '',
+                brand: product.brand || '',
+                boxQuantity: product.boxQuantity != null ? String(product.boxQuantity) : '',
+                imageUrl: product.imageUrl || '',
+                source: product.source || '',
             });
         } else {
             setEditingProduct(null);
@@ -119,12 +131,59 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                 priceFrom: '',
                 unit: 'м3',
                 inStock: true,
+                article: '',
+                brand: '',
+                boxQuantity: '',
+                imageUrl: '',
+                source: '',
             });
         }
         setIsModalOpen(true);
     };
 
     const closeModal = () => setIsModalOpen(false);
+
+    const categoryNameMap = useMemo(() => {
+        return new Map(categories.map((category) => [category.id, category.nameRu || category.name]));
+    }, [categories]);
+
+    const groupedProducts = useMemo(() => {
+        const query = catalogQuery.trim().toLowerCase();
+        const filtered = products.filter((product) => {
+            if (!query) return true;
+            const haystack = [
+                product.name,
+                product.description,
+                product.article || '',
+                product.brand || '',
+                categoryNameMap.get(product.categoryId) || '',
+            ]
+                .join(' ')
+                .toLowerCase();
+            return haystack.includes(query);
+        });
+
+        const sorted = [...filtered].sort((a, b) => {
+            if (sortBy === 'price_asc') return a.priceFrom - b.priceFrom;
+            if (sortBy === 'price_desc') return b.priceFrom - a.priceFrom;
+            if (sortBy === 'name_desc') return b.name.localeCompare(a.name, 'ru');
+            return a.name.localeCompare(b.name, 'ru');
+        });
+
+        return sorted.reduce<Record<string, Product[]>>((acc, product) => {
+            if (!acc[product.categoryId]) acc[product.categoryId] = [];
+            acc[product.categoryId].push(product);
+            return acc;
+        }, {});
+    }, [products, catalogQuery, sortBy, categoryNameMap]);
+
+    const groupedEntries = useMemo(() => {
+        return Object.entries(groupedProducts).sort((a, b) => {
+            const nameA = categoryNameMap.get(a[0]) || a[0];
+            const nameB = categoryNameMap.get(b[0]) || b[0];
+            return nameA.localeCompare(nameB, 'ru');
+        });
+    }, [groupedProducts, categoryNameMap]);
 
     const handleImport = async (dryRun: boolean) => {
         if (!importCsv.trim()) {
@@ -171,11 +230,32 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                 </div>
             </div>
 
+            <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <input
+                    className="input"
+                    placeholder="Поиск по названию, артикулу, бренду..."
+                    value={catalogQuery}
+                    onChange={(e) => setCatalogQuery(e.target.value)}
+                    style={{ flex: '1 1 280px' }}
+                />
+                <select
+                    className="input"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    style={{ flex: '0 1 280px' }}
+                >
+                    <option value="name_asc">Сортировка: название А-Я</option>
+                    <option value="name_desc">Сортировка: название Я-А</option>
+                    <option value="price_asc">Сортировка: цена по возрастанию</option>
+                    <option value="price_desc">Сортировка: цена по убыванию</option>
+                </select>
+            </div>
+
             {isImportOpen && (
                 <div className="card" style={{ marginBottom: 20 }}>
                     <h3 style={{ marginBottom: 8 }}>Импорт каталога из CSV</h3>
                     <p className="text-secondary" style={{ marginBottom: 10 }}>
-                        Колонки: <code>name,description,category,priceFrom,unit,priceUnit,inStock</code>
+                        Колонки: <code>name,description,category,priceFrom,unit,priceUnit,inStock,article,brand,boxQuantity,imageUrl,source</code>
                     </p>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
                         <button
@@ -256,27 +336,57 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                 </div>
             )}
 
-            <div className="grid">
+            <div style={{ display: 'grid', gap: 18 }}>
                 {products.length === 0 ? (
                     <p>Товаров пока нет. Добавьте первый товар!</p>
                 ) : (
-                    products.map(product => (
-                        <div key={product.id} className="card product-card">
-                            <div className="card-header">
-                                <h3>{product.name}</h3>
-                                <span className={`badge ${product.inStock ? 'badge-success' : 'badge-danger'}`}>
-                                    {product.inStock ? 'В наличии' : 'Нет в наличии'}
-                                </span>
+                    groupedEntries.map(([categoryId, groupProducts]) => (
+                        <section key={categoryId} className="card" style={{ padding: 14 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <h3 style={{ margin: 0 }}>{categoryNameMap.get(categoryId) || 'Без категории'}</h3>
+                                <span className="badge">{groupProducts.length}</span>
                             </div>
-                            <p className="text-secondary">{product.description}</p>
-                            <div className="price-tag">
-                                {product.priceFrom} ₸ / {product.unit}
+                            <div className="grid">
+                                {groupProducts.map(product => (
+                                    <div key={product.id} className="card product-card">
+                                        <div className="card-header">
+                                            <h3>{product.name}</h3>
+                                            <span className={`badge ${product.inStock ? 'badge-success' : 'badge-danger'}`}>
+                                                {product.inStock ? 'В наличии' : 'Нет в наличии'}
+                                            </span>
+                                        </div>
+                                        <p className="text-secondary">{product.description}</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                            {product.article && <span className="badge">Артикул: {product.article}</span>}
+                                            {product.brand && <span className="badge">{product.brand}</span>}
+                                            {product.boxQuantity != null && <span className="badge">Упаковка: {product.boxQuantity} шт</span>}
+                                        </div>
+                                        <div className="price-tag">
+                                            {product.priceFrom > 0 ? `${product.priceFrom} ₸ / ${product.unit}` : 'Цена по запросу'}
+                                        </div>
+                                        {product.imageUrl && (
+                                            <img
+                                                src={product.imageUrl}
+                                                alt={product.name}
+                                                style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 8, marginTop: 8, border: '1px solid var(--border)' }}
+                                            />
+                                        )}
+                                        <details style={{ marginTop: 8 }}>
+                                            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Подробнее</summary>
+                                            <div className="text-secondary" style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+                                                <div>Категория: {categoryNameMap.get(product.categoryId) || product.categoryId}</div>
+                                                <div>Ед. измерения: {product.unit}</div>
+                                                {product.source && <div>Источник: {product.source}</div>}
+                                            </div>
+                                        </details>
+                                        <div className="actions" style={{ marginTop: 10, display: 'flex', gap: 10 }}>
+                                            <button className="btn btn-sm btn-ghost" onClick={() => openModal(product)}>Редактировать</button>
+                                            <button className="btn btn-sm btn-danger-ghost" onClick={() => handleDelete(product.id)}>Удалить</button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="actions" style={{ marginTop: 10, display: 'flex', gap: 10 }}>
-                                <button className="btn btn-sm btn-ghost" onClick={() => openModal(product)}>Редактировать</button>
-                                <button className="btn btn-sm btn-danger-ghost" onClick={() => handleDelete(product.id)}>Удалить</button>
-                            </div>
-                        </div>
+                        </section>
                     ))
                 )}
             </div>
@@ -343,6 +453,51 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                                         <option value="рейс">рейс</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div className="row">
+                                <div className="form-group col">
+                                    <label>Артикул</label>
+                                    <input
+                                        className="input"
+                                        value={formData.article}
+                                        onChange={e => setFormData({ ...formData, article: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group col">
+                                    <label>Бренд</label>
+                                    <input
+                                        className="input"
+                                        value={formData.brand}
+                                        onChange={e => setFormData({ ...formData, brand: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="form-group col">
+                                    <label>Кол-во в коробке</label>
+                                    <input
+                                        type="number"
+                                        className="input"
+                                        value={formData.boxQuantity}
+                                        onChange={e => setFormData({ ...formData, boxQuantity: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group col">
+                                    <label>Ссылка на фото</label>
+                                    <input
+                                        className="input"
+                                        value={formData.imageUrl}
+                                        onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Источник</label>
+                                <input
+                                    className="input"
+                                    value={formData.source}
+                                    onChange={e => setFormData({ ...formData, source: e.target.value })}
+                                />
                             </div>
                             <div className="form-group">
                                 <label>

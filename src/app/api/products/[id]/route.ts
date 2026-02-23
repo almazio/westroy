@@ -31,16 +31,39 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         }
 
         const body = await request.json();
-        const { name, description, priceFrom, unit, inStock } = body;
+        const {
+            name,
+            description,
+            priceFrom,
+            unit,
+            inStock,
+            article,
+            brand,
+            boxQuantity,
+            imageUrl,
+            source,
+            specs,
+        } = body;
+
+        const normalizedPrice = Number(priceFrom);
+        if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+            return NextResponse.json({ error: 'Invalid priceFrom value' }, { status: 400 });
+        }
 
         const updatedProduct = await prisma.product.update({
             where: { id: id },
             data: {
                 name,
                 description,
-                priceFrom: Number(priceFrom),
+                priceFrom: normalizedPrice,
                 unit,
                 inStock,
+                article: typeof article === 'string' && article.trim() ? article.trim() : null,
+                brand: typeof brand === 'string' && brand.trim() ? brand.trim() : null,
+                boxQuantity: Number.isFinite(Number(boxQuantity)) ? Number(boxQuantity) : null,
+                imageUrl: typeof imageUrl === 'string' && imageUrl.trim() ? imageUrl.trim() : null,
+                source: typeof source === 'string' && source.trim() ? source.trim() : null,
+                specsJson: specs && typeof specs === 'object' ? JSON.stringify(specs) : null,
             }
         });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseQuery, parseQueryRegex } from '@/lib/ai-parser';
 import { search } from '@/lib/search';
+import type { SearchFilters } from '@/lib/types';
 
 const PARSER_TIMEOUT_MS = 1800;
 
@@ -33,6 +34,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q') || '';
     const categoryId = searchParams.get('category') || undefined;
+    const filters: SearchFilters = {
+        inStockOnly: searchParams.get('inStock') === 'true',
+        withImageOnly: searchParams.get('withImage') === 'true',
+        withArticleOnly: searchParams.get('withArticle') === 'true',
+        brand: searchParams.get('brand') || undefined,
+    };
 
     if (!q && !categoryId) {
         return NextResponse.json({ error: 'Query parameter "q" or "category" is required' }, { status: 400 });
@@ -47,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search
-    const results = await search(parsed);
+    const results = await search(parsed, filters);
 
     return NextResponse.json(results);
 }

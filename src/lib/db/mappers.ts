@@ -28,6 +28,12 @@ export type ProductDbRecord = {
     categoryId: string;
     name: string;
     description: string;
+    article: string | null;
+    brand: string | null;
+    boxQuantity: number | null;
+    imageUrl: string | null;
+    source: string | null;
+    specsJson: string | null;
     unit: string;
     priceFrom: number;
     priceUnit: string;
@@ -100,12 +106,30 @@ export const mapProduct = (p: ProductDbRecord): Product => ({
     categoryId: p.categoryId,
     name: p.name,
     description: p.description,
+    article: p.article || undefined,
+    brand: p.brand || undefined,
+    boxQuantity: p.boxQuantity ?? undefined,
+    imageUrl: p.imageUrl || undefined,
+    source: p.source || undefined,
+    specs: p.specsJson ? safeParseSpecs(p.specsJson) : undefined,
     unit: p.unit,
     priceFrom: p.priceFrom,
     priceUnit: p.priceUnit,
     inStock: p.inStock,
     updatedAt: p.updatedAt.toISOString(),
 });
+
+function safeParseSpecs(raw: string): Record<string, unknown> | undefined {
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return parsed as Record<string, unknown>;
+        }
+    } catch {
+        // ignore malformed legacy value
+    }
+    return undefined;
+}
 
 export const mapUser = (u: UserDbRecord): User => ({
     id: u.id,
