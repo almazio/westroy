@@ -36,38 +36,33 @@ export default function SearchFilters({
     setViewMode,
 }: SearchFiltersProps) {
     return (
-        <div className={styles.sidebarCard}>
-            <h3 className={styles.sidebarTitle}>Фильтры</h3>
+        <div className={styles.filtersBar}>
+            <div className={styles.filterPills}>
+                <label className={styles.filterToggle}>
+                    <input type="checkbox" checked={onlyDelivery} onChange={(e) => setOnlyDelivery(e.target.checked)} />
+                    Доставка
+                </label>
+                <label className={styles.filterToggle}>
+                    <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
+                    В наличии
+                </label>
+                <label className={styles.filterToggle}>
+                    <input type="checkbox" checked={withImageOnly} onChange={(e) => setWithImageOnly(e.target.checked)} />
+                    С фото
+                </label>
+                <label className={styles.filterToggle}>
+                    <input type="checkbox" checked={withArticleOnly} onChange={(e) => setWithArticleOnly(e.target.checked)} />
+                    С артикулом
+                </label>
+            </div>
 
-            <label className={styles.filterToggle}>
-                <input type="checkbox" checked={onlyDelivery} onChange={(e) => setOnlyDelivery(e.target.checked)} />
-                Только с доставкой
-            </label>
-            <label className={styles.filterToggle}>
-                <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
-                Только в наличии
-            </label>
-            <label className={styles.filterToggle}>
-                <input type="checkbox" checked={withImageOnly} onChange={(e) => setWithImageOnly(e.target.checked)} />
-                Только с фото
-            </label>
-            <label className={styles.filterToggle}>
-                <input type="checkbox" checked={withArticleOnly} onChange={(e) => setWithArticleOnly(e.target.checked)} />
-                Только с артикулом
-            </label>
-
-            <div className={styles.sidebarField}>
-                <label>Бренд</label>
+            <div className={styles.filtersControls}>
                 <input
                     className="input"
                     placeholder="Например: ExProfil"
                     value={brandFilter}
                     onChange={(e) => setBrandFilter(e.target.value)}
                 />
-            </div>
-
-            <div className={styles.sidebarField}>
-                <label>Сортировка</label>
                 <select
                     className={styles.sortSelect}
                     value={sortBy}
@@ -77,10 +72,6 @@ export default function SearchFilters({
                     <option value="price_desc">Сначала дороже</option>
                     <option value="supplier">По поставщику</option>
                 </select>
-            </div>
-
-            <div className={styles.sidebarField}>
-                <label>Вид</label>
                 <div className={styles.viewSwitch}>
                     <button
                         type="button"

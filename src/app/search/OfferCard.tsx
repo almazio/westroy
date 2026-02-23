@@ -22,7 +22,6 @@ interface OfferCardProps {
     isAggregatesCategory: boolean;
     viewMode: 'grid-2' | 'grid-3' | 'list';
     onToggleProduct: (companyId: string, productId: string) => void;
-    onProductRequest: (companyId: string, productId: string, seller: { name: string; type: 'producer' | 'dealer' }) => void;
     onGuestSubmit: () => void;
     onGuestRegister: () => void;
     onGuestLogin: () => void;
@@ -47,7 +46,6 @@ export default function OfferCard({
     isAggregatesCategory,
     viewMode,
     onToggleProduct,
-    onProductRequest,
     onGuestSubmit,
     onGuestRegister,
     onGuestLogin,
@@ -69,6 +67,7 @@ export default function OfferCard({
     };
 
     const estimatedTotal = calculateEstimatedTotalByOffer(offer.priceFrom, offer.priceUnit);
+    const isPriceOnRequest = offer.priceFrom <= 0 || offer.priceUnit.toLowerCase().includes('запрос');
     return (
         <article className={`${styles.offerCard} ${viewMode === 'list' ? styles.offerCardList : ''}`} style={{ animationDelay: `${index * 0.04}s` }}>
             <div className={styles.offerImageWrap}>
@@ -80,7 +79,10 @@ export default function OfferCard({
                 />
             </div>
             <div className={styles.offerTitle}>{offer.productName}</div>
-            <div className={styles.offerPrice}>{formatPrice(offer.priceFrom)} ₸ <span>{offer.priceUnit}</span></div>
+            <div className={styles.offerPrice}>
+                {isPriceOnRequest ? 'Цена по запросу' : `${formatPrice(offer.priceFrom)} ₸`}
+                <span>{isPriceOnRequest ? '' : offer.priceUnit}</span>
+            </div>
             <p className={styles.offerDesc}>{offer.productDescription}</p>
             {(offer.productArticle || offer.productBrand || offer.boxQuantity) && (
                 <div className={styles.offerMeta}>
@@ -108,22 +110,14 @@ export default function OfferCard({
             </div>
             <div className={styles.offerAddress}>{offer.companyAddress}</div>
             <div className={styles.offerUpdate}>Прайс обновлен: {formatRelativePriceUpdate(offer.updatedAt) || 'недавно'}</div>
-            {offer.source && <div className={styles.offerUpdate}>Источник: {offer.source}</div>}
 
             <div className={styles.offerActions}>
                 <button
                     type="button"
-                    className={`btn btn-secondary btn-sm ${isSelected ? styles.offerSelectActive : ''}`}
+                    className={`btn btn-primary btn-sm ${isSelected ? styles.offerSelectActive : ''}`}
                     onClick={() => onToggleProduct(offer.companyId, offer.productId)}
                 >
                     {isSelected ? 'В заявке' : 'Добавить в заявку'}
-                </button>
-                <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => onProductRequest(offer.companyId, offer.productId, { name: offer.companyName, type: 'producer' })}
-                    disabled={requestSubmitting}
-                >
-                    Запросить цену
                 </button>
             </div>
 

@@ -125,45 +125,46 @@
 
 .resultsLayout {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: 16px;
     align-items: start;
 }
 
-.filtersSidebar {
-    position: sticky;
-    top: calc(var(--nav-height) + 16px);
+.resultsMain {
+    min-width: 0;
 }
 
-.sidebarCard {
+.filtersBar {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--bg-card);
     padding: 14px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 10px;
+    margin-bottom: 12px;
 }
 
-.sidebarTitle {
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.sidebarField {
+.filterPills {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.sidebarField label {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
+.filtersControls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtersControls :global(.input) {
+    min-width: 180px;
+    max-width: 240px;
+    height: 36px;
 }
 
 .viewSwitch {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
     gap: 6px;
 }
 
@@ -180,8 +181,12 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-secondary);
 }
 
 .aiInsight {
@@ -268,6 +273,112 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
+}
+
+.tableWrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+}
+
+.offersTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.offersTable th,
+.offersTable td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.offersTable th {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tableProduct {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tableThumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+}
+
+.tableTitle {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.tableSub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.requestBasket {
+    position: sticky;
+    top: calc(var(--nav-height) + 16px);
+}
+
+.basketCard {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.basketCard h3 {
+    margin: 0;
+}
+
+.basketCard p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.basketList {
+    display: grid;
+    gap: 6px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.basketItem {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.82rem;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.basketItem button {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.basketMore {
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
 .offerCard {
@@ -637,7 +748,7 @@
         grid-template-columns: 1fr;
     }
 
-    .filtersSidebar {
+    .requestBasket {
         position: static;
     }
 
@@ -646,6 +757,12 @@
     }
 
     .sortSelect {
+        width: 100%;
+    }
+
+    .filtersControls :global(.input) {
+        min-width: 0;
+        max-width: none;
         width: 100%;
     }
 
@@ -664,6 +781,13 @@
 
     .offerCardList .offerImageWrap {
         height: 150px;
+    }
+
+    .offersTable th:nth-child(2),
+    .offersTable td:nth-child(2),
+    .offersTable th:nth-child(4),
+    .offersTable td:nth-child(4) {
+        display: none;
     }
 
     .guestActions :global(.btn) {
