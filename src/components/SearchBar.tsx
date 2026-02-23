@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './SearchBar.module.css';
 import { trackEvent } from '@/lib/analytics';
 import { toAppUrl } from '@/lib/urls';
+
+interface SuggestItem {
+    type: 'category' | 'product' | 'query';
+    label: string;
+    value: string;
+    meta?: string;
+}
 
 const PLACEHOLDERS = [
     'Например: нужно 10 кубов бетона М300 с доставкой в Абай районе',
@@ -13,6 +20,8 @@ const PLACEHOLDERS = [
     'Арматура 12 мм 5 тонн...',
     'Экскаватор на 3 дня...',
 ];
+
+const DEBOUNCE_MS = 300;
 
 interface SearchBarProps {
     size?: 'normal' | 'hero';
@@ -23,8 +32,15 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
     const [query, setQuery] = useState(initialQuery);
     const [placeholderIdx, setPlaceholderIdx] = useState(0);
     const [isTyping, setIsTyping] = useState(false);
+    const [suggestions, setSuggestions] = useState<SuggestItem[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const inputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Animated placeholder
     useEffect(() => {
@@ -35,23 +51,127 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
         return () => clearInterval(interval);
     }, [query, isTyping]);
 
+    // Fetch suggestions with debounce
+    const fetchSuggestions = useCallback(async (q: string) => {
+        if (q.trim().length < 2) {
+            setSuggestions([]);
+            setShowDropdown(false);
+            return;
+        }
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/suggest?q=${encodeURIComponent(q.trim())}`);
+            if (res.ok) {
+                const data = await res.json();
+                setSuggestions(data.suggestions || []);
+                setShowDropdown(true);
+                setActiveIndex(-1);
+            }
+        } catch {
+            // silently ignore
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setQuery(val);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => fetchSuggestions(val), DEBOUNCE_MS);
+    };
+
+    const navigateToSearch = (q: string, categoryId?: string) => {
+        const params = new URLSearchParams();
+        if (categoryId) {
+            params.set('category', categoryId);
+        }
+        if (q.trim()) {
+            params.set('q', q.trim());
+        }
+        const relativeTarget = `/search?${params.toString()}`;
+        const absoluteTarget = toAppUrl(relativeTarget);
+        setShowDropdown(false);
+        setSuggestions([]);
+        trackEvent('search_submitted', {
+            query_length: q.trim().length,
+            source: size === 'hero' ? 'hero_search' : 'search_page',
+        });
+        if (typeof window !== 'undefined' && absoluteTarget.startsWith(window.location.origin)) {
+            router.push(relativeTarget);
+            return;
+        }
+        if (typeof window !== 'undefined') {
+            window.location.assign(absoluteTarget);
+        }
+    };
+
+    const handleSuggestionClick = (item: SuggestItem) => {
+        trackEvent('suggestion_clicked', { type: item.type, value: item.value });
+        if (item.type === 'category') {
+            navigateToSearch('', item.value);
+        } else if (item.type === 'product') {
+            setQuery(item.label);
+            navigateToSearch(item.label);
+        } else {
+            navigateToSearch(item.value);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+            handleSuggestionClick(suggestions[activeIndex]);
+            return;
+        }
         const trimmed = query.trim();
         if (trimmed) {
-            trackEvent('search_submitted', {
-                query_length: trimmed.length,
-                source: size === 'hero' ? 'hero_search' : 'search_page',
-            });
-            const relativeTarget = `/search?q=${encodeURIComponent(trimmed)}`;
-            const absoluteTarget = toAppUrl(relativeTarget);
-            if (typeof window !== 'undefined' && absoluteTarget.startsWith(window.location.origin)) {
-                router.push(relativeTarget);
-                return;
-            }
-            if (typeof window !== 'undefined') {
-                window.location.assign(absoluteTarget);
-            }
+            navigateToSearch(trimmed);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showDropdown || suggestions.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveIndex(prev => (prev + 1) % suggestions.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveIndex(prev => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+        } else if (e.key === 'Escape') {
+            setShowDropdown(false);
+            setActiveIndex(-1);
+        }
+    };
+
+    const handleFocus = () => {
+        setIsTyping(true);
+        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+        if (suggestions.length > 0) setShowDropdown(true);
+    };
+
+    const handleBlur = () => {
+        setIsTyping(false);
+        // Delay to allow click events on dropdown
+        blurTimeoutRef.current = setTimeout(() => {
+            setShowDropdown(false);
+        }, 200);
+    };
+
+    // Cleanup debounce on unmount
+    useEffect(() => {
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+        };
+    }, []);
+
+    const typeIcon = (type: SuggestItem['type']) => {
+        switch (type) {
+            case 'category': return '📂';
+            case 'product': return '📦';
+            case 'query': return '🔍';
         }
     };
 
@@ -70,19 +190,48 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
                     type="text"
                     className={styles.input}
                     value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    onFocus={() => setIsTyping(true)}
-                    onBlur={() => setIsTyping(false)}
+                    onChange={handleInputChange}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
                     placeholder={PLACEHOLDERS[placeholderIdx]}
+                    autoComplete="off"
+                    role="combobox"
+                    aria-expanded={showDropdown}
+                    aria-haspopup="listbox"
+                    aria-autocomplete="list"
                 />
-                {query && (
+                {loading && (
+                    <span className={styles.spinner} />
+                )}
+                {query && !loading && (
                     <button
                         type="button"
                         className={styles.clearBtn}
-                        onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+                        onClick={() => { setQuery(''); setSuggestions([]); setShowDropdown(false); inputRef.current?.focus(); }}
                     >
                         ✕
                     </button>
+                )}
+
+                {showDropdown && suggestions.length > 0 && (
+                    <div className={styles.dropdown} ref={dropdownRef} role="listbox">
+                        {suggestions.map((item, i) => (
+                            <button
+                                key={`${item.type}-${item.value}-${i}`}
+                                type="button"
+                                className={`${styles.dropdownItem} ${i === activeIndex ? styles.dropdownItemActive : ''}`}
+                                role="option"
+                                aria-selected={i === activeIndex}
+                                onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(item); }}
+                                onMouseEnter={() => setActiveIndex(i)}
+                            >
+                                <span className={styles.dropdownIcon}>{typeIcon(item.type)}</span>
+                                <span className={styles.dropdownLabel}>{item.label}</span>
+                                {item.meta && <span className={styles.dropdownMeta}>{item.meta}</span>}
+                            </button>
+                        ))}
+                    </div>
                 )}
             </div>
             <button type="submit" className={styles.submitBtn}>
@@ -95,3 +244,4 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
         </form>
     );
 }
+

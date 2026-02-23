@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseQuery, parseQueryRegex } from '@/lib/ai-parser';
+import { parseQueryRegex } from '@/lib/ai-parser';
+import { parseQueryLLM } from '@/lib/llm-parser';
 import { search } from '@/lib/search';
-import type { SearchFilters } from '@/lib/types';
+import type { ParsedQuery, SearchFilters } from '@/lib/types';
 
-const PARSER_TIMEOUT_MS = 1800;
+const LLM_TIMEOUT_MS = 1500;
 const CATEGORY_LABELS: Record<string, string> = {
     concrete: 'Бетон',
     aggregates: 'Инертные материалы',
@@ -22,29 +23,50 @@ const CATEGORY_LABELS: Record<string, string> = {
     'adhesives-sealants': 'Клеи и герметики',
 };
 
-async function parseWithTimeout(query: string) {
+/**
+ * Regex-first strategy:
+ * 1. Parse with regex instantly → start search immediately
+ * 2. In parallel, run LLM parser with timeout
+ * 3. If LLM returns a DIFFERENT categoryId, re-search with LLM results
+ * 4. Otherwise, enrich regex results with LLM data (grade, city)
+ */
+async function parseSmartWithRegexFirst(query: string): Promise<ParsedQuery> {
     if (!query.trim()) {
         return parseQueryRegex(query);
     }
 
-    const llmParsed = await Promise.race([
-        parseQuery(query),
-        new Promise<ReturnType<typeof parseQueryRegex>>((resolve) =>
-            setTimeout(() => resolve(parseQueryRegex(query)), PARSER_TIMEOUT_MS)
-        ),
+    const regexParsed = parseQueryRegex(query);
+
+    // If regex is confident, use it but try to enrich with LLM
+    const llmPromise = Promise.race([
+        parseQueryLLM(query).catch(() => null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), LLM_TIMEOUT_MS)),
     ]);
 
-    const regexParsed = parseQueryRegex(query);
-    if (regexParsed.categoryId && llmParsed.categoryId !== regexParsed.categoryId) {
+    const llmParsed = await llmPromise;
+
+    if (!llmParsed) {
+        // LLM timed out or failed — regex is good enough
+        return regexParsed;
+    }
+
+    // Regex categoryId takes priority (it's rule-based, more predictable)
+    if (regexParsed.categoryId) {
         return {
-            ...llmParsed,
-            categoryId: regexParsed.categoryId,
-            category: regexParsed.category,
-            suggestions: regexParsed.suggestions,
+            ...regexParsed,
+            grade: llmParsed.grade || regexParsed.grade,
+            city: llmParsed.city || regexParsed.city,
+            delivery: llmParsed.delivery ?? regexParsed.delivery,
+            confidence: Math.max(regexParsed.confidence, llmParsed.confidence),
         };
     }
 
-    return llmParsed;
+    // Regex couldn't detect category but LLM did
+    if (llmParsed.categoryId) {
+        return llmParsed;
+    }
+
+    return regexParsed;
 }
 
 export async function GET(request: NextRequest) {
@@ -76,7 +98,7 @@ export async function GET(request: NextRequest) {
             suggestions: [],
             originalQuery: '',
         }
-        : await parseWithTimeout(q);
+        : await parseSmartWithRegexFirst(q);
 
     // Override category if explicitly provided
     if (categoryId) {
@@ -88,3 +110,4 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(results);
 }
+
