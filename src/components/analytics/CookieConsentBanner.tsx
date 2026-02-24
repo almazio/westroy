@@ -13,7 +13,7 @@ export default function CookieConsentBanner() {
         <div className={styles.banner} role="dialog" aria-live="polite" aria-label="Cookie consent">
             <div className={styles.content}>
                 <p>
-                    Мы используем cookie и аналитику (Google Tag Manager и Яндекс.Метрика), чтобы улучшать поиск, заявки и удобство платформы.
+                    Мы используем cookie для улучшения работы платформы, персонализации и аналитики.
                 </p>
                 <div className={styles.actions}>
                     <button
