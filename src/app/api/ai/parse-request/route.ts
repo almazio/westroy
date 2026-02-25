@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     // Используем gemini-pro (она точно доступна в v1beta/public API)
     // Flash может требовать другой endpoint или версию SDK.
     // Если gemini-pro будет медленной, попробуем gemini-1.5-flash-latest
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     // 3. Промпт
     // Мы просим JSON текстом, т.к. режим responseMimeType="application/json" иногда
