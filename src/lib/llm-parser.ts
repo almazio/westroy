@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { ParsedQuery } from './types';
 import { parseQueryRegex } from './ai-parser';
+import { parseConstructionRequest } from './ai/gemini';
 
 let openai: OpenAI | null = null;
 let deepseek: OpenAI | null = null;
@@ -69,53 +70,18 @@ function mergeWithRegexFallback(query: string, llmResult: Partial<ParsedQuery>):
 }
 
 async function parseWithGemini(query: string): Promise<ParsedQuery> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error('GEMINI_API_KEY not configured');
+    const result = await parseConstructionRequest(query);
+    if (!result) {
+        throw new Error('Empty or invalid response from Gemini SDK');
     }
 
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            system_instruction: {
-                parts: [{ text: SYSTEM_PROMPT }],
-            },
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: query }],
-                },
-            ],
-            generationConfig: {
-                temperature: 0,
-                responseMimeType: 'application/json',
-            },
-        }),
-    });
-
-    if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Gemini error ${response.status}: ${body}`);
-    }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text || typeof text !== 'string') {
-        throw new Error('Empty response from Gemini');
-    }
-
-    const result = JSON.parse(extractJsonObject(text));
     return mergeWithRegexFallback(query, {
         category: result.category,
         categoryId: null,
         volume: result.volume ? String(result.volume) : null,
         unit: result.unit,
-        city: result.city,
-        grade: result.grade,
+        city: result.location,
+        grade: result.productType,
         delivery: result.delivery,
         confidence: 0.95,
         suggestions: [],
@@ -217,11 +183,11 @@ export async function parseQueryLLM(query: string): Promise<ParsedQuery> {
     }
 
     try {
-        if (hasDeepSeek) {
-            return await parseWithDeepSeek(query);
-        }
         if (hasGemini) {
             return await parseWithGemini(query);
+        }
+        if (hasDeepSeek) {
+            return await parseWithDeepSeek(query);
         }
         return await parseWithOpenAI(query);
     } catch (error) {
