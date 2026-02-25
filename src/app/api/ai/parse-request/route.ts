@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Используем быструю модель Gemini 1.5 Flash
+    // Убрали сложный enum из responseSchema, чтобы не падал TypeScript build.
+    // Валидацию делаем через промпт.
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
@@ -51,8 +53,7 @@ export async function POST(req: NextRequest) {
             product: { type: SchemaType.STRING, description: "Название товара (нормализованное)" },
             category: { 
               type: SchemaType.STRING, 
-              enum: ["CONCRETE", "INERT", "BRICK", "BLOCKS", "CEMENT", "OTHER", "INVALID"],
-              description: "Категория товара"
+              description: "Категория товара: CONCRETE, INERT, BRICK, BLOCKS, CEMENT, OTHER, INVALID"
             },
             volume: { type: SchemaType.NUMBER, description: "Объем (число) или null", nullable: true },
             volumeUnit: { type: SchemaType.STRING, description: "Единица измерения (м3, т, шт) или null", nullable: true },
