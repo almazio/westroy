@@ -50,8 +50,11 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Используем модель из env: GEMINI_MODEL
-    console.log(`Using Gemini model: ${modelName}`); 
-    const model = genAI.getGenerativeModel({ model: modelName });
+    // И ЯВНО указываем apiVersion: 'v1beta', чтобы SDK стучался куда надо.
+    console.log(`Using Gemini model: ${modelName} (apiVersion: v1beta)`); 
+    const model = genAI.getGenerativeModel({ 
+        model: modelName 
+    }, { apiVersion: "v1beta" });
 
     // 3. Промпт
     const systemInstruction = `
@@ -118,7 +121,7 @@ export async function POST(req: NextRequest) {
     // Если ошибка 404 (Model not found), подсказываем пользователю проверить env
     if (error.message?.includes("404") || error.message?.includes("not found")) {
         return NextResponse.json(
-            { success: false, error: `Model '${modelName}' not found or not supported. Check GEMINI_MODEL env var.` },
+            { success: false, error: `Model '${modelName}' not found or not supported in v1beta. Check GEMINI_MODEL env var.` },
             { status: 500 }
         );
     }
