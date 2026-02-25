@@ -4,6 +4,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Инициализация Gemini
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
+// Получаем имя модели из переменной окружения.
+// Если переменная не задана, пробуем "gemini-1.5-flash" как дефолт,
+// но лучше всегда задавать GEMINI_MODEL в Vercel.
+const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+
 // Устанавливаем максимальное время выполнения функции (Vercel)
 export const maxDuration = 30; // seconds
 
@@ -44,14 +49,11 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Используем gemini-pro (она точно доступна в v1beta/public API)
-    // Flash может требовать другой endpoint или версию SDK.
-    // Если gemini-pro будет медленной, попробуем gemini-1.5-flash-latest
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Используем модель из env: GEMINI_MODEL
+    console.log(`Using Gemini model: ${modelName}`); 
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     // 3. Промпт
-    // Мы просим JSON текстом, т.к. режим responseMimeType="application/json" иногда
-    // капризничает с моделями в v1beta. Надежнее пропарсить руками.
     const systemInstruction = `
       Ты — AI-менеджер строительной биржи Westroy.
       Твоя задача — извлекать структурированные данные из запросов на закупку стройматериалов.
@@ -111,7 +113,16 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Gemini Parse Error:", error);
+    console.error(`Gemini Parse Error (Model: ${modelName}):`, error);
+    
+    // Если ошибка 404 (Model not found), подсказываем пользователю проверить env
+    if (error.message?.includes("404") || error.message?.includes("not found")) {
+        return NextResponse.json(
+            { success: false, error: `Model '${modelName}' not found or not supported. Check GEMINI_MODEL env var.` },
+            { status: 500 }
+        );
+    }
+
     return NextResponse.json(
       { success: false, error: error.message || "Internal Server Error" },
       { status: 500 }
