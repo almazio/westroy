@@ -3,12 +3,9 @@ import bcrypt from 'bcryptjs';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { createLogger } from '@/lib/logger';
+import { UserCreateSchema, parseBody } from '@/lib/schemas';
 
 const log = createLogger('api');
-
-function isValidRole(role: string): role is 'client' | 'producer' | 'admin' {
-    return role === 'client' || role === 'producer' || role === 'admin';
-}
 
 export async function GET() {
     const session = await auth();
@@ -54,22 +51,13 @@ export async function POST(request: Request) {
     }
 
     try {
-        const body = await request.json();
-        const name = String(body.name || '').trim();
-        const email = String(body.email || '').trim().toLowerCase();
-        const phone = String(body.phone || '').trim();
-        const password = String(body.password || '');
-        const role = String(body.role || 'client');
+        const raw = await request.json();
+        const parsed = parseBody(UserCreateSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
+        }
 
-        if (!name || !email || !phone || !password) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-        }
-        if (!isValidRole(role)) {
-            return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-        }
-        if (password.length < 6) {
-            return NextResponse.json({ error: 'Password must be at least 6 chars' }, { status: 400 });
-        }
+        const { name, email, phone, password, role } = parsed.data;
 
         const existing = await prisma.user.findFirst({
             where: {

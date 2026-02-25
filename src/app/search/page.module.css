@@ -329,7 +329,7 @@
 
 .requestBasket {
     position: sticky;
-    top: 16px;
+    top: calc(var(--nav-height) + 16px);
 }
 
 .basketCard {

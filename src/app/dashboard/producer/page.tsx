@@ -7,6 +7,7 @@ import styles from './page.module.css';
 import ProductsTab from '@/components/dashboard/producer/ProductsTab';
 import SettingsTab from '@/components/dashboard/producer/SettingsTab';
 import OffersTab from '@/components/dashboard/producer/OffersTab';
+import OrdersManager from '@/components/dashboard/OrdersManager';
 // Actually SettingsTab is expecting existing companyId.
 // We need a CreateCompany component.
 
@@ -97,7 +98,7 @@ interface CompanyOfferRef {
 
 export default function ProducerDashboard() {
     const { data: session } = useSession();
-    const [tab, setTab] = useState<'requests' | 'offers' | 'products' | 'settings'>('requests');
+    const [tab, setTab] = useState<'requests' | 'offers' | 'orders' | 'products' | 'settings'>('requests');
     const [requests, setRequests] = useState<RequestData[]>([]);
     const [loading, setLoading] = useState(true);
     const [companyLoading, setCompanyLoading] = useState(true);
@@ -232,6 +233,12 @@ export default function ProducerDashboard() {
                         💸 Мои предложения
                     </button>
                     <button
+                        className={`${styles.tab} ${tab === 'orders' ? styles.tabActive : ''}`}
+                        onClick={() => setTab('orders')}
+                    >
+                        📦 Мои заказы
+                    </button>
+                    <button
                         className={`${styles.tab} ${tab === 'products' ? styles.tabActive : ''}`}
                         onClick={() => setTab('products')}
                     >
@@ -354,6 +361,17 @@ export default function ProducerDashboard() {
                     <div className={styles.tabContent}>
                         {companyId ? (
                             <OffersTab companyId={companyId} />
+                        ) : (
+                            <p>Ошибка: Профиль не найден</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Orders tab */}
+                {tab === 'orders' && (
+                    <div className={styles.tabContent}>
+                        {companyId ? (
+                            <OrdersManager role="producer" />
                         ) : (
                             <p>Ошибка: Профиль не найден</p>
                         )}

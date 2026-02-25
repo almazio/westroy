@@ -93,6 +93,8 @@ export interface SearchResultData {
     stats?: {
         completedOrders: number;
         avgResponseMinutes: number | null;
+        rating?: number;
+        reviewCount?: number;
     };
 }
 
@@ -150,6 +152,8 @@ export interface ProductOffer {
     companyStats?: {
         completedOrders: number;
         avgResponseMinutes: number | null;
+        rating?: number;
+        reviewCount?: number;
     };
 }
 

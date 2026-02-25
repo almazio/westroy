@@ -117,6 +117,8 @@ export interface SearchResult {
   stats?: {
     completedOrders: number;
     avgResponseMinutes: number | null;
+    rating?: number;
+    reviewCount?: number;
   };
 }
 

@@ -198,6 +198,7 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
                     autoComplete="off"
                     role="combobox"
                     aria-expanded={showDropdown}
+                    aria-controls="search-suggestions-listbox"
                     aria-haspopup="listbox"
                     aria-autocomplete="list"
                 />
@@ -215,7 +216,7 @@ export default function SearchBar({ size = 'normal', initialQuery = '' }: Search
                 )}
 
                 {showDropdown && suggestions.length > 0 && (
-                    <div className={styles.dropdown} ref={dropdownRef} role="listbox">
+                    <div className={styles.dropdown} ref={dropdownRef} role="listbox" id="search-suggestions-listbox">
                         {suggestions.map((item, i) => (
                             <button
                                 key={`${item.type}-${item.value}-${i}`}

@@ -423,96 +423,96 @@ function SearchContent() {
                                     viewMode={viewMode}
                                     setViewMode={setViewMode}
                                 />
-                            {viewMode === 'list' ? (
-                                <div className={styles.tableWrap}>
-                                    <table className={styles.offersTable}>
-                                        <thead>
-                                            <tr>
-                                                <th>Товар</th>
-                                                <th>Артикул</th>
-                                                <th>Цена</th>
-                                                <th>Поставщик</th>
-                                                <th>Наличие</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredOffers.map((offer) => {
-                                                const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
-                                                const isPriceOnRequest = offer.priceFrom <= 0 || offer.priceUnit.toLowerCase().includes('запрос');
-                                                return (
-                                                    <tr key={`${offer.companyId}:${offer.productId}`}>
-                                                        <td>
-                                                            <div className={styles.tableProduct}>
-                                                                <img
-                                                                    src={offer.imageUrl || '/images/catalog/materials.jpg'}
-                                                                    alt={offer.productName}
-                                                                    className={styles.tableThumb}
-                                                                    loading="lazy"
-                                                                />
-                                                                <div>
-                                                                    <div className={styles.tableTitle}>{offer.productName}</div>
-                                                                    <div className={styles.tableSub}>{offer.productBrand || '—'}</div>
+                                {viewMode === 'list' ? (
+                                    <div className={styles.tableWrap}>
+                                        <table className={styles.offersTable}>
+                                            <thead>
+                                                <tr>
+                                                    <th>Товар</th>
+                                                    <th>Артикул</th>
+                                                    <th>Цена</th>
+                                                    <th>Поставщик</th>
+                                                    <th>Наличие</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredOffers.map((offer) => {
+                                                    const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
+                                                    const isPriceOnRequest = offer.priceFrom <= 0 || offer.priceUnit.toLowerCase().includes('запрос');
+                                                    return (
+                                                        <tr key={`${offer.companyId}:${offer.productId}`}>
+                                                            <td>
+                                                                <div className={styles.tableProduct}>
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img
+                                                                        src={offer.imageUrl || '/images/catalog/materials.jpg'}
+                                                                        alt={offer.productName}
+                                                                        className={styles.tableThumb}
+                                                                        loading="lazy"
+                                                                    />
+                                                                    <div>
+                                                                        <div className={styles.tableTitle}>{offer.productName}</div>
+                                                                        <div className={styles.tableSub}>{offer.productBrand || '—'}</div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>{offer.productArticle || '—'}</td>
-                                                        <td>{isPriceOnRequest ? 'По запросу' : `${formatPrice(offer.priceFrom)} ₸ ${offer.priceUnit}`}</td>
-                                                        <td>
-                                                            <Link href={`/company/${offer.companyId}`}>{offer.companyName}</Link>
-                                                        </td>
-                                                        <td>{offer.inStock ? 'В наличии' : 'Под заказ'}</td>
-                                                        <td>
-                                                            <button
-                                                                type="button"
-                                                                className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
-                                                                onClick={() => handleProductToggle(offer.companyId, offer.productId)}
-                                                            >
-                                                                {isSelected ? 'В заявке' : 'В заявку'}
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className={viewMode === 'grid-3' ? styles.offersGrid3 : styles.offersGrid}>
-                                    {filteredOffers.map((offer, i) => {
-                                        const offerKey = `${offer.companyId}:${offer.productId}`;
-                                        const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
-                                        const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
+                                                            </td>
+                                                            <td>{offer.productArticle || '—'}</td>
+                                                            <td>{isPriceOnRequest ? 'По запросу' : `${formatPrice(offer.priceFrom)} ₸ ${offer.priceUnit}`}</td>
+                                                            <td>
+                                                                <Link href={`/company/${offer.companyId}`}>{offer.companyName}</Link>
+                                                            </td>
+                                                            <td>{offer.inStock ? 'В наличии' : 'Под заказ'}</td>
+                                                            <td>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
+                                                                    onClick={() => handleProductToggle(offer.companyId, offer.productId)}
+                                                                >
+                                                                    {isSelected ? 'В заявке' : 'В заявку'}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className={viewMode === 'grid-3' ? styles.offersGrid3 : styles.offersGrid}>
+                                        {filteredOffers.map((offer, i) => {
+                                            const offerKey = `${offer.companyId}:${offer.productId}`;
+                                            const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
+                                            const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
 
-                                        return (
-                                            <OfferCard
-                                                key={offerKey}
-                                                offer={offer}
-                                                index={i}
-                                                isSelected={!!isSelected}
-                                                showGuestInline={showGuestInline}
-                                                requestSubmitting={requestSubmitting}
-                                                guestForm={guestForm}
-                                                setGuestForm={setGuestForm}
-                                                guestSent={guestSent}
-                                                guestSubmitting={guestSubmitting}
-                                                guestSeller={guestSeller}
-                                                requestedQuantity={requestedQuantity}
-                                                hasRequestedQuantity={hasRequestedQuantity}
-                                                requestedUnit={requestedUnit}
-                                                isAggregatesCategory={isAggregatesCategory}
-                                                viewMode={viewMode}
-                                                onToggleProduct={handleProductToggle}
-                                                onGuestSubmit={() => handleGuestSubmit(offer)}
-                                                onGuestRegister={makeGuestAuthHandler(offer, 'register')}
-                                                onGuestLogin={makeGuestAuthHandler(offer, 'login')}
-                                                onGuestContinue={() => { setGuestOfferId(null); setGuestSeller(null); setGuestSent(false); }}
-                                                onGuestPostRegister={makeGuestAuthHandler(offer, 'register')}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                            return (
+                                                <OfferCard
+                                                    key={offerKey}
+                                                    offer={offer}
+                                                    index={i}
+                                                    isSelected={!!isSelected}
+                                                    showGuestInline={showGuestInline}
+                                                    guestForm={guestForm}
+                                                    setGuestForm={setGuestForm}
+                                                    guestSent={guestSent}
+                                                    guestSubmitting={guestSubmitting}
+                                                    guestSeller={guestSeller}
+                                                    requestedQuantity={requestedQuantity}
+                                                    hasRequestedQuantity={hasRequestedQuantity}
+                                                    requestedUnit={requestedUnit}
+                                                    isAggregatesCategory={isAggregatesCategory}
+                                                    viewMode={viewMode}
+                                                    onToggleProduct={handleProductToggle}
+                                                    onGuestSubmit={() => handleGuestSubmit(offer)}
+                                                    onGuestRegister={makeGuestAuthHandler(offer, 'register')}
+                                                    onGuestLogin={makeGuestAuthHandler(offer, 'login')}
+                                                    onGuestContinue={() => { setGuestOfferId(null); setGuestSeller(null); setGuestSent(false); }}
+                                                    onGuestPostRegister={makeGuestAuthHandler(offer, 'register')}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                             <aside className={styles.requestBasket}>
                                 <div className={styles.basketCard}>

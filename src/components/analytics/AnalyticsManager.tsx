@@ -36,6 +36,7 @@ export default function AnalyticsManager() {
     const query = useMemo(() => {
         if (typeof window === 'undefined') return '';
         return window.location.search.replace(/^\?/, '');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pathname]);
 
     useEffect(() => {

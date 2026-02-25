@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { createLogger } from '@/lib/logger';
+import { CompanyCreateSchema, parseBody } from '@/lib/schemas';
 
 const log = createLogger('api');
 
@@ -49,12 +50,13 @@ export async function POST(request: Request) {
     }
 
     try {
-        const body = await request.json();
-        const { name, description, phone, address, delivery, regionId, categoryId } = body;
-
-        if (!name || !phone || !address) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        const raw = await request.json();
+        const parsed = parseBody(CompanyCreateSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
+
+        const { name, description, phone, address, delivery, regionId, categoryId } = parsed.data;
 
         // Check if user already has a company
         const existing = await prisma.company.findUnique({

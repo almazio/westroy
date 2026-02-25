@@ -38,7 +38,7 @@ export async function addOffer(data: Offer): Promise<Offer> {
 
 export async function getCompanyMarketStats(
     companyIds: string[]
-): Promise<Record<string, { completedOrders: number; avgResponseMinutes: number | null }>> {
+): Promise<Record<string, { completedOrders: number; avgResponseMinutes: number | null; rating: number; reviewCount: number }>> {
     if (companyIds.length === 0) return {};
 
     const offers = await prisma.offer.findMany({
@@ -79,14 +79,37 @@ export async function getCompanyMarketStats(
         }
     }
 
-    const result: Record<string, { completedOrders: number; avgResponseMinutes: number | null }> = {};
+    const result: Record<string, { completedOrders: number; avgResponseMinutes: number | null; rating: number; reviewCount: number }> = {};
     for (const [companyId, value] of Object.entries(stats)) {
         result[companyId] = {
             completedOrders: value.completedOrders,
             avgResponseMinutes: value.responseCount > 0
                 ? Math.round(value.totalResponseMinutes / value.responseCount)
                 : null,
+            rating: 0,
+            reviewCount: 0,
         };
+    }
+
+    const reviews = await prisma.review.findMany({
+        where: { companyId: { in: companyIds } },
+        select: { companyId: true, rating: true },
+    });
+
+    for (const review of reviews) {
+        if (result[review.companyId]) {
+            result[review.companyId].rating += review.rating;
+            result[review.companyId].reviewCount += 1;
+        }
+    }
+
+    // Convert accumulated rating to average
+    for (const companyId of Object.keys(result)) {
+        if (result[companyId].reviewCount > 0) {
+            result[companyId].rating = Math.round((result[companyId].rating / result[companyId].reviewCount) * 10) / 10;
+        } else {
+            result[companyId].rating = 5.0; // Default rating if no reviews
+        }
     }
 
     return result;

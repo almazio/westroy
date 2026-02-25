@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { createLogger } from '@/lib/logger';
+import { CompanyUpdateSchema, parseBody } from '@/lib/schemas';
 
 const log = createLogger('api');
 
@@ -52,8 +53,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const body = await request.json();
-        const { name, description, address, phone, delivery } = body;
+        const raw = await request.json();
+        const parsed = parseBody(CompanyUpdateSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
+        }
+
+        const { name, description, address, phone, delivery } = parsed.data;
 
         const updatedCompany = await prisma.company.update({
             where: { id: id },

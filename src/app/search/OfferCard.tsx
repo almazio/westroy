@@ -10,7 +10,6 @@ interface OfferCardProps {
     index: number;
     isSelected: boolean;
     showGuestInline: boolean;
-    requestSubmitting: boolean;
     guestForm: GuestFormState;
     setGuestForm: (updater: (prev: GuestFormState) => GuestFormState) => void;
     guestSent: boolean;
@@ -34,7 +33,6 @@ export default function OfferCard({
     index,
     isSelected,
     showGuestInline,
-    requestSubmitting,
     guestForm,
     setGuestForm,
     guestSent,
@@ -71,6 +69,7 @@ export default function OfferCard({
     return (
         <article className={`${styles.offerCard} ${viewMode === 'list' ? styles.offerCardList : ''}`} style={{ animationDelay: `${index * 0.04}s` }}>
             <div className={styles.offerImageWrap}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={offer.imageUrl || getOfferImage(offer)}
                     alt={offer.productName}
@@ -98,6 +97,11 @@ export default function OfferCard({
                 {offer.inStock ? <span className="badge badge-success">В наличии</span> : <span className="badge">Под заказ</span>}
                 {offer.companyStats?.avgResponseMinutes !== null && offer.companyStats?.avgResponseMinutes !== undefined && (
                     <span className="badge badge-warning">⚡ {offer.companyStats.avgResponseMinutes} мин</span>
+                )}
+                {offer.companyStats?.rating !== undefined && offer.companyStats?.reviewCount !== undefined && offer.companyStats.reviewCount > 0 && (
+                    <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold' }}>
+                        ⭐ {offer.companyStats.rating} ({offer.companyStats.reviewCount})
+                    </span>
                 )}
             </div>
 

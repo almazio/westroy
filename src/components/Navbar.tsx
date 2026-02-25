@@ -13,7 +13,6 @@ export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
     const pathname = usePathname();
     const [menuOpen, setMenuOpen] = useState(false);
-    const isHomePage = pathname === '/';
     const isAppHost = typeof window !== 'undefined' && window.location.hostname === 'app.westroy.kz';
 
     const navLinks = {

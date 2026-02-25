@@ -4,18 +4,6 @@ import { notifyOps } from '@/lib/notifications';
 import { checkRateLimit, getClientIp, rateLimits } from '@/lib/rate-limit';
 import { GuestRequestSchema, parseBody } from '@/lib/schemas';
 
-interface GuestRequestBody {
-    name?: string;
-    phone?: string;
-    quantity?: string;
-    address?: string;
-    query?: string;
-    companyName?: string;
-    productName?: string;
-    sellerName?: string;
-    city?: string;
-}
-
 export async function POST(request: NextRequest) {
     try {
         const rl = checkRateLimit(getClientIp(request), rateLimits.guestForm);

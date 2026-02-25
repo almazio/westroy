@@ -3,12 +3,9 @@ import bcrypt from 'bcryptjs';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { createLogger } from '@/lib/logger';
+import { UserUpdateSchema, parseBody } from '@/lib/schemas';
 
 const log = createLogger('api');
-
-function isValidRole(role: string): role is 'client' | 'producer' | 'admin' {
-    return role === 'client' || role === 'producer' || role === 'admin';
-}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -24,20 +21,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const body = await request.json();
-        const nextName = body.name !== undefined ? String(body.name).trim() : undefined;
-        const nextPhone = body.phone !== undefined ? String(body.phone).trim() : undefined;
-        const nextRole = body.role !== undefined ? String(body.role) : undefined;
-        const nextPassword = body.password !== undefined ? String(body.password) : undefined;
-
-        if (nextRole !== undefined && !isValidRole(nextRole)) {
-            return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+        const raw = await request.json();
+        const parsed = parseBody(UserUpdateSchema, raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
+
+        const nextName = parsed.data.name;
+        const nextPhone = parsed.data.phone;
+        const nextRole = parsed.data.role;
+        const nextPassword = parsed.data.password;
+
         if (session.user.id === id && nextRole && nextRole !== 'admin') {
             return NextResponse.json({ error: 'Cannot remove your own admin role' }, { status: 400 });
-        }
-        if (nextPassword !== undefined && nextPassword.length > 0 && nextPassword.length < 6) {
-            return NextResponse.json({ error: 'Password must be at least 6 chars' }, { status: 400 });
         }
 
         if (nextPhone && nextPhone !== existing.phone) {

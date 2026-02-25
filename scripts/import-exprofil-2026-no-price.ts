@@ -283,7 +283,7 @@ function extractItemsFromText(rawText: string): ParsedItem[] {
 
     if (names.length === 0) continue;
 
-    let quantities: number[] = [];
+    const quantities: number[] = [];
     let quantityStart = -1;
     for (let j = i + 1; j < Math.min(lines.length, i + 120); j += 1) {
       if (lines[j].toLowerCase() === 'количество' && lines[j + 1]?.toLowerCase() === 'в коробке') {

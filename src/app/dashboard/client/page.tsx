@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import OrdersManager from '@/components/dashboard/OrdersManager';
 
 interface RequestData {
     id: string;
@@ -103,20 +104,40 @@ export default function ClientDashboard() {
         cancelled: { label: 'Отменена', className: '' },
     };
 
+    const [tab, setTab] = useState<'requests' | 'orders'>('requests');
+
     return (
         <div className="page">
             <div className="container">
                 <div className={styles.header}>
                     <div>
-                        <h1>Мои заявки</h1>
-                        <p className="text-secondary">Все ваши запросы и полученные предложения</p>
+                        <h1>Кабинет клиента</h1>
+                        <p className="text-secondary">Управление заявками и заказами</p>
                     </div>
                     <Link href="/" className="btn btn-primary">
                         + Новый поиск
                     </Link>
                 </div>
 
-                {loading ? (
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: 12, marginBottom: 24, overflowX: 'auto', paddingBottom: 8 }}>
+                    <button
+                        className={`btn ${tab === 'requests' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setTab('requests')}
+                    >
+                        📨 Мои заявки
+                    </button>
+                    <button
+                        className={`btn ${tab === 'orders' ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setTab('orders')}
+                    >
+                        📦 Заказы
+                    </button>
+                </div>
+
+                {tab === 'orders' ? (
+                    <OrdersManager role="client" />
+                ) : loading ? (
                     <div className="loading" style={{ padding: 60, textAlign: 'center' }}>Загрузка...</div>
                 ) : requests.length === 0 ? (
                     <div className={styles.empty}>
@@ -216,7 +237,7 @@ export default function ClientDashboard() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 
