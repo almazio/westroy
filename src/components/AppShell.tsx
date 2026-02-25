@@ -133,6 +133,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className={styles.content}>
                 {children}
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className={styles.bottomNav}>
+                {navItems.map(item => (
+                    <Link
+                        key={`mob-${item.href}`}
+                        href={item.href}
+                        className={`${styles.bottomNavItem} ${isActive(item.href) ? styles.bottomNavItemActive : ''}`}
+                    >
+                        <span className={styles.bottomNavIcon}>{item.icon}</span>
+                        <span className={styles.bottomNavLabel}>{item.label}</span>
+                        {item.badge && item.badge > 0 && (
+                            <span className={styles.bottomNavBadge}>{item.badge > 99 ? '99+' : item.badge}</span>
+                        )}
+                    </Link>
+                ))}
+            </nav>
         </div>
     );
 }
