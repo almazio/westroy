@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-// Инициализация OpenAI. Ключ берется автоматически из process.env.OPENAI_API_KEY
-// Если ключа нет — будет ошибка, поэтому делаем проверку внутри хендлера.
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "dummy_key", // Fallback чтобы не падал билд, но в рантайме нужна проверка
-});
+// Инициализация Gemini
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-// Схема ответа (для документации и фронтенда)
+// Схема ответа для TypeScript
 interface AIParseResponse {
   product: string;
   category: "CONCRETE" | "INERT" | "BRICK" | "BLOCKS" | "CEMENT" | "OTHER" | "INVALID";
@@ -17,15 +14,15 @@ interface AIParseResponse {
   deliveryNeeded: boolean;
   urgent: boolean;
   rawContact: string | null;
-  userMessage: string; // Ответ бота пользователю
+  userMessage: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Проверка API ключа
-    if (!process.env.OPENAI_API_KEY) {
+    if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: "OpenAI API key is missing on server" },
+        { success: false, error: "GOOGLE_API_KEY is missing on server" },
         { status: 500 }
       );
     }
@@ -41,73 +38,78 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Формирование промпта для AI
-    const systemPrompt = `
-      Ты — AI-менеджер строительной биржи Westroy. Твоя задача — извлекать структурированные данные из сырых запросов клиентов на закупку стройматериалов.
-
-      ТВОЯ ЦЕЛЬ:
-      Преобразовать текст пользователя в JSON-объект строго по схеме ниже.
-
-      ФОРМАТ ВЫВОДА (JSON ONLY):
-      {
-        "product": "Название товара (нормализованное, например: Бетон М300)",
-        "category": "Категория товара (строго одно из: CONCRETE, INERT, BRICK, BLOCKS, CEMENT, OTHER, INVALID)",
-        "volume": число или null (только цифра),
-        "volumeUnit": "ед. изм. (м3, т, шт, кг) или null",
-        "location": "Город или район доставки (если указан, иначе null)",
-        "deliveryNeeded": true/false (по умолчанию true, если не указан самовывоз),
-        "urgent": true/false (если есть слова 'срочно', 'сегодня', 'сейчас'),
-        "details": "Любые важные детали (марка, фракция, особенности заезда, и т.д.)",
-        "rawContact": "Контактные данные, если есть в тексте (телефон, имя), иначе null",
-        "userMessage": "Текст твоего ответа пользователю. Если данных хватает — подтверди заказ и скажи что ищешь поставщиков. Если данных мало (нет объема или марки) — задай уточняющий вопрос."
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Используем быструю модель Gemini 1.5 Flash
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            product: { type: SchemaType.STRING, description: "Название товара (нормализованное)" },
+            category: { 
+              type: SchemaType.STRING, 
+              enum: ["CONCRETE", "INERT", "BRICK", "BLOCKS", "CEMENT", "OTHER", "INVALID"],
+              description: "Категория товара"
+            },
+            volume: { type: SchemaType.NUMBER, description: "Объем (число) или null", nullable: true },
+            volumeUnit: { type: SchemaType.STRING, description: "Единица измерения (м3, т, шт) или null", nullable: true },
+            location: { type: SchemaType.STRING, description: "Город/Район доставки или null", nullable: true },
+            deliveryNeeded: { type: SchemaType.BOOLEAN, description: "Нужна ли доставка (default: true)" },
+            urgent: { type: SchemaType.BOOLEAN, description: "Срочность" },
+            details: { type: SchemaType.STRING, description: "Детали (марка, фракция)", nullable: true },
+            rawContact: { type: SchemaType.STRING, description: "Контактные данные из текста или null", nullable: true },
+            userMessage: { type: SchemaType.STRING, description: "Ответ бота пользователю (подтверждение или уточнение)" }
+          },
+          required: ["product", "category", "deliveryNeeded", "urgent", "userMessage"]
+        }
       }
-
-      ПРАВИЛА:
-      1. Если запрос не относится к стройматериалам (например "продам гараж" или спам), ставь category: "INVALID" и userMessage: "Я занимаюсь только поиском стройматериалов."
-      2. Если категория не очевидна, ставь "OTHER".
-      3. В поле volume пиши только число. Единицу измерения в volumeUnit.
-      4. ОТВЕЧАЙ ТОЛЬКО ЧИСТЫМ JSON. Без markdown блоков \`\`\`.
-    `;
-
-    // 4. Запрос к OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Используем быструю и дешевую модель
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text },
-      ],
-      temperature: 0.3, // Низкая температура для предсказуемости
-      max_tokens: 500,
     });
 
-    const rawContent = completion.choices[0]?.message?.content?.trim();
+    // 3. Промпт
+    const systemInstruction = `
+      Ты — AI-менеджер строительной биржи Westroy.
+      Твоя задача — извлекать структурированные данные из запросов на закупку стройматериалов.
+      
+      ПРАВИЛА:
+      1. Если запрос не про стройку (спам, продажа гаража), ставь category="INVALID".
+      2. Если категория не очевидна, ставь "OTHER".
+      3. volume должен быть числом. Если в тексте "5 кубов", volume=5, volumeUnit="м3".
+      4. userMessage: Сформируй вежливый ответ на русском языке.
+         - Если данных достаточно: "Принято! Бетон М300, 5 кубов в Акжар. Ищу поставщиков..."
+         - Если нет объема/марки: "Какой объем бетона вам нужен?"
+    `;
 
-    if (!rawContent) {
-      throw new Error("Empty response from OpenAI");
-    }
+    // 4. Запрос к модели
+    const result = await model.generateContent({
+      contents: [
+        { role: "user", parts: [{ text: systemInstruction + "\n\nЗАПРОС ПОЛЬЗОВАТЕЛЯ:\n" + text }] }
+      ]
+    });
 
-    // 5. Парсинг ответа (убираем возможные markdown-обертки)
-    const jsonStr = rawContent.replace(/^```json/, "").replace(/```$/, "").trim();
+    const responseText = result.response.text();
     let parsedData: AIParseResponse;
 
     try {
-      parsedData = JSON.parse(jsonStr);
+      parsedData = JSON.parse(responseText);
     } catch (e) {
-      console.error("Failed to parse AI response:", rawContent);
+      console.error("Failed to parse Gemini response:", responseText);
       return NextResponse.json(
         { success: false, error: "AI returned invalid JSON" },
         { status: 502 }
       );
     }
 
-    // 6. Успешный ответ
+    // 5. Успешный ответ
     return NextResponse.json({
       success: true,
       data: parsedData,
     });
 
   } catch (error: any) {
-    console.error("AI Parse Error:", error);
+    console.error("Gemini Parse Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Internal Server Error" },
       { status: 500 }
