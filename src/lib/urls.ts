@@ -8,9 +8,12 @@ function normalizePath(path: string) {
 function runtimeAppOrigin() {
     if (typeof window === "undefined") return null;
     const host = window.location.hostname.toLowerCase();
-    if (host === "localhost" || host === "127.0.0.1") {
+    
+    // Support Vercel preview URLs
+    if (host.includes("vercel.app") || host === "localhost" || host === "127.0.0.1") {
         return window.location.origin;
     }
+    
     if (host === "app.westroy.kz") {
         return window.location.origin;
     }
@@ -23,5 +26,11 @@ export function getAppOrigin() {
 
 export function toAppUrl(path: string) {
     if (/^https?:\/\//i.test(path)) return path;
+    
+    // If we are on client side, use relative path to stay on same domain (supports preview)
+    if (typeof window !== "undefined") {
+        return normalizePath(path);
+    }
+    
     return `${getAppOrigin()}${normalizePath(path)}`;
 }
