@@ -37,6 +37,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { text } = body;
 
+    // DEBUG: Если текст "debug_models", возвращаем список доступных моделей
+    if (text === "debug_models") {
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const listRes = await fetch(listUrl);
+        const listData = await listRes.json();
+        return NextResponse.json({
+            success: true,
+            debug: true,
+            models: listData.models?.map((m: any) => m.name) || [],
+            raw: listData
+        });
+    }
+
     if (!text || typeof text !== "string") {
       return NextResponse.json(
         { success: false, error: "Field 'text' is required and must be a string" },
@@ -94,6 +107,12 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error("Gemini API Error:", response.status, errorText);
+        
+        // Если ошибка 404, пробуем подсказать, какие модели доступны (если это возможно узнать из ошибки)
+        if (response.status === 404) {
+             throw new Error(`Model '${modelName}' not found. Try sending 'debug_models' as text to see available models.`);
+        }
+        
         throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
     }
 
