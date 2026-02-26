@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Инициализация
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-// Берем модель из env или дефолт (gemini-pro - самая надежная)
-// Можно попробовать gemini-1.5-flash, если нужна скорость.
-const modelName = process.env.GEMINI_MODEL || "gemini-pro";
+
+// Хардкодим правильную модель, которую мы видели в debug_models
+// gemini-2.0-flash-001 - это стабильная версия, которая точно работает с ключом.
+const modelName = "gemini-2.0-flash-001";
 
 // Устанавливаем максимальное время выполнения функции (Vercel)
 export const maxDuration = 30; // seconds
@@ -87,7 +88,6 @@ export async function POST(req: NextRequest) {
 
     // 4. Прямой запрос к REST API (без SDK)
     // Используем v1beta, так как это основной эндпоинт для Gemini API (через API Key)
-    // Если gemini-pro в v1beta недоступна (странно, но бывает), можно попробовать v1.
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
     console.log(`Calling Gemini API directly: ${modelName}`);
