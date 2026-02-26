@@ -1,0 +1,173 @@
+/* AI Insight Panel New Styles */
+.aiInsight {
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    position: relative;
+}
+
+.aiContent {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px 24px;
+}
+
+.aiMain {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+}
+
+.aiHeaderRow {
+    display: flex;
+    align-items: flex-start;
+}
+
+.aiMessageBubble {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.aiIcon {
+    font-size: 1.4rem;
+    line-height: 1;
+    animation: float 3s ease-in-out infinite;
+}
+
+.aiMessageText {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+}
+
+.aiLoadingRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.aiLoadingText {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    background: linear-gradient(90deg, var(--text-secondary) 0%, var(--text-muted) 50%, var(--text-secondary) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s infinite linear;
+}
+
+.aiTagsRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 36px; /* indent to align with text */
+}
+
+.aiTag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.aiTagUrgent {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #ef4444;
+}
+
+.aiStatsSide {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+}
+
+.aiStatItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.aiStatLabel {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.aiStatValue {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+
+.aiFooter {
+    background: rgba(0, 0, 0, 0.02);
+    padding: 10px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+}
+
+.aiTipsCompact {
+    display: flex;
+    gap: 16px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+    .aiContent {
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .aiStatsSide {
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .aiTagsRow {
+        margin-left: 0;
+    }
+}
