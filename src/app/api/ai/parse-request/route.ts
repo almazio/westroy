@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Инициализация Gemini
+// Инициализация
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-
-// Получаем имя модели из переменной окружения.
-// Если переменная не задана, пробуем "gemini-1.5-flash" как дефолт,
-// но лучше всегда задавать GEMINI_MODEL в Vercel.
-const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+// Берем модель из env или дефолт (gemini-pro - самая надежная)
+// Можно попробовать gemini-1.5-flash, если нужна скорость.
+const modelName = process.env.GEMINI_MODEL || "gemini-pro";
 
 // Устанавливаем максимальное время выполнения функции (Vercel)
 export const maxDuration = 30; // seconds
@@ -47,13 +44,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Используем модель из env: GEMINI_MODEL
-    // Убрали apiVersion, полагаемся на дефолт SDK.
-    console.log(`Using Gemini model: ${modelName}`); 
-    const model = genAI.getGenerativeModel({ model: modelName });
-
     // 3. Промпт
     const systemInstruction = `
       Ты — AI-менеджер строительной биржи Westroy.
@@ -82,9 +72,37 @@ export async function POST(req: NextRequest) {
       3. userMessage должен быть кратким и полезным.
     `;
 
-    // 4. Запрос к модели
-    const result = await model.generateContent(systemInstruction);
-    const responseText = result.response.text();
+    // 4. Прямой запрос к REST API (без SDK)
+    // Используем v1beta, так как это основной эндпоинт для Gemini API (через API Key)
+    // Если gemini-pro в v1beta недоступна (странно, но бывает), можно попробовать v1.
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+    console.log(`Calling Gemini API directly: ${modelName}`);
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: systemInstruction }]
+        }]
+      }),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Gemini API Error:", response.status, errorText);
+        throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!responseText) {
+        throw new Error("Empty response from Gemini API");
+    }
 
     // Очистка от markdown (```json ... ```)
     const jsonStr = responseText.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
@@ -116,10 +134,10 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error(`Gemini Parse Error (Model: ${modelName}):`, error);
     
-    // Если ошибка 404 (Model not found), подсказываем пользователю проверить env
+    // Подсказка про 404
     if (error.message?.includes("404") || error.message?.includes("not found")) {
         return NextResponse.json(
-            { success: false, error: `Model '${modelName}' not found. Check GEMINI_MODEL env var or try 'gemini-pro'.` },
+            { success: false, error: `Model '${modelName}' not found via REST API. Check GEMINI_MODEL env var or try 'gemini-1.5-flash'.` },
             { status: 500 }
         );
     }
