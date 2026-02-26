@@ -1,3 +1,6 @@
+@import './ai-panel.module.css';
+/* Import AI Panel styles */
+
 .searchTop {
     margin-bottom: 24px;
     display: flex;
@@ -812,6 +815,7 @@
         grid-template-columns: 1fr;
     }
 }
+
 /* AI Insight Panel Extensions */
 .aiHeader {
     display: flex;
@@ -873,10 +877,15 @@
 }
 
 @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-}
+    0% {
+        opacity: 0.6;
+    }
 
-@import './ai-panel.module.css';
-/* Import AI Panel styles */
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
