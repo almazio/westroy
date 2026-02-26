@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // Инициализация
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-// Хардкодим правильную модель, которую мы видели в debug_models
-// gemini-2.0-flash-001 - это стабильная версия, которая точно работает с ключом.
-const modelName = "gemini-2.0-flash-001";
+// Берем модель из env или дефолт.
+// Возвращаем гибкость: если hardcode не сработал, даем возможность менять через Vercel.
+// gemini-1.5-flash - текущая стабильная (General Availability) модель.
+const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 // Устанавливаем максимальное время выполнения функции (Vercel)
 export const maxDuration = 30; // seconds
