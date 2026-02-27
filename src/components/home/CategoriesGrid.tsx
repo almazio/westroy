@@ -18,10 +18,10 @@ export default async function CategoriesGrid() {
 
                 <div className={styles.grid}>
                     {categories.map((cat) => (
-                        <div key={cat.id} className={styles.categoryColumn}>
+                        <div key={cat.id} className={styles.card}>
                             <a
                                 href={toAppUrl(`/search?category=${cat.id}`)}
-                                className={styles.card}
+                                className={styles.cardHeader}
                             >
                                 <div className={styles.iconWrapper}>
                                     <span className={styles.icon}>{cat.icon}</span>

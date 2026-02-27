@@ -39,18 +39,25 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    text-decoration: none;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
     overflow: hidden;
+    height: 100%;
 }
 
 .card:hover {
     transform: translateY(-5px);
     border-color: var(--accent);
     box-shadow: 0 10px 30px -10px rgba(var(--accent-rgb), 0.3);
+}
+
+.cardHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
 }
 
 .iconWrapper {
@@ -79,11 +86,30 @@
     margin-bottom: 4px;
 }
 
-.cardCount {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+.subCategories {
+    list-style: none;
+    padding: 16px 0 0 0;
+    margin: 16px 0 0 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
 }
-.categoryColumn { display: flex; flex-direction: column; gap: 0.5rem; }
-.subCategories { list-style: none; padding: 0.5rem 0 0 1rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.subCategoryLink { font-size: 0.9rem; color: var(--text-secondary); text-decoration: none; transition: color 0.15s ease; }
-.subCategoryLink:hover { color: var(--primary); }
+
+.subCategoryLink {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    background: var(--bg-tertiary);
+    padding: 6px 12px;
+    border-radius: 100px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.subCategoryLink:hover {
+    color: var(--text-primary);
+    background: var(--accent-bg);
+    border-color: var(--border-accent);
+}
