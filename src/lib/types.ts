@@ -14,6 +14,8 @@ export interface Category {
   nameRu: string;
   icon: string;
   keywords: string[]; // For AI parser matching
+  parentId?: string | null;
+  children?: Category[];
 }
 
 export interface Company {

@@ -83,3 +83,7 @@
     font-size: 0.85rem;
     color: var(--text-muted);
 }
+.categoryColumn { display: flex; flex-direction: column; gap: 0.5rem; }
+.subCategories { list-style: none; padding: 0.5rem 0 0 1rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.subCategoryLink { font-size: 0.9rem; color: var(--text-secondary); text-decoration: none; transition: color 0.15s ease; }
+.subCategoryLink:hover { color: var(--primary); }

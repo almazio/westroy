@@ -18,16 +18,28 @@ export default async function CategoriesGrid() {
 
                 <div className={styles.grid}>
                     {categories.map((cat) => (
-                        <a
-                            key={cat.id}
-                            href={toAppUrl(`/search?category=${cat.id}`)}
-                            className={styles.card}
-                        >
-                            <div className={styles.iconWrapper}>
-                                <span className={styles.icon}>{cat.icon}</span>
-                            </div>
-                            <h3 className={styles.cardTitle}>{cat.nameRu}</h3>
-                        </a>
+                        <div key={cat.id} className={styles.categoryColumn}>
+                            <a
+                                href={toAppUrl(`/search?category=${cat.id}`)}
+                                className={styles.card}
+                            >
+                                <div className={styles.iconWrapper}>
+                                    <span className={styles.icon}>{cat.icon}</span>
+                                </div>
+                                <h3 className={styles.cardTitle}>{cat.nameRu}</h3>
+                            </a>
+                            {cat.children && cat.children.length > 0 && (
+                                <ul className={styles.subCategories}>
+                                    {cat.children.map((child) => (
+                                        <li key={child.id}>
+                                            <a href={toAppUrl(`/search?category=${child.id}`)} className={styles.subCategoryLink}>
+                                                {child.nameRu}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     ))}
                 </div>
             </div>

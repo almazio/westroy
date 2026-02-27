@@ -6,7 +6,7 @@ import { Region, Category, Company, Product, User, Request, Offer } from '../typ
 
 // --- DB Record types ---
 
-export type CategoryDbRecord = Omit<Category, 'keywords'> & { keywords: string };
+export type CategoryDbRecord = Omit<Category, 'keywords' | 'children'> & { keywords: string, children?: CategoryDbRecord[] };
 
 export type CompanyDbRecord = {
     id: string;
@@ -91,7 +91,12 @@ export const mapCategory = (c: CategoryDbRecord): Category => {
     } catch {
         keywords = c.keywords ? c.keywords.split(',').map((k: string) => k.trim()) : [];
     }
-    return { ...c, keywords };
+    return {
+        ...c,
+        keywords,
+        parentId: c.parentId || null,
+        children: c.children ? c.children.map(mapCategory) : undefined
+    };
 };
 
 export const mapCompany = (c: CompanyDbRecord): Company => ({

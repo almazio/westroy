@@ -11,9 +11,17 @@ export async function getRegions(): Promise<Region[]> {
     return regions.map(mapRegion);
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(rootOnly = true): Promise<Category[]> {
     try {
-        const categories = await prisma.category.findMany();
+        const categories = await prisma.category.findMany({
+            where: rootOnly ? { parentId: null } : undefined,
+            include: {
+                children: true, // Fetch next level
+            },
+            orderBy: {
+                nameRu: 'asc', // Sort alphabetically for better UX
+            }
+        });
         return categories.map(mapCategory);
     } catch (error) {
         if (!hasConfiguredDatabaseUrl()) {
@@ -31,11 +39,14 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getCategoryById(id: string): Promise<Category | undefined> {
     try {
-        const category = await prisma.category.findUnique({ where: { id } });
+        const category = await prisma.category.findUnique({
+            where: { id },
+            include: { children: true }
+        });
         return category ? mapCategory(category) : undefined;
     } catch (error) {
         if (hasConfiguredDatabaseUrl()) throw error;
         console.warn('[DB] getCategoryById fallback (no DB url):', error);
-        return (await getCategories()).find((c) => c.id === id);
+        return (await getCategories(false)).find((c) => c.id === id);
     }
 }
