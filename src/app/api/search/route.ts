@@ -3,7 +3,8 @@ import { parseQueryRegex } from '@/lib/ai-parser';
 import { parseQueryLLM } from '@/lib/llm-parser';
 import { search } from '@/lib/search';
 import { CATEGORY_LABELS } from '@/lib/constants';
-import type { ParsedQuery, SearchFilters } from '@/lib/types';
+import { getCategoryById } from '@/lib/db';
+import type { ParsedQuery, SearchFilters, Category } from '@/lib/types';
 
 const LLM_TIMEOUT_MS = 1500;
 
@@ -92,6 +93,15 @@ export async function GET(request: NextRequest) {
     // Search
     const results = await search(parsed, filters);
 
-    return NextResponse.json(results);
+    // Fetch subcategories if browsing by a specific category
+    let subCategories: Category[] = [];
+    if (parsed.categoryId) {
+        const cat = await getCategoryById(parsed.categoryId);
+        if (cat?.children && cat.children.length > 0) {
+            subCategories = cat.children;
+        }
+    }
+
+    return NextResponse.json({ results, parsed, subCategories });
 }
 

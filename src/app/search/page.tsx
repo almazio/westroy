@@ -25,6 +25,7 @@ function SearchContent() {
 
     const [results, setResults] = useState<SearchResultData[]>([]);
     const [parsed, setParsed] = useState<ParsedData | null>(null);
+    const [subCategories, setSubCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [requestSent, setRequestSent] = useState(false);
@@ -64,6 +65,7 @@ function SearchContent() {
             const data = await res.json();
             setResults(data.results || []);
             setParsed(data.parsed || null);
+            setSubCategories(data.subCategories || []);
             trackEvent('search_results_viewed', {
                 total_results: Array.isArray(data.results) ? data.results.length : 0,
                 category_id: data?.parsed?.categoryId || '',
@@ -76,6 +78,7 @@ function SearchContent() {
         } else {
             setResults([]);
             setParsed(null);
+            setSubCategories([]);
             setLoading(false);
         }
     }, [q, categoryParam, inStockOnly, withImageOnly, withArticleOnly, brandFilter]);
@@ -379,6 +382,20 @@ function SearchContent() {
                                 summaryUnit={summaryUnit}
                                 filteredOffersCount={filteredOffers.length}
                             />
+                        )}
+
+                        {subCategories.length > 0 && (
+                            <div className={styles.subCategoriesWrap}>
+                                <h3>Уточните категорию:</h3>
+                                <div className={styles.subCategoriesGrid}>
+                                    {subCategories.map(cat => (
+                                        <Link key={cat.id} href={`/search?category=${cat.id}`} className={styles.subCategoryCard}>
+                                            <span className={styles.subCategoryIcon}>{cat.icon || '📦'}</span>
+                                            {cat.nameRu}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
                         )}
 
                         <div className={styles.resultsHeader}>
