@@ -85,8 +85,21 @@ export async function getProductsByCompany(companyId: string): Promise<Product[]
 }
 
 export async function getProductsByCategory(categoryId: string): Promise<Product[]> {
+    // Получаем текущую категорию и её дочерние категории
+    const categories = await prisma.category.findMany({
+        where: {
+            OR: [
+                { id: categoryId },
+                { parentId: categoryId }
+            ]
+        },
+        select: { id: true }
+    });
+
+    const categoryIds = categories.map(c => c.id);
+
     const products = await prisma.product.findMany({
-        where: { categoryId },
+        where: { categoryId: { in: categoryIds } },
         include: { offers: true }
     });
     return products.map(p => mapProduct(p as any));
