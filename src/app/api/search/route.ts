@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search
-    const results = await search(parsed, filters);
+    const searchResponse = await search(parsed, filters);
 
     // Fetch subcategories if browsing by a specific category
     let subCategories: Category[] = [];
@@ -102,6 +102,9 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    return NextResponse.json({ results, parsed, subCategories });
+    return NextResponse.json({
+        ...searchResponse,
+        subCategories,
+    });
 }
 
