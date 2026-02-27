@@ -27,9 +27,26 @@
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 24px;
+    column-count: 4;
+    column-gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .grid {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid {
+        column-count: 1;
+    }
 }
 
 .card {
@@ -42,7 +59,9 @@
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
     overflow: hidden;
-    height: 100%;
+    break-inside: avoid;
+    margin-bottom: 24px;
+    height: auto;
 }
 
 .card:hover {
