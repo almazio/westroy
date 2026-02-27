@@ -53,8 +53,11 @@ export async function GET(request: NextRequest) {
     try {
         const products = await searchProductsByText(q, 6);
         for (const product of products) {
-            const priceMeta = product.priceFrom > 0
-                ? `от ${new Intl.NumberFormat('ru-RU').format(product.priceFrom)} ₸`
+            const minPrice = product.offers && product.offers.length > 0
+                ? Math.min(...product.offers.map(o => o.price))
+                : 0;
+            const priceMeta = minPrice > 0
+                ? `от ${new Intl.NumberFormat('ru-RU').format(minPrice)} ₸`
                 : 'По запросу';
             suggestions.push({
                 type: 'product',

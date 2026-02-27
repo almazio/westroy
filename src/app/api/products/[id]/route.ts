@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const session = await auth();
 
-    if (!session?.user || session.user.role !== 'producer') {
+    if (!session?.user || !['producer', 'admin'].includes(session.user.role as string)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,13 +24,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        // Verify ownership via company
+        // Verify ownership via company Offer presence
         const company = await prisma.company.findUnique({
             where: { ownerId: session.user.id }
         });
 
-        if (!company || company.id !== product.companyId) {
+        if (!company) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const offer = await prisma.offer.findFirst({
+            where: { productId: id, companyId: company.id }
+        });
+
+        if (!offer && session.user.role !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden: You do not own this product' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -58,15 +66,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             data: {
                 name,
                 description,
-                priceFrom: normalizedPrice,
-                unit,
-                inStock,
                 article: typeof article === 'string' && article.trim() ? article.trim() : null,
                 brand: typeof brand === 'string' && brand.trim() ? brand.trim() : null,
-                boxQuantity: Number.isFinite(Number(boxQuantity)) ? Number(boxQuantity) : null,
                 imageUrl: typeof imageUrl === 'string' && imageUrl.trim() ? imageUrl.trim() : null,
-                source: typeof source === 'string' && source.trim() ? source.trim() : null,
-                specsJson: specs && typeof specs === 'object' ? JSON.stringify(specs) : null,
+                technicalSpecs: specs && typeof specs === 'object' ? { ...specs, boxQuantity, unit, source } : { boxQuantity, unit, source },
+                offers: {
+                    updateMany: {
+                        where: { companyId: company.id },
+                        data: {
+                            price: normalizedPrice,
+                            stockStatus: inStock === false ? 'OUT_OF_STOCK' : 'IN_STOCK'
+                        }
+                    }
+                }
             }
         });
 
@@ -82,7 +94,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     const session = await auth();
 
-    if (!session?.user || session.user.role !== 'producer') {
+    if (!session?.user || !['producer', 'admin'].includes(session.user.role as string)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -100,13 +112,23 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
             where: { ownerId: session.user.id }
         });
 
-        if (!company || company.id !== product.companyId) {
+        if (!company) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        await prisma.product.delete({
-            where: { id: id },
+        const offer = await prisma.offer.findFirst({
+            where: { productId: id, companyId: company.id }
         });
+
+        if (!offer && session.user.role !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        if (offer) {
+            await prisma.offer.delete({
+                where: { id: offer.id },
+            });
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

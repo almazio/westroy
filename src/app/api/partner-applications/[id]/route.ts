@@ -35,7 +35,6 @@ async function resolveCategoryId(input: string) {
                 { id: { contains: normalized, mode: 'insensitive' } },
                 { name: { contains: normalized, mode: 'insensitive' } },
                 { nameRu: { contains: normalized, mode: 'insensitive' } },
-                { keywords: { contains: normalized, mode: 'insensitive' } },
             ],
         },
         select: { id: true },
@@ -94,11 +93,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             return NextResponse.json(updated);
         }
 
-        const [categoryId, regionId] = await Promise.all([
-            resolveCategoryId(existingApplication.category),
-            resolveRegionId(existingApplication.city),
+        const [categoryId, baseCityId] = await Promise.all([
+            resolveCategoryId(existingApplication.category || ''),
+            resolveRegionId(existingApplication.city || ''),
         ]);
-        if (!categoryId || !regionId) {
+        if (!categoryId || !baseCityId) {
             return NextResponse.json(
                 { error: 'Missing category/region setup in DB. Seed categories and regions first.' },
                 { status: 500 }
@@ -161,8 +160,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
                         phone: application.phone,
                         delivery: true,
                         verified: true,
-                        categoryId,
-                        regionId,
+                        categories: {
+                            create: { categoryId }
+                        },
+                        baseCityId,
                         ownerId: user.id,
                     },
                 });
@@ -174,8 +175,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
                         verified: true,
                         phone: company.phone || application.phone,
                         address: company.address || application.city,
-                        categoryId: company.categoryId || categoryId,
-                        regionId: company.regionId || regionId,
+                        baseCityId: company.baseCityId || baseCityId,
                     },
                 });
             }

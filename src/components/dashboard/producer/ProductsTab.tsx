@@ -110,18 +110,21 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
     const openModal = (product?: Product) => {
         if (product) {
             setEditingProduct(product);
+            const offer = product.offers?.[0];
+            const specs = (product.technicalSpecs as any) || {};
+
             setFormData({
                 name: product.name,
-                description: product.description,
+                description: product.description || '',
                 categoryId: product.categoryId,
-                priceFrom: String(product.priceFrom),
-                unit: product.unit,
-                inStock: product.inStock,
+                priceFrom: String(offer?.price || ''),
+                unit: offer?.priceUnit || 'м3',
+                inStock: offer?.stockStatus !== 'OUT_OF_STOCK',
                 article: product.article || '',
                 brand: product.brand || '',
-                boxQuantity: product.boxQuantity != null ? String(product.boxQuantity) : '',
+                boxQuantity: specs.boxQuantity != null ? String(specs.boxQuantity) : '',
                 imageUrl: product.imageUrl || '',
-                source: product.source || '',
+                source: specs.source || '',
             });
         } else {
             setEditingProduct(null);
@@ -165,8 +168,10 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
         });
 
         const sorted = [...filtered].sort((a, b) => {
-            if (sortBy === 'price_asc') return a.priceFrom - b.priceFrom;
-            if (sortBy === 'price_desc') return b.priceFrom - a.priceFrom;
+            const priceA = a.offers?.[0]?.price || 0;
+            const priceB = b.offers?.[0]?.price || 0;
+            if (sortBy === 'price_asc') return priceA - priceB;
+            if (sortBy === 'price_desc') return priceB - priceA;
             if (sortBy === 'name_desc') return b.name.localeCompare(a.name, 'ru');
             return a.name.localeCompare(b.name, 'ru');
         });
@@ -352,18 +357,18 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                                     <div key={product.id} className="card product-card">
                                         <div className="card-header">
                                             <h3>{product.name}</h3>
-                                            <span className={`badge ${product.inStock ? 'badge-success' : 'badge-danger'}`}>
-                                                {product.inStock ? 'В наличии' : 'Нет в наличии'}
+                                            <span className={`badge ${product.offers?.[0]?.stockStatus !== 'OUT_OF_STOCK' ? 'badge-success' : 'badge-danger'}`}>
+                                                {product.offers?.[0]?.stockStatus !== 'OUT_OF_STOCK' ? 'В наличии' : 'Нет в наличии'}
                                             </span>
                                         </div>
                                         <p className="text-secondary">{product.description}</p>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                             {product.article && <span className="badge">Артикул: {product.article}</span>}
                                             {product.brand && <span className="badge">{product.brand}</span>}
-                                            {product.boxQuantity != null && <span className="badge">Упаковка: {product.boxQuantity} шт</span>}
+                                            {(product.technicalSpecs as any)?.boxQuantity != null && <span className="badge">Упаковка: {(product.technicalSpecs as any).boxQuantity} шт</span>}
                                         </div>
                                         <div className="price-tag">
-                                            {product.priceFrom > 0 ? `${product.priceFrom} ₸ / ${product.unit}` : 'Цена по запросу'}
+                                            {(product.offers?.[0]?.price || 0) > 0 ? `${product.offers?.[0].price} ₸ / ${product.offers?.[0].priceUnit}` : 'Цена по запросу'}
                                         </div>
                                         {product.imageUrl && (
                                             <div style={{ position: 'relative', width: '100%', height: 140, marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -380,8 +385,8 @@ export default function ProductsTab({ companyId }: ProductsTabProps) {
                                             <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Подробнее</summary>
                                             <div className="text-secondary" style={{ marginTop: 6, display: 'grid', gap: 4 }}>
                                                 <div>Категория: {categoryNameMap.get(product.categoryId) || product.categoryId}</div>
-                                                <div>Ед. измерения: {product.unit}</div>
-                                                {product.source && <div>Источник: {product.source}</div>}
+                                                <div>Ед. измерения: {product.offers?.[0]?.priceUnit || (product.technicalSpecs as any)?.unit}</div>
+                                                {(product.technicalSpecs as any)?.source && <div>Источник: {(product.technicalSpecs as any).source}</div>}
                                             </div>
                                         </details>
                                         <div className="actions" style={{ marginTop: 10, display: 'flex', gap: 10 }}>

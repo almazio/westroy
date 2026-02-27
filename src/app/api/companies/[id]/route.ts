@@ -14,8 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const company = await prisma.company.findUnique({
             where: { id: id },
             include: {
-                category: true,
-                region: true,
+                categories: true,
             }
         });
 
@@ -110,7 +109,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         // Deleting company should delete products, offers.
 
         // Manual cleanup for safety if cascade not set
-        await prisma.product.deleteMany({ where: { companyId: id } });
         await prisma.offer.deleteMany({ where: { companyId: id } });
 
         await prisma.company.delete({

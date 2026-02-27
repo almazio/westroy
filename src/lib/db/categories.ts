@@ -22,7 +22,7 @@ export async function getCategories(rootOnly = true): Promise<Category[]> {
                 nameRu: 'asc', // Sort alphabetically for better UX
             }
         });
-        return categories.map(mapCategory);
+        return categories.map(c => mapCategory(c as any));
     } catch (error) {
         if (!hasConfiguredDatabaseUrl()) {
             console.warn('[DB] getCategories fallback (no DB url):', error);
@@ -43,7 +43,7 @@ export async function getCategoryById(id: string): Promise<Category | undefined>
             where: { id },
             include: { children: true }
         });
-        return category ? mapCategory(category) : undefined;
+        return category ? mapCategory(category as any) : undefined;
     } catch (error) {
         if (hasConfiguredDatabaseUrl()) throw error;
         console.warn('[DB] getCategoryById fallback (no DB url):', error);

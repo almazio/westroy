@@ -55,7 +55,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             const offer = await prisma.offer.findUnique({
                 where: { id: order.offerId }
             });
-            if (offer) {
+            if (offer && offer.requestId) {
                 await prisma.request.update({
                     where: { id: offer.requestId },
                     data: { status: 'completed' }

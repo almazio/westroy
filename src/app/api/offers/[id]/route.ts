@@ -26,6 +26,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Offer not found' }, { status: 404 });
         }
 
+        if (!offer.request) {
+            return NextResponse.json({ error: 'Request associated with this offer not found' }, { status: 404 });
+        }
+
         if (offer.request.userId !== session.user.id && session.user.role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -38,41 +42,28 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         }
 
         const updatedOffer = await prisma.$transaction(async (tx) => {
-            const nextOffer = await tx.offer.update({
-                where: { id },
-                data: { status },
-            });
-
             if (status === 'accepted') {
-                // Reject all other pending offers
-                await tx.offer.updateMany({
-                    where: {
-                        requestId: offer.requestId,
-                        id: { not: id },
-                        status: 'pending'
-                    },
-                    data: { status: 'rejected' }
-                });
-                // Move request to in_progress
-                await tx.request.update({
-                    where: { id: offer.requestId },
-                    data: { status: 'in_progress' }
-                });
-                // Auto-create Order
+                if (offer.requestId) {
+                    await tx.request.update({
+                        where: { id: offer.requestId },
+                        data: { status: 'in_progress' }
+                    });
+                }
+
                 await tx.order.create({
                     data: {
                         offerId: id,
-                        clientId: offer.request.userId,
+                        clientId: offer.request!.userId, // we verified it's not null above
                         companyId: offer.companyId,
                         totalPrice: offer.price + (offer.deliveryPrice || 0),
                         deliveryPrice: offer.deliveryPrice,
-                        deliveryAddress: offer.request.address,
+                        deliveryAddress: offer.request!.address,
                         status: 'confirmed',
                     },
                 });
             }
 
-            return nextOffer;
+            return offer;
         });
 
         // Notify the producer who made the offer

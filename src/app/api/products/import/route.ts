@@ -164,10 +164,10 @@ export async function POST(request: Request) {
         }
 
         const existingProducts = await prisma.product.findMany({
-            where: { companyId },
-            select: { id: true, name: true, unit: true }
+            where: { offers: { some: { companyId } } },
+            select: { id: true, name: true }
         });
-        const existingMap = new Map(existingProducts.map((p) => [`${p.name.toLowerCase()}::${p.unit.toLowerCase()}`, p.id]));
+        const existingMap = new Map(existingProducts.map((p) => [p.name.toLowerCase(), p.id]));
 
         let created = 0;
         let updated = 0;
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
                 continue;
             }
 
-            const key = `${data.name.toLowerCase()}::${data.unit.toLowerCase()}`;
+            const key = data.name.toLowerCase();
             const existingId = existingMap.get(key);
 
             if (dryRun) {
@@ -210,7 +210,7 @@ export async function POST(request: Request) {
                         name: data.name,
                         categoryRef: data.categoryRef,
                         action: 'update',
-                        reason: 'Найден существующий товар (name + unit)',
+                        reason: 'Найден существующий товар (name)',
                     });
                 } else {
                     created += 1;
@@ -231,15 +231,20 @@ export async function POST(request: Request) {
                     data: {
                         description: data.description,
                         categoryId,
-                        priceFrom: data.priceFrom,
-                        unit: data.unit,
-                        priceUnit: data.priceUnit,
-                        inStock: data.inStock,
                         article: data.article || null,
                         brand: data.brand || null,
-                        boxQuantity: data.boxQuantity ?? null,
                         imageUrl: data.imageUrl || null,
-                        source: data.source || null,
+                        technicalSpecs: { boxQuantity: data.boxQuantity, source: data.source, unit: data.unit },
+                        offers: {
+                            updateMany: {
+                                where: { companyId },
+                                data: {
+                                    price: data.priceFrom,
+                                    priceUnit: data.priceUnit,
+                                    stockStatus: data.inStock ? 'IN_STOCK' : 'OUT_OF_STOCK',
+                                }
+                            }
+                        }
                     },
                 });
                 updated += 1;
@@ -251,24 +256,27 @@ export async function POST(request: Request) {
                     reason: 'Обновлен существующий товар',
                 });
             } else {
-                await prisma.product.create({
+                const newProduct = await prisma.product.create({
                     data: {
-                        companyId,
                         name: data.name,
                         description: data.description,
                         categoryId,
-                        priceFrom: data.priceFrom,
-                        unit: data.unit,
-                        priceUnit: data.priceUnit,
-                        inStock: data.inStock,
                         article: data.article || null,
                         brand: data.brand || null,
-                        boxQuantity: data.boxQuantity ?? null,
                         imageUrl: data.imageUrl || null,
-                        source: data.source || null,
+                        technicalSpecs: { boxQuantity: data.boxQuantity, source: data.source, unit: data.unit },
+                        offers: {
+                            create: {
+                                companyId,
+                                price: data.priceFrom,
+                                priceUnit: data.priceUnit,
+                                stockStatus: data.inStock ? 'IN_STOCK' : 'OUT_OF_STOCK',
+                            }
+                        }
                     },
                 });
                 created += 1;
+                existingMap.set(key, newProduct.id);
                 preview.push({
                     row,
                     name: data.name,

@@ -17,14 +17,12 @@ export async function GET() {
     try {
         const companies = await prisma.company.findMany({
             include: {
-                category: true,
-                region: true,
+                categories: true,
                 owner: {
                     select: { id: true, name: true, email: true }
                 },
                 _count: {
                     select: {
-                        products: true,
                         offers: true
                     }
                 }
@@ -82,9 +80,10 @@ export async function POST(request: Request) {
                 phone,
                 address,
                 delivery: delivery || false,
-                ownerId: session.user.id,
-                regionId: regionId || 'kz-shim', // Default region
-                categoryId: defaultCategory.id
+                ownerId: session.user.id!,
+                categories: {
+                    connect: { id: defaultCategory.id }
+                }
             }
         });
 

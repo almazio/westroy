@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
             if (!requestEntity) {
                 return NextResponse.json({ error: 'Request not found' }, { status: 404 });
             }
-            if (requestEntity.userId !== session.user.id && session.user.role !== 'admin') {
+            if (requestEntity && requestEntity.userId !== session.user.id && session.user.role !== 'admin') {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
         }
@@ -119,15 +119,17 @@ export async function POST(request: NextRequest) {
 
     const saved = await prisma.offer.create({
         data: {
-            requestId: body.requestId,
+            requestId: body.requestId || undefined,
+            productId: body.productId || undefined,
             companyId: targetCompanyId,
             price: Number(body.price),
             priceUnit: body.priceUnit || 'за м³',
-            comment: body.comment || '',
-            deliveryIncluded: Boolean(body.deliveryIncluded),
             deliveryPrice: body.deliveryPrice != null ? Number(body.deliveryPrice) : null,
-            validUntil: body.validUntil || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            status: 'pending',
+            stockStatus: 'IN_STOCK',
+            minOrder: null,
+            leadTime: null,
+            discountLabel: null,
+            oldPrice: null
         },
     });
 

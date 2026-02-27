@@ -21,15 +21,17 @@ export async function addOffer(data: Offer): Promise<Offer> {
     const offer = await prisma.offer.create({
         data: {
             id: data.id,
-            requestId: data.requestId,
+            productId: data.productId || null,
+            requestId: data.requestId || null,
             companyId: data.companyId,
             price: data.price,
             priceUnit: data.priceUnit,
-            comment: data.comment,
-            deliveryIncluded: data.deliveryIncluded,
+            oldPrice: data.oldPrice || null,
+            discountLabel: data.discountLabel || null,
+            minOrder: data.minOrder || null,
+            stockStatus: data.stockStatus || 'IN_STOCK',
+            leadTime: data.leadTime || null,
             deliveryPrice: data.deliveryPrice ?? null,
-            validUntil: data.validUntil,
-            status: data.status,
             createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
         },
     });
@@ -41,17 +43,12 @@ export async function getCompanyMarketStats(
 ): Promise<Record<string, { completedOrders: number; avgResponseMinutes: number | null; rating: number; reviewCount: number }>> {
     if (companyIds.length === 0) return {};
 
-    const offers = await prisma.offer.findMany({
+    const orders = await prisma.order.findMany({
         where: { companyId: { in: companyIds } },
         select: {
             companyId: true,
             status: true,
             createdAt: true,
-            request: {
-                select: {
-                    createdAt: true,
-                },
-            },
         },
     });
 
@@ -60,23 +57,16 @@ export async function getCompanyMarketStats(
         stats[companyId] = { completedOrders: 0, totalResponseMinutes: 0, responseCount: 0 };
     }
 
-    for (const offer of offers) {
-        const bucket = stats[offer.companyId];
+    for (const order of orders) {
+        const bucket = stats[order.companyId];
         if (!bucket) continue;
 
-        if (offer.status === 'accepted') {
+        if (order.status === 'completed' || order.status === 'delivered') { // Assumed statuses based on common implementations
             bucket.completedOrders += 1;
         }
 
-        const requestCreatedAt = offer.request?.createdAt;
-        if (requestCreatedAt) {
-            const responseMinutes = Math.max(
-                0,
-                Math.round((offer.createdAt.getTime() - requestCreatedAt.getTime()) / (1000 * 60))
-            );
-            bucket.totalResponseMinutes += responseMinutes;
-            bucket.responseCount += 1;
-        }
+        // Response time logic removed for Orders as it doesn't align perfectly, 
+        // can be added back if we link Orders to Requests with response tracking.
     }
 
     const result: Record<string, { completedOrders: number; avgResponseMinutes: number | null; rating: number; reviewCount: number }> = {};

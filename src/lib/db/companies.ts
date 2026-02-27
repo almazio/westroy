@@ -1,6 +1,6 @@
 import { prisma } from '../db';
 import { Company, Product } from '../types';
-import { mapCompany, mapProduct } from './mappers';
+import { mapCompany, mapProduct, CompanyDbRecord, ProductDbRecord } from './mappers';
 
 function hasConfiguredDatabaseUrl() {
     return Boolean(process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL);
@@ -24,7 +24,9 @@ function isCacheValid<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
 export async function getCompanies(): Promise<Company[]> {
     if (isCacheValid(companiesCache)) return companiesCache.data;
     try {
-        const companies = await prisma.company.findMany();
+        const companies = await prisma.company.findMany({
+            include: { categories: true }
+        });
         const mapped = companies.map(mapCompany);
         companiesCache = { data: mapped, expiresAt: Date.now() + CACHE_TTL_MS };
         return mapped;
@@ -37,8 +39,11 @@ export async function getCompanies(): Promise<Company[]> {
 
 export async function getCompanyById(id: string): Promise<Company | undefined> {
     try {
-        const company = await prisma.company.findUnique({ where: { id } });
-        return company ? mapCompany(company) : undefined;
+        const company = await prisma.company.findUnique({
+            where: { id },
+            include: { categories: true }
+        });
+        return company ? mapCompany(company as unknown as CompanyDbRecord) : undefined;
     } catch (error) {
         if (hasConfiguredDatabaseUrl()) throw error;
         console.warn('[DB] getCompanyById fallback (no DB url):', error);
@@ -47,23 +52,31 @@ export async function getCompanyById(id: string): Promise<Company | undefined> {
 }
 
 export async function getCompaniesByCategory(categoryId: string): Promise<Company[]> {
-    const companies = await prisma.company.findMany({ where: { categoryId } });
+    const companies = await prisma.company.findMany({
+        where: { categories: { some: { categoryId } } },
+        include: { categories: true }
+    });
     return companies.map(mapCompany);
 }
 
 // Products
 export async function getProducts(): Promise<Product[]> {
     if (isCacheValid(productsCache)) return productsCache.data;
-    const products = await prisma.product.findMany();
-    const mapped = products.map(mapProduct);
+    const products = await prisma.product.findMany({
+        include: { offers: true }
+    });
+    const mapped = products.map(p => mapProduct(p as any));
     productsCache = { data: mapped, expiresAt: Date.now() + CACHE_TTL_MS };
     return mapped;
 }
 
 export async function getProductsByCompany(companyId: string): Promise<Product[]> {
     try {
-        const products = await prisma.product.findMany({ where: { companyId } });
-        return products.map(mapProduct);
+        const products = await prisma.product.findMany({
+            where: { offers: { some: { companyId } } },
+            include: { offers: { where: { companyId } } }
+        });
+        return products.map(p => mapProduct(p as unknown as ProductDbRecord));
     } catch (error) {
         if (hasConfiguredDatabaseUrl()) throw error;
         console.warn('[DB] getProductsByCompany fallback (no DB url):', error);
@@ -72,8 +85,11 @@ export async function getProductsByCompany(companyId: string): Promise<Product[]
 }
 
 export async function getProductsByCategory(categoryId: string): Promise<Product[]> {
-    const products = await prisma.product.findMany({ where: { categoryId } });
-    return products.map(mapProduct);
+    const products = await prisma.product.findMany({
+        where: { categoryId },
+        include: { offers: true }
+    });
+    return products.map(p => mapProduct(p as any));
 }
 
 // ---- Fast product search for suggestions ----
@@ -90,9 +106,16 @@ export async function searchProductsByText(query: string, limit: number = 8): Pr
                 ],
             },
             take: limit,
-            orderBy: { priceFrom: 'asc' },
+            include: { offers: true }
         });
-        return products.map(mapProduct);
+
+        // Custom sort by virtual lowest price logic locally due to JSON/Relation complexities
+        const mapped = products.map(p => mapProduct(p as unknown as ProductDbRecord));
+        return mapped.sort((a, b) => {
+            const minA = a.offers?.length ? Math.min(...a.offers.map(o => o.price)) : Infinity;
+            const minB = b.offers?.length ? Math.min(...b.offers.map(o => o.price)) : Infinity;
+            return minA - minB;
+        });
     } catch (error) {
         if (hasConfiguredDatabaseUrl()) throw error;
         console.warn('[DB] searchProductsByText fallback (no DB url):', error);

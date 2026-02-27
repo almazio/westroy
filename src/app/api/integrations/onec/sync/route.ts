@@ -186,10 +186,10 @@ export async function POST(request: Request) {
         }
 
         const existing = await prisma.product.findMany({
-            where: { companyId },
-            select: { id: true, name: true, unit: true }
+            where: { offers: { some: { companyId } } },
+            select: { id: true, name: true }
         });
-        const existingMap = new Map(existing.map((p) => [`${p.name.toLowerCase()}::${p.unit.toLowerCase()}`, p.id]));
+        const existingMap = new Map(existing.map((p) => [p.name.toLowerCase(), p.id]));
         const skuMap = await readProductMap();
 
         let created = 0;
@@ -219,30 +219,44 @@ export async function POST(request: Request) {
                 continue;
             }
 
-            const key = `${name.toLowerCase()}::${unit.toLowerCase()}`;
+            const key = name.toLowerCase();
             const skuKey = externalSku ? `${companyId.toLowerCase()}::${externalSku.toLowerCase()}` : '';
             const existingIdBySku = skuKey ? skuMap[skuKey] : undefined;
             const existingId = existingIdBySku || existingMap.get(key);
-            const data = {
-                companyId,
+
+            const productData = {
                 name,
                 description: String(row.description || ''),
                 categoryId,
-                priceFrom,
-                unit,
-                priceUnit: String(row.priceUnit || '').trim() || toPriceUnit(unit),
-                inStock: row.inStock ?? true,
             };
 
-            if (existingId) {
-                await prisma.product.update({ where: { id: existingId }, data });
-                updated += 1;
-                if (skuKey) skuMap[skuKey] = existingId;
+            const offerData = {
+                companyId,
+                price: priceFrom,
+                priceUnit: String(row.priceUnit || '').trim() || toPriceUnit(unit),
+                stockStatus: ((row.inStock === false) ? 'OUT_OF_STOCK' : 'IN_STOCK') as 'IN_STOCK' | 'OUT_OF_STOCK',
+            };
+
+            let productId = existingId;
+            if (productId) {
+                await prisma.product.update({ where: { id: productId }, data: productData });
             } else {
-                const createdProduct = await prisma.product.create({ data });
+                const createdProduct = await prisma.product.create({ data: productData });
+                productId = createdProduct.id;
+                existingMap.set(key, productId);
+                if (skuKey) skuMap[skuKey] = productId;
                 created += 1;
-                existingMap.set(key, createdProduct.id);
-                if (skuKey) skuMap[skuKey] = createdProduct.id;
+            }
+
+            const existingOffer = await prisma.offer.findFirst({
+                where: { productId, companyId }
+            });
+
+            if (existingOffer) {
+                await prisma.offer.update({ where: { id: existingOffer.id }, data: offerData });
+                if (existingId) updated += 1;
+            } else {
+                await prisma.offer.create({ data: { ...offerData, productId } });
             }
         }
 

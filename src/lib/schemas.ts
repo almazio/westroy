@@ -25,14 +25,17 @@ export const RequestCreateSchema = z.object({
 // --- Offers ---
 
 export const OfferCreateSchema = z.object({
-    requestId: z.string().min(1),
+    requestId: z.string().optional(),
+    productId: z.string().optional(),
     companyId: z.string().optional(),
     price: z.number().positive(),
     priceUnit: z.string().max(50).optional().default('за м³'),
-    comment: z.string().max(2000).optional().default(''),
-    deliveryIncluded: z.boolean().optional().default(false),
+    oldPrice: z.number().optional().nullable(),
+    discountLabel: z.string().max(50).optional().nullable(),
+    minOrder: z.number().optional().nullable(),
+    stockStatus: z.enum(['IN_STOCK', 'ON_DEMAND', 'OUT_OF_STOCK']).optional().default('IN_STOCK'),
+    leadTime: z.string().max(100).optional().nullable(),
     deliveryPrice: z.number().min(0).optional().nullable(),
-    validUntil: z.string().max(50).optional(),
 });
 
 export const OfferStatusSchema = z.object({
@@ -83,18 +86,12 @@ export const CompanyUpdateSchema = z.object({
 
 export const ProductCreateSchema = z.object({
     name: z.string().min(1).max(500),
+    slug: z.string().max(500).optional().nullable(),
     description: z.string().max(5000).optional().default(''),
     categoryId: z.string().min(1),
     article: z.string().max(100).optional().nullable(),
     brand: z.string().max(200).optional().nullable(),
-    boxQuantity: z.number().int().positive().optional().nullable(),
     imageUrl: z.string().url().optional().nullable(),
-    source: z.string().max(1000).optional().nullable(),
-    specsJson: z.string().optional().nullable(),
-    unit: z.string().min(1).max(50),
-    priceFrom: z.number().min(0),
-    priceUnit: z.string().min(1).max(50),
-    inStock: z.boolean().optional().default(true),
 });
 
 // --- Guest Requests ---

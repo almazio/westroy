@@ -37,11 +37,18 @@ function priceForSort(value: number): number {
 
 function applyProductFilters(
     products: Awaited<ReturnType<typeof getProducts>>,
-    filters: SearchFilters
+    filters: SearchFilters,
+    companyId?: string
 ) {
     const brandNeedle = filters.brand?.trim().toLowerCase();
     return products.filter((product) => {
-        if (filters.inStockOnly && !product.inStock) return false;
+        let relevantOffers = product.offers || [];
+        if (companyId) {
+            relevantOffers = relevantOffers.filter(o => o.companyId === companyId);
+        }
+        if (relevantOffers.length === 0) return false;
+
+        if (filters.inStockOnly && !relevantOffers.some(o => o.stockStatus === 'IN_STOCK')) return false;
         if (filters.withImageOnly && !product.imageUrl) return false;
         if (filters.withArticleOnly && !product.article) return false;
         if (brandNeedle && !(product.brand || '').toLowerCase().includes(brandNeedle)) return false;
@@ -69,7 +76,7 @@ function buildResult({
         const gradeNormalized = grade.toLowerCase();
         const gradeProducts = products.filter((p) =>
             p.name.toLowerCase().includes(gradeNormalized) ||
-            p.description.toLowerCase().includes(gradeNormalized)
+            (p.description || '').toLowerCase().includes(gradeNormalized)
         );
         if (gradeProducts.length > 0) {
             matchedProducts = gradeProducts;
@@ -80,15 +87,20 @@ function buildResult({
     if (delivery && company.delivery) relevanceScore += 0.1;
     if (company.verified) relevanceScore += 0.1;
 
-    const minPricedProduct = matchedProducts
-        .filter((p) => p.priceFrom > 0)
-        .sort((a, b) => a.priceFrom - b.priceFrom)[0];
+    const companyProducts = matchedProducts.map(p => {
+        const offer = p.offers?.find(o => o.companyId === company.id);
+        return { p, offer };
+    }).filter(pair => pair.offer);
+
+    const minPricedPair = companyProducts
+        .filter(pair => pair.offer!.price > 0)
+        .sort((a, b) => a.offer!.price - b.offer!.price)[0];
 
     return {
         company,
         products: matchedProducts,
-        priceFrom: minPricedProduct?.priceFrom ?? 0,
-        priceUnit: minPricedProduct?.priceUnit ?? (matchedProducts[0]?.priceUnit || ''),
+        priceFrom: minPricedPair?.offer?.price ?? 0,
+        priceUnit: minPricedPair?.offer?.priceUnit ?? (companyProducts[0]?.offer?.priceUnit || ''),
         relevanceScore: Math.min(relevanceScore, 1),
         stats: companyStats[company.id],
     };
@@ -109,7 +121,7 @@ async function searchByCategory(parsed: ParsedQuery): Promise<SearchResult[]> {
     const categoryProducts = await getProductsByCategory(parsed.categoryId);
     if (categoryProducts.length === 0) return [];
 
-    const companyIds = [...new Set(categoryProducts.map((product) => product.companyId))];
+    const companyIds = [...new Set(categoryProducts.flatMap((product) => (product.offers || []).map(o => o.companyId)))];
     const companies = (await getCompanies()).filter((company) => companyIds.includes(company.id));
     const companyStats = await getCompanyMarketStats(companyIds);
 
@@ -117,7 +129,7 @@ async function searchByCategory(parsed: ParsedQuery): Promise<SearchResult[]> {
         .map((company) =>
             buildResult({
                 company,
-                products: categoryProducts.filter((p) => p.companyId === company.id),
+                products: categoryProducts.filter((p) => (p.offers || []).some(o => o.companyId === company.id)),
                 grade: parsed.grade,
                 delivery: parsed.delivery,
                 companyStats,
@@ -135,7 +147,7 @@ async function searchByCategoryWithFilters(parsed: ParsedQuery, filters: SearchF
     const categoryProducts = applyProductFilters(await getProductsByCategory(parsed.categoryId), filters);
     if (categoryProducts.length === 0) return [];
 
-    const companyIds = [...new Set(categoryProducts.map((product) => product.companyId))];
+    const companyIds = [...new Set(categoryProducts.flatMap((product) => (product.offers || []).map(o => o.companyId)))];
     const companies = (await getCompanies()).filter((company) => companyIds.includes(company.id));
     const companyStats = await getCompanyMarketStats(companyIds);
 
@@ -143,7 +155,7 @@ async function searchByCategoryWithFilters(parsed: ParsedQuery, filters: SearchF
         .map((company) =>
             buildResult({
                 company,
-                products: categoryProducts.filter((p) => p.companyId === company.id),
+                products: categoryProducts.filter((p) => (p.offers || []).some(o => o.companyId === company.id)),
                 grade: parsed.grade,
                 delivery: parsed.delivery,
                 companyStats,
@@ -180,17 +192,17 @@ async function searchByText(parsed: ParsedQuery, filters: SearchFilters): Promis
     });
 
     const matchedCompanyIds = new Set<string>([
-        ...productMatches.map((p) => p.companyId),
+        ...productMatches.flatMap((p) => (p.offers || []).map(o => o.companyId)),
         ...companyMatches.map((c) => c.id),
     ]);
 
     const results: SearchResult[] = [];
     for (const company of companies) {
         if (!matchedCompanyIds.has(company.id)) continue;
-        const productsForCompany = productMatches.filter((p) => p.companyId === company.id);
+        const productsForCompany = productMatches.filter((p) => (p.offers || []).some(o => o.companyId === company.id));
         const fallbackProducts = productsForCompany.length > 0
             ? productsForCompany
-            : products.filter((p) => p.companyId === company.id).slice(0, 6);
+            : products.filter((p) => (p.offers || []).some(o => o.companyId === company.id)).slice(0, 6);
 
         const result = buildResult({
             company,

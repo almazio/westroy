@@ -17,22 +17,15 @@ export async function GET() {
     try {
         const [products, companies] = await Promise.all([
             prisma.product.findMany({
-                select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    unit: true,
-                    priceFrom: true,
-                    priceUnit: true,
-                    inStock: true,
-                    updatedAt: true,
+                include: {
+                    offers: true
                 }
             }),
             prisma.company.findMany({
                 select: {
                     id: true,
                     name: true,
-                    _count: { select: { products: true } }
+                    _count: { select: { offers: true } }
                 }
             })
         ]);
@@ -40,12 +33,12 @@ export async function GET() {
         const staleThreshold = Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000;
         const staleProducts = products.filter((p) => new Date(p.updatedAt).getTime() < staleThreshold).length;
         const missingDescription = products.filter((p) => !p.description?.trim()).length;
-        const missingPriceUnit = products.filter((p) => !p.priceUnit?.trim()).length;
-        const invalidPrice = products.filter((p) => !Number.isFinite(p.priceFrom) || p.priceFrom < 0).length;
-        const priceOnRequest = products.filter((p) => Number.isFinite(p.priceFrom) && p.priceFrom === 0).length;
-        const invalidUnit = products.filter((p) => !ALLOWED_UNITS.includes(p.unit as (typeof ALLOWED_UNITS)[number])).length;
-        const outOfStock = products.filter((p) => !p.inStock).length;
-        const companiesWithoutProducts = companies.filter((c) => c._count.products === 0);
+        const missingPriceUnit = products.reduce((acc, p) => acc + p.offers.filter(o => !o.priceUnit?.trim()).length, 0);
+        const invalidPrice = products.reduce((acc, p) => acc + p.offers.filter(o => !Number.isFinite(o.price) || o.price < 0).length, 0);
+        const priceOnRequest = products.reduce((acc, p) => acc + p.offers.filter(o => Number.isFinite(o.price) && o.price === 0).length, 0);
+        const invalidUnit = 0; // Legacy unit metric
+        const outOfStock = products.reduce((acc, p) => acc + p.offers.filter((o) => o.stockStatus !== 'IN_STOCK').length, 0);
+        const companiesWithoutProducts = companies.filter((c) => c._count.offers === 0);
 
         return NextResponse.json({
             totals: {

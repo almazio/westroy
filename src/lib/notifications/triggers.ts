@@ -23,10 +23,10 @@ export async function notifyProducersOfRequest(requestId: string) {
             include: { category: true }
         });
 
-        if (!request) return;
+        if (!request || !request.category || !request.categoryId) return;
 
         const producers = await prisma.company.findMany({
-            where: { categoryId: request.categoryId },
+            where: { categories: { some: { categoryId: request.categoryId } } },
             include: { owner: true }
         });
 
@@ -62,12 +62,12 @@ export async function notifyClientOfOffer(offerId: string) {
             }
         });
 
-        if (!offer || !offer.request.user.email) return;
+        if (!offer || !offer.request || !offer.request.user?.email) return;
 
         await notificationService.notify({
             to: offer.request.user.email,
             subject: `Новое предложение по запросу "${offer.request.parsedCategory}"`,
-            message: `Компания "${offer.company.name}" отправила вам предложение.\n\nЦена: ${offer.price} ₸ ${offer.priceUnit}\nКомментарий: ${offer.comment}\n\nПосмотреть предложение: ${getAppBaseUrl()}/dashboard/client`,
+            message: `Компания "${offer.company.name}" отправила вам предложение.\n\nЦена: ${offer.price} ₸ ${offer.priceUnit}\n\nПосмотреть предложение: ${getAppBaseUrl()}/dashboard/client`,
             type: 'offer_new',
             metadata: { offerId, requestId: offer.requestId }
         });
@@ -92,22 +92,24 @@ export async function notifyProducerOfOfferStatus(offerId: string) {
             }
         });
 
-        if (!offer || !offer.company.owner?.email) return;
+        if (!offer || !offer.request || !offer.company.owner?.email) return;
 
-        const statusText = offer.status === 'accepted' ? 'ПРИНЯТО' : 'ОТКЛОНЕНО';
+        // the "status" of the offer is not explicitly stored anymore, instead the associated Request gets finished
+        const isAccepted = offer.request.status === 'completed';
+        const statusText = isAccepted ? 'ПРИНЯТО' : 'ОТКЛОНЕНО';
 
         await notificationService.notify({
             to: offer.company.owner.email,
             subject: `Ваше предложение ${statusText}`,
-            message: `Клиент ${offer.status === 'accepted' ? 'принял' : 'отклонил'} ваше предложение по запросу "${offer.request.parsedCategory}".\n\nСтатус: ${statusText}\n\nПосмотреть детали: ${getAppBaseUrl()}/dashboard/producer`,
-            type: offer.status === 'accepted' ? 'offer_accepted' : 'offer_rejected',
+            message: `Клиент ${isAccepted ? 'принял' : 'отклонил'} ваше предложение по запросу "${offer.request.parsedCategory}".\n\nСтатус: ${statusText}\n\nПосмотреть детали: ${getAppBaseUrl()}/dashboard/producer`,
+            type: isAccepted ? 'offer_accepted' : 'offer_rejected',
             metadata: { offerId, requestId: offer.requestId }
         });
 
         await notifyOps(
             `Изменение статуса оффера: ${statusText}`,
             `Компания: ${offer.company.name}\nКатегория: ${offer.request.parsedCategory}\nСтатус: ${statusText}\nID оффера: ${offer.id}\n\nОткрыть: ${getAppBaseUrl()}/admin`,
-            { offerId: offer.id, requestId: offer.requestId, status: offer.status }
+            { offerId: offer.id, requestId: offer.requestId, status: isAccepted ? 'accepted' : 'rejected' }
         );
     } catch (error) {
         console.error('Failed to notify producer of offer status:', error);

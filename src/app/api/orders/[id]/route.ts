@@ -73,7 +73,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         });
 
         // On completion, update request status too
-        if (newStatus === 'completed') {
+        if (newStatus === 'completed' && order.offer.requestId) {
             await prisma.request.update({
                 where: { id: order.offer.requestId },
                 data: { status: 'completed' },

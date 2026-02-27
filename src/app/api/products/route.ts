@@ -17,15 +17,21 @@ export async function GET(request: Request) {
 
     try {
         const where: {
-            companyId?: string;
             categoryId?: string;
-            inStock?: boolean;
             imageUrl?: { not: null };
             brand?: { contains: string; mode: 'insensitive' };
+            offers?: { some: { companyId?: string, stockStatus?: 'IN_STOCK' } };
         } = {};
-        if (companyId) where.companyId = companyId;
+
+        const offerFilters: any = {};
+        if (companyId) offerFilters.companyId = companyId;
+        if (inStockOnly) offerFilters.stockStatus = 'IN_STOCK';
+
+        if (Object.keys(offerFilters).length > 0) {
+            where.offers = { some: offerFilters };
+        }
+
         if (categoryId) where.categoryId = categoryId;
-        if (inStockOnly) where.inStock = true;
         if (withImageOnly) where.imageUrl = { not: null };
         if (brand) where.brand = { contains: brand, mode: 'insensitive' };
 
@@ -34,6 +40,7 @@ export async function GET(request: Request) {
             orderBy: { createdAt: 'desc' },
             include: {
                 category: true,
+                offers: true
             }
         });
 
@@ -94,17 +101,18 @@ export async function POST(request: Request) {
                 name,
                 description: description || '',
                 categoryId,
-                priceFrom: normalizedPrice,
-                unit,
-                priceUnit: priceUnit || `за ${unit}`,
-                inStock: inStock ?? true,
                 article: typeof article === 'string' && article.trim() ? article.trim() : null,
                 brand: typeof brand === 'string' && brand.trim() ? brand.trim() : null,
-                boxQuantity: Number.isFinite(Number(boxQuantity)) ? Number(boxQuantity) : null,
                 imageUrl: typeof imageUrl === 'string' && imageUrl.trim() ? imageUrl.trim() : null,
-                source: typeof source === 'string' && source.trim() ? source.trim() : null,
-                specsJson: specs && typeof specs === 'object' ? JSON.stringify(specs) : null,
-                companyId: company.id,
+                technicalSpecs: specs && typeof specs === 'object' ? { ...specs, boxQuantity, unit, source } : { boxQuantity, unit, source },
+                offers: {
+                    create: {
+                        companyId: company.id,
+                        price: normalizedPrice,
+                        priceUnit: priceUnit || `за ${unit || 'шт'}`,
+                        stockStatus: inStock === false ? 'OUT_OF_STOCK' : 'IN_STOCK'
+                    }
+                }
             }
         });
 

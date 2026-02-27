@@ -9,8 +9,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     if (!company) notFound();
 
     const products = await getProductsByCompany(id);
-    const category = await getCategoryById(company.categoryId);
     const categories = await getCategories();
+    const category = products.length > 0 ? categories.find(c => c.id === products[0].categoryId) : null;
     const categoryMap = new Map(categories.map((item) => [item.id, item]));
 
     const groupedProducts = [...products]
@@ -34,7 +34,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <div className="container">
                 {/* Breadcrumb */}
                 <div className={styles.breadcrumb}>
-                    <Link href="/">Главная</Link> / <Link href={`/search?category=${company.categoryId}`}>{category?.nameRu}</Link> / <span>{company.name}</span>
+                    <Link href="/">Главная</Link> / {category ? <><Link href={`/search?category=${category.id}`}>{category.nameRu}</Link> / </> : null}<span>{company.name}</span>
                 </div>
 
                 {/* Company Header */}
@@ -70,43 +70,51 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                                         <span className="badge">{categoryProducts.length}</span>
                                     </div>
                                     <div className={styles.products}>
-                                        {categoryProducts.map(product => (
-                                            <div key={product.id} className={styles.productCard}>
-                                                {product.imageUrl && (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
-                                                        src={product.imageUrl}
-                                                        alt={product.name}
-                                                        className={styles.productImage}
-                                                        loading="lazy"
-                                                    />
-                                                )}
-                                                <div className={styles.productInfo}>
-                                                    <h4>{product.name}</h4>
-                                                    <p>{product.description}</p>
-                                                    <div className={styles.productMeta}>
-                                                        {product.article && <span className="badge">Артикул: {product.article}</span>}
-                                                        {product.brand && <span className="badge">{product.brand}</span>}
-                                                        {product.boxQuantity != null && <span className="badge">Упаковка: {product.boxQuantity} шт</span>}
-                                                    </div>
-                                                    <details className={styles.productDetails}>
-                                                        <summary>Подробнее</summary>
-                                                        <div className={styles.productDetailsBody}>
-                                                            <div>Ед. изм.: {product.unit}</div>
-                                                            <div>{product.inStock ? 'В наличии' : 'Под заказ'}</div>
-                                                            {product.source && <div>Источник: {product.source}</div>}
+                                        {categoryProducts.map(product => {
+                                            const specs = (product.technicalSpecs as Record<string, any>) || {};
+                                            const offer = product.offers?.[0]; // getProductsByCompany should return the company's offer
+                                            const inStock = offer?.stockStatus === 'IN_STOCK';
+                                            const price = offer?.price || 0;
+                                            const priceUnit = offer?.priceUnit || 'тг';
+
+                                            return (
+                                                <div key={product.id} className={styles.productCard}>
+                                                    {product.imageUrl && (
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <img
+                                                            src={product.imageUrl}
+                                                            alt={product.name}
+                                                            className={styles.productImage}
+                                                            loading="lazy"
+                                                        />
+                                                    )}
+                                                    <div className={styles.productInfo}>
+                                                        <h4>{product.name}</h4>
+                                                        <p>{product.description}</p>
+                                                        <div className={styles.productMeta}>
+                                                            {product.article && <span className="badge">Артикул: {product.article}</span>}
+                                                            {product.brand && <span className="badge">{product.brand}</span>}
+                                                            {specs.boxQuantity != null && <span className="badge">Упаковка: {specs.boxQuantity} шт</span>}
                                                         </div>
-                                                    </details>
-                                                </div>
-                                                <div className={styles.productPrice}>
-                                                    <div className={styles.priceFrom}>
-                                                        {product.priceFrom > 0 ? `от ${formatPrice(product.priceFrom)} ₸` : 'Цена по запросу'}
+                                                        <details className={styles.productDetails}>
+                                                            <summary>Подробнее</summary>
+                                                            <div className={styles.productDetailsBody}>
+                                                                {specs.unit && <div>Ед. изм.: {specs.unit}</div>}
+                                                                <div>{inStock ? 'В наличии' : 'Под заказ'}</div>
+                                                                {specs.source && <div>Источник: {specs.source}</div>}
+                                                            </div>
+                                                        </details>
                                                     </div>
-                                                    <div className={styles.priceUnit}>{product.priceUnit}</div>
-                                                    {product.inStock && <span className="badge badge-success">В наличии</span>}
+                                                    <div className={styles.productPrice}>
+                                                        <div className={styles.priceFrom}>
+                                                            {price > 0 ? `от ${formatPrice(price)} ₸` : 'Цена по запросу'}
+                                                        </div>
+                                                        <div className={styles.priceUnit}>{priceUnit}</div>
+                                                        {inStock && <span className="badge badge-success">В наличии</span>}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 </section>
                             ))}

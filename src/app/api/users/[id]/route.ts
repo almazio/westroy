@@ -103,7 +103,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
             const company = await tx.company.findUnique({ where: { ownerId: id } });
             if (company) {
                 await tx.offer.deleteMany({ where: { companyId: company.id } });
-                await tx.product.deleteMany({ where: { companyId: company.id } });
                 await tx.company.delete({ where: { id: company.id } });
             }
 

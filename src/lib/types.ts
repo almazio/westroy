@@ -12,8 +12,10 @@ export interface Category {
   id: string;
   name: string;
   nameRu: string;
-  icon: string;
-  keywords: string[]; // For AI parser matching
+  description?: string;
+  slug?: string;
+  icon?: string;
+  keywords?: string[]; // Array of strings (JsonB)
   parentId?: string | null;
   children?: Category[];
 }
@@ -21,33 +23,33 @@ export interface Category {
 export interface Company {
   id: string;
   name: string;
-  description: string;
-  categoryId: string;
-  regionId: string;
-  address: string;
-  phone: string;
+  description?: string;
+  address?: string;
+  phone?: string;
   delivery: boolean;
   logoUrl?: string;
   verified: boolean;
+  baseCityId?: string;
+  deliveryRegions?: string[]; // JsonB
+  ownerId?: string;
   createdAt: string;
 }
 
 export interface Product {
   id: string;
-  companyId: string;
-  categoryId: string;
   name: string;
-  description: string;
+  slug?: string;
   article?: string;
   brand?: string;
-  boxQuantity?: number;
+  description?: string;
   imageUrl?: string;
-  source?: string;
-  specs?: Record<string, unknown>;
-  unit: string; // м3, тонн, шт
-  priceFrom: number; // ₸
-  priceUnit: string; // "за м3", "за тонну"
-  inStock: boolean;
+  additionalImages?: string[]; // JsonB
+  technicalSpecs?: Record<string, unknown>; // JsonB
+  marketingFeatures?: Record<string, unknown>; // JsonB
+  tags?: string[]; // JsonB
+  categoryId: string;
+  offers?: Offer[]; // Inferred from relation
+  createdAt?: string;
   updatedAt?: string;
 }
 
@@ -77,16 +79,19 @@ export interface Request {
 
 export interface Offer {
   id: string;
-  requestId: string;
+  productId?: string;
   companyId: string;
   price: number;
   priceUnit: string;
-  comment: string;
-  deliveryIncluded: boolean;
+  oldPrice?: number;
+  discountLabel?: string;
+  minOrder?: number;
+  stockStatus: 'IN_STOCK' | 'ON_ORDER' | 'OUT_OF_STOCK';
+  leadTime?: string;
   deliveryPrice?: number;
-  validUntil: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  requestId?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // AI Parser types

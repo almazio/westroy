@@ -37,16 +37,16 @@ export default function OffersTab({ companyId }: OffersTabProps) {
 
     const getStatusBadgeClass = (status: string) => {
         switch (status) {
-            case 'accepted': return 'badge-success';
-            case 'rejected': return 'badge-danger';
+            case 'completed': return 'badge-success';
+            case 'cancelled': return 'badge-danger';
             default: return 'badge-warning';
         }
     };
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case 'accepted': return 'Принято';
-            case 'rejected': return 'Отклонено';
+            case 'completed': return 'Принято';
+            case 'cancelled': return 'Отклонено';
             default: return 'Ожидает ответа';
         }
     };
@@ -67,8 +67,8 @@ export default function OffersTab({ companyId }: OffersTabProps) {
                     offers.map(offer => (
                         <div key={offer.id} className="card offer-card">
                             <div className="offer-header">
-                                <span className={`badge ${getStatusBadgeClass(offer.status)}`}>
-                                    {getStatusText(offer.status)}
+                                <span className={`badge ${getStatusBadgeClass(offer.request.status)}`}>
+                                    {getStatusText(offer.request.status)}
                                 </span>
                                 <span className="text-secondary">{formatDate(offer.createdAt)}</span>
                             </div>
@@ -87,15 +87,12 @@ export default function OffersTab({ companyId }: OffersTabProps) {
                                 <div className="price">
                                     {offer.price} ₸ {offer.priceUnit}
                                 </div>
-                                {offer.deliveryIncluded ? (
+                                {offer.deliveryPrice === 0 ? (
                                     <div className="delivery-info success">Доставка включена</div>
                                 ) : offer.deliveryPrice ? (
                                     <div className="delivery-info">+ Доставка: {offer.deliveryPrice} ₸</div>
                                 ) : (
                                     <div className="delivery-info">Самовывоз</div>
-                                )}
-                                {offer.comment && (
-                                    <p className="comment">«{offer.comment}»</p>
                                 )}
                             </div>
                         </div>
