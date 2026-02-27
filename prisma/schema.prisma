@@ -12,8 +12,15 @@ datasource db {
 }
 
 // ============================================
-// WESTROY — Database Schema
+// WESTROY — Database Schema (Full Marketplace Refactor)
 // ============================================
+
+// Enum для статуса торгового предложения
+enum OfferStockStatus {
+  IN_STOCK
+  ON_ORDER
+  OUT_OF_STOCK
+}
 
 // Roles & statuses stored as String to match existing DB
 // Valid UserRole values: 'client' | 'producer' | 'admin'
@@ -44,297 +51,323 @@ enum KnowledgeSourceType {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  phone         String    @unique
-  passwordHash  String?
-  role          String    // 'client' | 'producer' | 'admin'
+  id                      String              @id @default(cuid())
+  name                    String
+  email                   String              @unique
+  phone                   String              @unique
+  passwordHash            String?
+  role                    String              // 'client' | 'producer' | 'admin'
 
   // Relations
-  company       Company?
-  requests      Request[]
-  orders        Order[]   @relation("OrderClient")
-  reviews       Review[]  @relation("ReviewAuthor")
-  knowledgeItemsCreated KnowledgeBaseItem[] @relation("KnowledgeItemCreatedBy")
-  knowledgeItemsUpdated KnowledgeBaseItem[] @relation("KnowledgeItemUpdatedBy")
+  company                 Company?
+  requests                Request[]
+  orders                  Order[]             @relation("OrderClient")
+  reviews                 Review[]            @relation("ReviewAuthor")
+  knowledgeItemsCreated   KnowledgeBaseItem[] @relation("KnowledgeItemCreatedBy")
+  knowledgeItemsUpdated   KnowledgeBaseItem[] @relation("KnowledgeItemUpdatedBy")
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
 model Region {
-  id        String    @id
-  name      String
-  nameRu    String
+  id                      String              @id
+  name                    String
+  nameRu                  String
 
   // Relations
-  companies Company[]
+  companies               Company[]
 }
 
+// Модель Категорий с иерархией и slug
 model Category {
-  id        String    @id
-  name      String
-  nameRu    String
-  icon      String
-  keywords  String    // Stored as JSON string or comma-separated
+  id                      String              @id @default(cuid())
+  name                    String
+  nameRu                  String
+  slug                    String              @unique // Для SEO-ЧПУ
+  icon                    String?             // Сделал опциональным
+  keywords                Json?               // Массив строк в JSON (JSONB)
+  description             String?             // Добавил описание категории
 
-  // ===== ДОБАВЛЕНО ДЛЯ ИЕРАРХИИ =====
-  parentId  String?   // ID родительской категории (опционально). Null для корневых категорий.
-  parent    Category? @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  // ИЕРАРХИЯ
+  parentId                String?             // ID родительской категории (null для корневых)
+  parent                  Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
 
-  // Связь для дочерних категорий (чтобы получить все подкатегории родителя)
-  children  Category[] @relation("CategoryHierarchy")
-  // =================================
+  // Дочерние категории
+  children                Category[]          @relation("CategoryHierarchy")
 
   // Relations
-  companies         Company[]
-  products          Product[]
-  requests          Request[]
-  companyCategories CompanyCategory[]
+  products                Product[]
+  requests                Request[]
+  companyCategories       CompanyCategory[]   // Связь многие ко многим для компаний
+  companies               Company[]           // Удалить эту связь, если CompanyCategory используется для всех связей с категориями
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
+// Модель Компании (Поставщика)
 model Company {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  address     String
-  phone       String
-  delivery    Boolean  @default(false)
-  logoUrl     String?
-  verified    Boolean  @default(false)
+  id                      String              @id @default(cuid())
+  name                    String
+  description             String?
+  address                 String?
+  phone                   String?
+  delivery                Boolean             @default(false)
+  logoUrl                 String?
+  verified                Boolean             @default(false)
+
+  // География и Межгород
+  baseCityId              String?             // FK к Region - основной город
+  baseCity                Region?             @relation("CompanyBaseCity", fields: [baseCityId], references: [id])
+  deliveryRegions         Json?               // JSONB массив ID регионов, куда компания доставляет
 
   // Relations
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  regionId    String
-  region      Region   @relation(fields: [regionId], references: [id])
+  ownerId                 String?             @unique
+  owner                   User?               @relation(fields: [ownerId], references: [id])
+  
+  // Категории, в которых компания представлена (через CompanyCategory)
+  categories              CompanyCategory[]
 
-  ownerId     String?  @unique
-  owner       User?    @relation(fields: [ownerId], references: [id])
+  // Продукты и предложения компании
+  products                Product[]           // Продукты, которые компания *может производить/поставлять*
+  offers                  Offer[]             // Торговые предложения конкретной компании
+  orders                  Order[]
+  reviews                 Review[]
 
-  products    Product[]
-  offers      Offer[]
-  orders      Order[]
-  reviews     Review[]
-  categories  CompanyCategory[]
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
+// Модель Мастер-Товара (Эталонная карточка)
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  article     String?
-  brand       String?
-  boxQuantity Int?
-  imageUrl    String?
-  source      String?
-  specsJson   String?
-  unit        String
-  priceFrom   Float
-  priceUnit   String
-  inStock     Boolean  @default(true)
+  id                      String              @id @default(cuid())
+  name                    String
+  slug                    String              @unique // Для SEO-ЧПУ, генерируется из name
+  article                 String              @unique // Уникальный артикул для эталонного товара
+  brand                   String? 
+  description             String?
+  imageUrl                String?             // Основное изображение (можно добавить Array для галереи)
+  additionalImages        Json?               // JSONB массив URL дополнительных изображений
+  
+  // Dynamic Specs (JSONB) для хранения технических характеристик
+  technicalSpecs          Json?
+  // Marketing (JSONB) для преиму
+  marketingFeatures       Json?
+  
+  // Tags (JSONB) для плашек «Хит», «ГОСТ»
+  tags                    Json?
+  
+  // Связь с категорией (leafCategory)
+  categoryId              String
+  category                Category            @relation(fields: [categoryId], references: [id])
 
-  // Relations
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+  // Relations к торговым предложениям (Offer)
+  offers                  Offer[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 
-  @@index([companyId])
   @@index([categoryId])
-  @@index([name])
+  @@index([brand])
+  @@index([slug])
 }
 
+// НОВАЯ МОДЕЛЬ: Торговое Предложение (Конкретное предложение от поставщика)
+model Offer {
+  id                      String              @id @default(cuid())
+  productId               String              // FK к Product (мастер-товар)
+  product                 Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  companyId               String              // FK к Company (поставщик)
+  company                 Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  price                   Float               // Текущая цена дилера
+  priceUnit               String              // Единица измерения цены (тг/м3, тг/шт)
+  oldPrice                Float?              // Для зачеркнутой цены (nullable)
+  discountLabel           String?             // Например: "Акция -10%"
+  minOrder                Float?              // Минимальный объем заказа
+  stockStatus             OfferStockStatus    @default(IN_STOCK) // Статус наличия
+  leadTime                String?             // Срок поставки (например, "3 дня", "завтра")
+  deliveryPrice           Float?              // Цена доставки (nullable)
+
+  // Связь с заявкой (если это ответ на заявку)
+  requestId               String?             // FK к Request
+  request                 Request?            @relation(fields: [requestId], references: [id])
+  
+  // Связь с заказом
+  order                   Order?
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@unique([productId, companyId]) // Уникальное предложение от компании на конкретный товар
+  @@index([productId])
+  @@index([companyId])
+  @@index([requestId])
+}
+
+// Модель Заявки от Клиента
 model Request {
-  id             String   @id @default(cuid())
-  query          String
-
-  // Parsed data
-  parsedCategory String
-  parsedVolume   String?
-  parsedCity     String
-
-  deliveryNeeded Boolean
-  address        String?
-  deadline       String?
-
-  status         String          // 'active' | 'in_progress' | 'completed' | 'cancelled'
-
+  id                      String              @id @default(cuid())
+  query                   String              // Оригинальный запрос клиента
+  
+  // Парсинг данных
+  parsedCategory          String?
+  parsedVolume            String?
+  parsedCity              String?
+  
+  deliveryNeeded          Boolean?
+  address                 String?
+  deadline                String?
+  
+  status                  String              // 'active' | 'in_progress' | 'completed' | 'cancelled'
+  
   // Relations
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
-  categoryId     String
-  category       Category @relation(fields: [categoryId], references: [id])
+  userId                  String
+  user                    User                @relation(fields: [userId], references: [id])
+  categoryId              String?             // К какой категории относится заявка
+  category                Category?           @relation(fields: [categoryId], references: [id])
+  
+  // Торговые предложения на эту заявку
+  offers                  Offer[]
 
-  offers         Offer[]
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 
   @@index([userId, status])
   @@index([categoryId])
 }
 
-model Offer {
-  id               String   @id @default(cuid())
-  price            Float
-  priceUnit        String
-  comment          String
-  deliveryIncluded Boolean
-  deliveryPrice    Float?
-  validUntil       String
-
-  status           String        // 'pending' | 'accepted' | 'rejected'
-
-  // Relations
-  requestId        String
-  request          Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  companyId        String
-  company          Company  @relation(fields: [companyId], references: [id])
-  order            Order?
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@index([requestId])
-  @@index([companyId])
-}
-
-// --- Order Lifecycle ---
-// Created when an offer is accepted.
-// Status flow: confirmed → delivering → delivered → completed
+// Модель Заказа
 model Order {
-  id             String   @id @default(cuid())
-  status         String   @default("confirmed") // 'confirmed' | 'delivering' | 'delivered' | 'completed' | 'cancelled'
-
-  totalPrice     Float
-  deliveryPrice  Float?
-  deliveryAddress String?
-  notes          String?
-
+  id                      String              @id @default(cuid())
+  status                  String              @default("confirmed") // 'confirmed' | 'delivering' | 'delivered' | 'completed' | 'cancelled'
+  
+  totalPrice              Float
+  deliveryPrice           Float?
+  deliveryAddress         String?
+  notes                   String?
+  
   // Relations
-  offerId        String   @unique
-  offer          Offer    @relation(fields: [offerId], references: [id])
-  clientId       String
-  client         User     @relation("OrderClient", fields: [clientId], references: [id])
-  companyId      String
-  company        Company  @relation(fields: [companyId], references: [id])
-  review         Review?
-
-  completedAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  offerId                 String              @unique
+  offer                   Offer               @relation(fields: [offerId], references: [id])
+  clientId                String
+  client                  User                @relation("OrderClient", fields: [clientId], references: [id])
+  companyId               String
+  company                 Company             @relation(fields: [companyId], references: [id])
+  review                  Review?
+  
+  completedAt             DateTime?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 
   @@index([clientId, status])
   @@index([companyId, status])
 }
 
-// --- Reviews & Ratings ---
+// Модель Отзыва
 model Review {
-  id        String   @id @default(cuid())
-  rating    Int      // 1-5
-  comment   String?
-
+  id                      String              @id @default(cuid())
+  rating                  Int                 // 1-5
+  comment                 String?
+  
   // Relations
-  orderId   String   @unique
-  order     Order    @relation(fields: [orderId], references: [id])
-  clientId  String
-  client    User     @relation("ReviewAuthor", fields: [clientId], references: [id])
-  companyId String
-  company   Company  @relation(fields: [companyId], references: [id])
-
-  createdAt DateTime @default(now())
+  orderId                 String              @unique
+  order                   Order               @relation(fields: [orderId], references: [id])
+  clientId                String
+  client                  User                @relation("ReviewAuthor", fields: [clientId], references: [id])
+  companyId               String
+  company                 Company             @relation(fields: [companyId], references: [id])
+  
+  createdAt               DateTime            @default(now())
 
   @@index([companyId])
 }
 
+// Модель Заявки в Партнеры
 model PartnerApplication {
-  id          String                   @id @default(cuid())
-  name        String
-  email       String
-  phone       String
-  companyName String
-  category    String
-  city        String
-  message     String?
-  status      String   @default("pending")
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
+  id                      String              @id @default(cuid())
+  name                    String
+  email                   String
+  phone                   String
+  companyName             String
+  category                String?             // Может быть заменено на categoryId, если хотим привязку
+  city                    String? 
+  message                 String?
+  status                  String              @default("pending")
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
+// Модель Гостевой Заявки (для неавторизованных)
 model GuestRequest {
-  id          String   @id @default(cuid())
-  name        String
-  phone       String
-  query       String
-  quantity    String?
-  address     String?
-  companyName String?
-  productName String?
-  sellerName  String?
-  city        String?
-  createdAt   DateTime @default(now())
+  id                      String              @id @default(cuid())
+  name                    String?
+  phone                   String?
+  query                   String
+  quantity                String?
+  address                 String?
+  companyName             String?
+  productName             String?
+  sellerName              String?
+  city                    String?
+  createdAt               DateTime            @default(now())
 }
 
+// Модель Связи Компания-Категория (многие ко многим)
 model CompanyCategory {
-  id         String   @id @default(cuid())
-  companyId  String
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-  createdAt  DateTime @default(now())
+  id                      String              @id @default(cuid())
+  companyId               String
+  company                 Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId              String
+  category                Category            @relation(fields: [categoryId], references: [id])
+  createdAt               DateTime            @default(now())
 
   @@unique([companyId, categoryId])
   @@index([categoryId])
 }
 
+// Модели для Базы Знаний
 model KnowledgeBaseItem {
-  id               String              @id @default(cuid())
-  title            String
-  slug             String              @unique
-  market           String              @default("kz")
-  type             KnowledgeItemType
-  status           KnowledgeItemStatus @default(draft)
-  topic            String?
-  summary          String?
-  contentMd        String
-  formula          String?
-  inputSchemaJson  String?
-  outputSchemaJson String?
-  tagsJson         String              @default("[]")
-  regionCode       String?
-  sourceName       String?
-  sourceUrl        String?
-  verificationNote String?
-  effectiveFrom    DateTime?
-  effectiveTo      DateTime?
-  createdById      String?
-  createdBy        User?               @relation("KnowledgeItemCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedById      String?
-  updatedBy        User?               @relation("KnowledgeItemUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  sources          KnowledgeSource[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id                      String              @id @default(cuid())
+  title                   String
+  slug                    String              @unique
+  market                  String              @default("kz")
+  type                    KnowledgeItemType
+  status                  KnowledgeItemStatus @default(draft)
+  topic                   String?
+  summary                 String?
+  contentMd               String
+  formula                 String?
+  inputSchemaJson         Json?
+  outputSchemaJson        Json?
+  tagsJson                Json?
+  regionCode              String?
+  sourceName              String?
+  sourceUrl               String?
+  verificationNote        String?
+  effectiveFrom           DateTime?
+  effectiveTo             DateTime?
+  createdById             String?
+  createdBy               User?               @relation("KnowledgeItemCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById             String?
+  updatedBy               User?               @relation("KnowledgeItemUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  sources                 KnowledgeSource[]
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
 model KnowledgeSource {
-  id          String              @id @default(cuid())
-  itemId       String
-  item         KnowledgeBaseItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  type         KnowledgeSourceType @default(standard)
-  title        String
-  url          String?
-  publisher    String?
-  publishedAt  DateTime?
-  checkedAt    DateTime?
-  notes        String?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id                      String              @id @default(cuid())
+  itemId                  String
+  item                    KnowledgeBaseItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type                    KnowledgeSourceType @default(standard)
+  title                   String
+  url                     String?
+  publisher               String?
+  publishedAt             DateTime?
+  checkedAt               DateTime?
+  notes                   String?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
