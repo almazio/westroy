@@ -76,7 +76,7 @@ model Region {
   nameRu                  String
 
   // Relations
-  companies               Company[]
+  companies               Company[]           @relation("CompanyBaseCity")
 }
 
 // Модель Категорий с иерархией и slug
@@ -84,7 +84,7 @@ model Category {
   id                      String              @id @default(cuid())
   name                    String
   nameRu                  String
-  slug                    String              @unique // Для SEO-ЧПУ
+  slug                    String?             @unique // Для SEO-ЧПУ
   icon                    String?             // Сделал опциональным
   keywords                Json?               // Массив строк в JSON (JSONB)
   description             String?             // Добавил описание категории
@@ -100,10 +100,9 @@ model Category {
   products                Product[]
   requests                Request[]
   companyCategories       CompanyCategory[]   // Связь многие ко многим для компаний
-  companies               Company[]           // Удалить эту связь, если CompanyCategory используется для всех связей с категориями
 
   createdAt               DateTime            @default(now())
-  updatedAt               DateTime            @updatedAt
+  updatedAt               DateTime?           @updatedAt
 }
 
 // Модель Компании (Поставщика)
@@ -129,8 +128,7 @@ model Company {
   // Категории, в которых компания представлена (через CompanyCategory)
   categories              CompanyCategory[]
 
-  // Продукты и предложения компании
-  products                Product[]           // Продукты, которые компания *может производить/поставлять*
+  // Торговые предложения компании
   offers                  Offer[]             // Торговые предложения конкретной компании
   orders                  Order[]
   reviews                 Review[]
@@ -143,8 +141,8 @@ model Company {
 model Product {
   id                      String              @id @default(cuid())
   name                    String
-  slug                    String              @unique // Для SEO-ЧПУ, генерируется из name
-  article                 String              @unique // Уникальный артикул для эталонного товара
+  slug                    String?             @unique // Для SEO-ЧПУ, генерируется из name
+  article                 String?             @unique // Уникальный артикул для эталонного товара
   brand                   String? 
   description             String?
   imageUrl                String?             // Основное изображение (можно добавить Array для галереи)
@@ -176,8 +174,8 @@ model Product {
 // НОВАЯ МОДЕЛЬ: Торговое Предложение (Конкретное предложение от поставщика)
 model Offer {
   id                      String              @id @default(cuid())
-  productId               String              // FK к Product (мастер-товар)
-  product                 Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId               String?             // FK к Product (мастер-товар)
+  product                 Product?            @relation(fields: [productId], references: [id], onDelete: Cascade)
   companyId               String              // FK к Company (поставщик)
   company                 Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
