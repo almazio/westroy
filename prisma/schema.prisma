@@ -50,7 +50,7 @@ model User {
   phone         String    @unique
   passwordHash  String?
   role          String    // 'client' | 'producer' | 'admin'
-  
+
   // Relations
   company       Company?
   requests      Request[]
@@ -58,7 +58,7 @@ model User {
   reviews       Review[]  @relation("ReviewAuthor")
   knowledgeItemsCreated KnowledgeBaseItem[] @relation("KnowledgeItemCreatedBy")
   knowledgeItemsUpdated KnowledgeBaseItem[] @relation("KnowledgeItemUpdatedBy")
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -67,7 +67,7 @@ model Region {
   id        String    @id
   name      String
   nameRu    String
-  
+
   // Relations
   companies Company[]
 }
@@ -78,7 +78,15 @@ model Category {
   nameRu    String
   icon      String
   keywords  String    // Stored as JSON string or comma-separated
-  
+
+  // ===== ДОБАВЛЕНО ДЛЯ ИЕРАРХИИ =====
+  parentId  String?   // ID родительской категории (опционально). Null для корневых категорий.
+  parent    Category? @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+
+  // Связь для дочерних категорий (чтобы получить все подкатегории родителя)
+  children  Category[] @relation("CategoryHierarchy")
+  // =================================
+
   // Relations
   companies         Company[]
   products          Product[]
@@ -95,22 +103,22 @@ model Company {
   delivery    Boolean  @default(false)
   logoUrl     String?
   verified    Boolean  @default(false)
-  
+
   // Relations
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   regionId    String
   region      Region   @relation(fields: [regionId], references: [id])
-  
+
   ownerId     String?  @unique
   owner       User?    @relation(fields: [ownerId], references: [id])
-  
+
   products    Product[]
   offers      Offer[]
   orders      Order[]
   reviews     Review[]
   categories  CompanyCategory[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -129,13 +137,13 @@ model Product {
   priceFrom   Float
   priceUnit   String
   inStock     Boolean  @default(true)
-  
+
   // Relations
   companyId   String
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -147,26 +155,26 @@ model Product {
 model Request {
   id             String   @id @default(cuid())
   query          String
-  
+
   // Parsed data
   parsedCategory String
   parsedVolume   String?
   parsedCity     String
-  
+
   deliveryNeeded Boolean
   address        String?
   deadline       String?
-  
+
   status         String          // 'active' | 'in_progress' | 'completed' | 'cancelled'
-  
+
   // Relations
   userId         String
   user           User     @relation(fields: [userId], references: [id])
   categoryId     String
   category       Category @relation(fields: [categoryId], references: [id])
-  
+
   offers         Offer[]
-  
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -182,16 +190,16 @@ model Offer {
   deliveryIncluded Boolean
   deliveryPrice    Float?
   validUntil       String
-  
+
   status           String        // 'pending' | 'accepted' | 'rejected'
-  
+
   // Relations
   requestId        String
   request          Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
   companyId        String
   company          Company  @relation(fields: [companyId], references: [id])
   order            Order?
-  
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -205,12 +213,12 @@ model Offer {
 model Order {
   id             String   @id @default(cuid())
   status         String   @default("confirmed") // 'confirmed' | 'delivering' | 'delivered' | 'completed' | 'cancelled'
-  
+
   totalPrice     Float
   deliveryPrice  Float?
   deliveryAddress String?
   notes          String?
-  
+
   // Relations
   offerId        String   @unique
   offer          Offer    @relation(fields: [offerId], references: [id])
@@ -219,7 +227,7 @@ model Order {
   companyId      String
   company        Company  @relation(fields: [companyId], references: [id])
   review         Review?
-  
+
   completedAt    DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -233,7 +241,7 @@ model Review {
   id        String   @id @default(cuid())
   rating    Int      // 1-5
   comment   String?
-  
+
   // Relations
   orderId   String   @unique
   order     Order    @relation(fields: [orderId], references: [id])
@@ -241,7 +249,7 @@ model Review {
   client    User     @relation("ReviewAuthor", fields: [clientId], references: [id])
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
-  
+
   createdAt DateTime @default(now())
 
   @@index([companyId])
