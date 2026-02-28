@@ -12,7 +12,7 @@ export default function Navbar() {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const pathname = usePathname();
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [lang, setLang] = useState('RU');
     const isAppHost = typeof window !== 'undefined' && window.location.hostname === 'app.westroy.kz';
 
     const navLinks = {
@@ -54,42 +54,6 @@ export default function Navbar() {
         ? visibleLinks
         : currentLinks.filter((link) => link.external || link.href !== pathname);
 
-    useEffect(() => {
-        if (!menuOpen) return;
-
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setMenuOpen(false);
-        };
-
-        const scrollY = window.scrollY;
-        const original = {
-            overflow: document.body.style.overflow,
-            position: document.body.style.position,
-            top: document.body.style.top,
-            width: document.body.style.width,
-        };
-
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.width = '100%';
-
-        window.addEventListener('keydown', onKeyDown);
-
-        return () => {
-            const top = document.body.style.top;
-            document.body.style.overflow = original.overflow;
-            document.body.style.position = original.position;
-            document.body.style.top = original.top;
-            document.body.style.width = original.width;
-            window.removeEventListener('keydown', onKeyDown);
-            const restoredY = Number.parseInt(top || '0', 10);
-            if (!Number.isNaN(restoredY)) {
-                window.scrollTo(0, Math.abs(restoredY));
-            }
-        };
-    }, [menuOpen]);
-
     return (
         <nav className={styles.nav}>
             <div className={styles.inner}>
@@ -104,11 +68,11 @@ export default function Navbar() {
                 <div className={styles.desktopLinks}>
                     {fallbackLinks.map(link => (
                         link.external ? (
-                            <a key={link.href} href={link.href} className={styles.link} onClick={() => setMenuOpen(false)}>
+                            <a key={link.href} href={link.href} className={styles.link}>
                                 {link.label}
                             </a>
                         ) : (
-                            <Link key={link.href} href={link.href} className={styles.link} onClick={() => setMenuOpen(false)}>
+                            <Link key={link.href} href={link.href} className={styles.link}>
                                 {link.label}
                             </Link>
                         )
@@ -141,6 +105,16 @@ export default function Navbar() {
                     )}
 
                     <button
+                        onClick={() => setLang(lang === 'RU' ? 'KZ' : 'RU')}
+                        className={styles.themeBtn}
+                        style={{ fontWeight: 600, fontSize: '0.9rem' }}
+                        aria-label="Переключить язык"
+                        title="Язык"
+                    >
+                        <span>{lang}</span>
+                    </button>
+
+                    <button
                         onClick={toggleTheme}
                         className={styles.themeBtn}
                         aria-label="Переключить тему"
@@ -148,76 +122,7 @@ export default function Navbar() {
                     >
                         <span suppressHydrationWarning>{theme === 'dark' ? '☀️' : '🌙'}</span>
                     </button>
-
-                    <button
-                        className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        aria-expanded={menuOpen}
-                        aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
-                    >
-                        <span></span><span></span><span></span>
-                    </button>
                 </div>
-            </div>
-
-            {menuOpen && <button className={styles.overlay} onClick={() => setMenuOpen(false)} aria-label="Закрыть меню" />}
-
-            <div className={`${styles.mobileDrawer} ${menuOpen ? styles.mobileDrawerOpen : ''}`}>
-                <div className={styles.mobileHeader}>
-                    <strong>Меню</strong>
-                </div>
-
-                <div className={styles.mobileLinks}>
-                    {fallbackLinks.filter(l => !['Поиск', 'Каталог', 'Главная'].includes(l.label)).map(link => (
-                        link.external ? (
-                            <a key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-                                {link.label}
-                            </a>
-                        ) : (
-                            <Link key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-                                {link.label}
-                            </Link>
-                        )
-                    ))}
-                </div>
-
-                <div className={styles.mobileThemeRow}>
-                    <span className={styles.mobileThemeLabel}>Тема</span>
-                    <button
-                        onClick={toggleTheme}
-                        className={styles.mobileThemeBtn}
-                        aria-label="Переключить тему"
-                    >
-                        <span suppressHydrationWarning>{theme === 'dark' ? 'Светлая' : 'Темная'}</span>
-                    </button>
-                </div>
-
-                {user ? (
-                    <div className={styles.mobileUserCard}>
-                        <div>
-                            <div className={styles.userName}>{user.name}</div>
-                            <div className={styles.userRole}>
-                                {user.role === 'client' && 'Клиент'}
-                                {user.role === 'producer' && 'Производитель'}
-                                {user.role === 'admin' && 'Админ'}
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => {
-                                setMenuOpen(false);
-                                void logout();
-                            }}
-                            className="btn btn-ghost"
-                            style={{ width: '100%' }}
-                        >
-                            Выйти
-                        </button>
-                    </div>
-                ) : (
-                    <div className={styles.mobileAuthRow}>
-                        <a href={toAppUrl('/login')} className="btn btn-secondary" onClick={() => setMenuOpen(false)}>Войти</a>
-                    </div>
-                )}
             </div>
         </nav>
     );

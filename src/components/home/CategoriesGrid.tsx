@@ -11,7 +11,7 @@ export default async function CategoriesGrid() {
             <div className="container">
                 <div className={styles.header}>
                     <h2 className={styles.title}>Категории материалов</h2>
-                    <a href={toAppUrl('/search')} className={styles.viewAll}>
+                    <a href={toAppUrl('/catalog')} className={styles.viewAll}>
                         Все категории →
                     </a>
                 </div>

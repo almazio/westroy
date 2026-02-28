@@ -1,0 +1,108 @@
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.breadcrumbs a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumbs a:hover {
+    color: var(--accent);
+}
+
+.separator {
+    color: var(--text-muted);
+}
+
+.current {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.heading {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s ease;
+}
+
+.card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.12);
+    transform: translateY(-2px);
+}
+
+.cardIcon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+
+.card:hover .cardIcon {
+    background: var(--accent);
+}
+
+.cardName {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.childCount {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .heading {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+        padding: 16px 12px;
+    }
+}

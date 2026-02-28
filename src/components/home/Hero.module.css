@@ -1,7 +1,8 @@
 .hero {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
-    padding: 24px 0 20px;
+    padding: 80px 0 20px;
+    /* 64px navbar + 16px spacing */
 }
 
 .content {
@@ -54,11 +55,13 @@
 /* Mobile — compact but visible */
 @media (max-width: 768px) {
     .hero {
-        padding: 16px 0 12px;
+        padding: 80px 0 16px;
+        /* 64px navbar + 16px spacing */
     }
 
     .content {
         padding: 0 16px;
+        gap: 10px;
     }
 
     .tags {

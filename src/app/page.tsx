@@ -1,8 +1,6 @@
 
 import Hero from '@/components/home/Hero';
 import CategoriesGrid from '@/components/home/CategoriesGrid';
-import FeaturedProducers from '@/components/home/FeaturedProducers';
-import PopularMaterials from '@/components/home/PopularMaterials';
 import HotOffers from '@/components/home/HotOffers';
 import styles from './page.module.css';
 
@@ -16,10 +14,6 @@ export default async function Home() {
       <CategoriesGrid />
 
       <HotOffers />
-
-      <PopularMaterials />
-
-      <FeaturedProducers />
 
       {/* CTA Section */}
       <section className={styles.cta}>

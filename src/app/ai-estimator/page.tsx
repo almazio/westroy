@@ -23,8 +23,8 @@ export default function AiEstimatorPage() {
                         </div>
                         <h2>Сфотографировать смету</h2>
                         <p>Я распознаю рукописный текст или PDF и сформирую список товаров</p>
-                        <button className="btn btn-primary btn-lg" style={{ marginTop: '20px' }}>
-                            Открыть камеру
+                        <button className="btn btn-primary btn-lg" style={{ marginTop: '20px', opacity: 0.5 }} disabled>
+                            Скоро
                         </button>
                     </div>
 
@@ -35,8 +35,8 @@ export default function AiEstimatorPage() {
                             className={styles.textarea}
                             placeholder="Напишите список материалов вручную, например: 10 тонн арматуры 12мм и 5 кубов бетона М300..."
                         />
-                        <button className="btn btn-secondary" style={{ marginTop: '16px', width: '100%' }}>
-                            Посчитать всё
+                        <button className="btn btn-secondary" style={{ marginTop: '16px', width: '100%', opacity: 0.5 }} disabled>
+                            Скоро
                         </button>
                     </div>
                 </div>

@@ -62,8 +62,29 @@ export default function PWAWidget() {
             window.removeEventListener('offline', onOffline);
         };
     }, []);
+    // Delay showing install prompt until cookie consent is resolved
+    const [showDelayed, setShowDelayed] = useState(false);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const consent = typeof localStorage !== 'undefined' ? localStorage.getItem('analytics_consent') : null;
+            if (consent && consent !== 'unknown') {
+                setShowDelayed(true);
+            } else {
+                // Re-check every 2 seconds until cookie is resolved
+                const interval = setInterval(() => {
+                    const c = localStorage.getItem('analytics_consent');
+                    if (c && c !== 'unknown') {
+                        setShowDelayed(true);
+                        clearInterval(interval);
+                    }
+                }, 2000);
+                return () => clearInterval(interval);
+            }
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, []);
 
-    const canInstall = useMemo(() => Boolean(deferredPrompt) && !isInstalled && !dismissed, [deferredPrompt, dismissed, isInstalled]);
+    const canInstall = useMemo(() => Boolean(deferredPrompt) && !isInstalled && !dismissed && showDelayed, [deferredPrompt, dismissed, isInstalled, showDelayed]);
 
     const handleInstall = async () => {
         if (!deferredPrompt) return;

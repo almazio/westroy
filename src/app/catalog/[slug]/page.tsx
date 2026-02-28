@@ -1,7 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCategories, getCategoryById } from '@/lib/db';
-import styles from '@/app/search/page.module.css';
+import { getCategoryById } from '@/lib/db';
+import { prisma } from '@/lib/db';
+import { mapCategory } from '@/lib/db/mappers';
+import styles from './page.module.css';
 
 interface Props {
     params: {
@@ -11,54 +13,54 @@ interface Props {
 
 export default async function CatalogCategoryPage({ params }: Props) {
     const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
 
-    // We need to find the category. It could be a slug or an ID.
-    const allCategories = await getCategories();
+    // Fetch directly by ID or Slug without needing the full tree
+    let category = await getCategoryById(decodedSlug);
 
-    // Flatten categories to search by slug or id
-    let foundCategory = null;
-    const findCat = (cats: any[]) => {
-        for (const cat of cats) {
-            if (cat.slug === slug || cat.id === slug) {
-                foundCategory = cat;
-                return;
-            }
-            if (cat.children) findCat(cat.children);
+    if (!category) {
+        // Fallback to checking the slug field directly
+        const catRecord = await prisma.category.findFirst({
+            where: { slug: decodedSlug },
+            include: { children: true }
+        });
+        if (catRecord) {
+            category = mapCategory(catRecord as any);
         }
-    };
-    findCat(allCategories);
-
-    if (!foundCategory) {
-        notFound();
     }
-
-    // Fetch full category info with children
-    const category = await getCategoryById((foundCategory as any).id);
 
     if (!category) {
         notFound();
     }
 
-    // If it's a leaf category (no children), redirect to search to show products
-    // We could render the search UI here, but search UI is a complex client component.
+    // If leaf category (no children), redirect to search
     if (!category.children || category.children.length === 0) {
         redirect(`/search?category=${category.slug || category.id}`);
     }
 
-    // If it's a parent category, render the Directory Hub instantly
     return (
         <div className="page" style={{ paddingTop: '80px' }}>
             <div className="container">
-                <div className={`${styles.subCategoriesWrap} ${styles.directoryHubMode}`}>
-                    <h1 style={{ marginBottom: '24px', fontSize: '2rem', fontWeight: 700 }}>{category.nameRu}</h1>
-                    <div className={styles.subCategoriesGrid}>
-                        {category.children.map(child => (
-                            <Link key={child.id} href={`/catalog/${child.slug || child.id}`} className={styles.subCategoryCard}>
-                                <span className={styles.subCategoryIcon}>{child.icon || '📦'}</span>
-                                {child.nameRu}
-                            </Link>
-                        ))}
-                    </div>
+                <div className={styles.breadcrumbs}>
+                    <Link href="/#categories">Каталог</Link>
+                    <span className={styles.separator}>/</span>
+                    <span className={styles.current}>{category.nameRu}</span>
+                </div>
+                <h1 className={styles.heading}>{category.nameRu}</h1>
+                <div className={styles.grid}>
+                    {category.children.map((child: any) => (
+                        <Link key={child.id} href={`/catalog/${child.slug || child.id}`} className={styles.card}>
+                            <div className={styles.cardIcon}>
+                                {child.icon || '📦'}
+                            </div>
+                            <div className={styles.cardName}>{child.nameRu}</div>
+                            {child.children && child.children.length > 0 && (
+                                <div className={styles.childCount}>
+                                    {child.children.length} подкатегор.
+                                </div>
+                            )}
+                        </Link>
+                    ))}
                 </div>
             </div>
         </div>

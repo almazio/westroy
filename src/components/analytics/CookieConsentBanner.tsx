@@ -1,13 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAnalyticsConsent, setAnalyticsConsent } from '@/lib/analytics';
 import styles from './CookieConsentBanner.module.css';
 
 export default function CookieConsentBanner() {
-    const [visible, setVisible] = useState(() => getAnalyticsConsent() === 'unknown');
+    const [mounted, setMounted] = useState(false);
+    const [visible, setVisible] = useState(false);
 
-    if (!visible) return null;
+    useEffect(() => {
+        setMounted(true);
+        if (getAnalyticsConsent() === 'unknown') {
+            setVisible(true);
+        }
+    }, []);
+
+    if (!mounted || !visible) return null;
 
     return (
         <div className={styles.banner} role="dialog" aria-live="polite" aria-label="Cookie consent">

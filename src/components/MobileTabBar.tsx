@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './MobileTabBar.module.css';
@@ -7,7 +8,7 @@ import styles from './MobileTabBar.module.css';
 export default function MobileTabBar() {
     const pathname = usePathname();
 
-    const tabs = [
+    const tabs: Array<{ name: string; href: string; icon: React.ReactNode; isPrimary?: boolean }> = [
         {
             name: 'Каталог',
             href: '/#categories',
@@ -20,16 +21,7 @@ export default function MobileTabBar() {
                 </svg>
             ),
         },
-        {
-            name: 'Поиск',
-            href: '/search',
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-            ),
-        },
+        /*
         {
             name: 'AI-Смета',
             href: '/ai-estimator',
@@ -41,6 +33,7 @@ export default function MobileTabBar() {
             ),
             isPrimary: true,
         },
+        */
         {
             name: 'Заявки',
             href: '/dashboard/client',
