@@ -76,7 +76,8 @@ model Region {
   nameRu                  String
 
   // Relations
-  companies               Company[]           @relation("CompanyBaseCity")
+  baseCityCompanies       Company[]           @relation("CompanyBaseCity") // Обратная связь для Company.baseCity
+  // Если нужны другие связи компаний с регионами (например, доставка), то через доп. модель
 }
 
 // Модель Категорий с иерархией и slug
@@ -84,7 +85,7 @@ model Category {
   id                      String              @id @default(cuid())
   name                    String
   nameRu                  String
-  slug                    String?             @unique // Для SEO-ЧПУ
+  slug                    String              @unique // Для SEO-ЧПУ
   icon                    String?             // Сделал опциональным
   keywords                Json?               // Массив строк в JSON (JSONB)
   description             String?             // Добавил описание категории
@@ -102,7 +103,7 @@ model Category {
   companyCategories       CompanyCategory[]   // Связь многие ко многим для компаний
 
   createdAt               DateTime            @default(now())
-  updatedAt               DateTime?           @updatedAt
+  updatedAt               DateTime            @updatedAt
 }
 
 // Модель Компании (Поставщика)
@@ -129,7 +130,7 @@ model Company {
   // Категории, в которых компания представлена (через CompanyCategory)
   categories              CompanyCategory[]
 
-  // Торговые предложения компании
+  // Продукты и предложения компании
   offers                  Offer[]             // Торговые предложения конкретной компании
   orders                  Order[]
   reviews                 Review[]
@@ -142,8 +143,8 @@ model Company {
 model Product {
   id                      String              @id @default(cuid())
   name                    String
-  slug                    String?             @unique // Для SEO-ЧПУ, генерируется из name
-  article                 String?             @unique // Уникальный артикул для эталонного товара
+  slug                    String              @unique // Для SEO-ЧПУ, генерируется из name
+  article                 String              @unique // Уникальный артикул для эталонного товара
   brand                   String? 
   description             String?
   imageUrl                String?             // Основное изображение (можно добавить Array для галереи)
@@ -151,7 +152,7 @@ model Product {
   
   // Dynamic Specs (JSONB) для хранения технических характеристик
   technicalSpecs          Json?
-  // Marketing (JSONB) для преиму
+  // Marketing (JSONB) для преимуществ
   marketingFeatures       Json?
   
   // Tags (JSONB) для плашек «Хит», «ГОСТ»
