@@ -71,6 +71,7 @@ export interface SearchResultData {
     company: {
         id: string; name: string; description: string; delivery: boolean;
         verified: boolean; address: string; phone: string; categoryId: string;
+        slug?: string | null;
     };
     products: {
         id: string;
