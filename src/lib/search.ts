@@ -104,6 +104,7 @@ function buildResult({
                 ...p,
                 priceFrom: offer?.price ?? 0,
                 priceUnit: offer?.priceUnit ?? '',
+                technicalSpecs: (p as any).specsJson || undefined,
             };
         }),
         priceFrom: minPricedPair?.offer?.price ?? 0,

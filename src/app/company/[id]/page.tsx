@@ -34,7 +34,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <div className="container">
                 {/* Breadcrumb */}
                 <div className={styles.breadcrumb}>
-                    <Link href="/">Главная</Link> / {category ? <><Link href={`/search?category=${category.id}`}>{category.nameRu}</Link> / </> : null}<span>{company.name}</span>
+                    <Link href="/">Главная</Link> / {category ? <><Link href={`/catalog/${category.id}`}>{category.nameRu}</Link> / </> : null}<span>{company.name}</span>
                 </div>
 
                 {/* Company Header */}

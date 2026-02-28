@@ -17,6 +17,14 @@ export async function getOffersByCompany(companyId: string): Promise<Offer[]> {
     return offers.map(mapOffer);
 }
 
+export async function getOffersByProduct(productId: string): Promise<Offer[]> {
+    const offers = await prisma.offer.findMany({
+        where: { productId },
+        include: { company: true }
+    });
+    return offers.map(mapOffer);
+}
+
 export async function addOffer(data: Offer): Promise<Offer> {
     const offer = await prisma.offer.create({
         data: {

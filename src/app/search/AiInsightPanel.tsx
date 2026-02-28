@@ -11,6 +11,7 @@ interface AiInsightPanelProps {
     minFallbackTotal: number | null;
     summaryUnit: string;
     filteredOffersCount: number;
+    onQuickButtonClick?: (query: string) => void;
 }
 
 interface AiApiResponse {
@@ -23,6 +24,7 @@ interface AiApiResponse {
     urgent: boolean;
     details: string | null;
     userMessage: string;
+    quickButtons?: string[];
 }
 
 export default function AiInsightPanel({
@@ -32,6 +34,7 @@ export default function AiInsightPanel({
     minFallbackTotal,
     summaryUnit,
     filteredOffersCount,
+    onQuickButtonClick,
 }: AiInsightPanelProps) {
     const [aiInsight, setAiInsight] = useState<AiApiResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -43,7 +46,7 @@ export default function AiInsightPanel({
 
         // Не спамим запросами, если уже загрузили для этого же запроса
         // (можно добавить кэширование, но пока просто check)
-        
+
         let isMounted = true;
 
         async function fetchAiInsight() {
@@ -54,7 +57,7 @@ export default function AiInsightPanel({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: query }),
                 });
-                
+
                 if (res.ok) {
                     const json = await res.json();
                     if (json.success && isMounted) {
@@ -85,7 +88,7 @@ export default function AiInsightPanel({
     const renderQuantitySummary = () => {
         // Приоритет AI данным, если есть
         if (aiInsight?.volume && aiInsight?.volumeUnit) {
-             return `${aiInsight.volume} ${aiInsight.volumeUnit}`;
+            return `${aiInsight.volume} ${aiInsight.volumeUnit}`;
         }
 
         if (!hasRequestedQuantity || !requestedUnit) return null;
@@ -118,14 +121,30 @@ export default function AiInsightPanel({
                 <div className={styles.aiMessage}>
                     <p><strong>МиниБро:</strong> {aiInsight.userMessage}</p>
                     {aiInsight.details && <p className={styles.aiDetails}>📝 Детали: {aiInsight.details}</p>}
+
+                    {/* Quick Action Buttons */}
+                    {aiInsight.quickButtons && aiInsight.quickButtons.length > 0 && (
+                        <div className={styles.aiQuickButtons}>
+                            {aiInsight.quickButtons.map((btnText) => (
+                                <button
+                                    key={btnText}
+                                    type="button"
+                                    className={styles.aiQuickBtn}
+                                    onClick={() => onQuickButtonClick?.(btnText)}
+                                >
+                                    {btnText}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             ) : (
                 /* Fallback пока грузится или если ошибка */
-                 !loading && (
+                !loading && (
                     <p className={styles.aiSummary}>
                         {quantitySummary && `📦 ${quantitySummary} ${isAggregatesCategory ? '(в зависимости от типа и влажности)' : ''}`}
                     </p>
-                 )
+                )
             )}
 
             <div className={styles.aiTips}>
@@ -150,7 +169,7 @@ export default function AiInsightPanel({
                     </span>
                 )}
             </div>
-            
+
             <p className={styles.aiFooterText}>
                 ⬇️ {filteredOffersCount > 0 ? 'Предложения от проверенных поставщиков:' : 'По запросу пока нет точных совпадений, попробуйте уточнить категорию.'}
             </p>

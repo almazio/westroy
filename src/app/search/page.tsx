@@ -380,6 +380,51 @@ function SearchContent() {
         return filteredOffers.filter((offer) => selected.has(offer.productId));
     }, [filteredOffers, selectedProductIdsByCompany]);
 
+    // --- Grouping & Dynamic Columns ---
+    const groupedResults = useMemo(() => {
+        const groups: Record<string, ProductOffer[]> = {};
+        filteredOffers.forEach((offer) => {
+            if (!groups[offer.productId]) groups[offer.productId] = [];
+            groups[offer.productId].push(offer);
+        });
+        // Sort each group by price
+        Object.values(groups).forEach(group => {
+            group.sort((a, b) => (a.priceFrom || 999999) - (b.priceFrom || 999999));
+        });
+        // Sort groups by best price in each
+        return Object.values(groups).sort((a, b) => (a[0].priceFrom || 999999) - (b[0].priceFrom || 999999));
+    }, [filteredOffers]);
+
+    const dynamicSpecKeys = useMemo(() => {
+        if (filteredOffers.length === 0) return [];
+        const keyCounts: Record<string, number> = {};
+        filteredOffers.forEach(offer => {
+            if (offer.productSpecs) {
+                Object.keys(offer.productSpecs).forEach(k => {
+                    keyCounts[k] = (keyCounts[k] || 0) + 1;
+                });
+            }
+        });
+        // Sort keys by frequency and take top 3
+        return Object.entries(keyCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([k]) => k)
+            .slice(0, 3);
+    }, [filteredOffers]);
+
+    const keyNamesMap: Record<string, string> = {
+        diameter: 'Диаметр',
+        class: 'Класс',
+        steel: 'Сталь',
+        weight: 'Вес',
+        dimensions: 'Размеры',
+        thickness: 'Толщина',
+        grade: 'Марка/Класс',
+        length: 'Длина',
+        width: 'Ширина',
+        height: 'Высота'
+    };
+
     return (
         <div className="page">
             <div className="container">
@@ -404,6 +449,11 @@ function SearchContent() {
                                 minFallbackTotal={minFallbackTotal}
                                 summaryUnit={summaryUnit}
                                 filteredOffersCount={filteredOffers.length}
+                                onQuickButtonClick={(newQuery) => {
+                                    const params = new URLSearchParams(searchParams.toString());
+                                    params.set('q', newQuery);
+                                    router.push(`/search?${params.toString()}`);
+                                }}
                             />
                         )}
 
@@ -412,7 +462,7 @@ function SearchContent() {
                                 <h3>{isDirectoryHub ? 'Выберите подкатегорию:' : 'Уточните категорию:'}</h3>
                                 <div className={styles.subCategoriesGrid}>
                                     {subCategories.map(cat => (
-                                        <Link key={cat.id} href={`/search?category=${cat.slug || cat.id}`} className={styles.subCategoryCard}>
+                                        <Link key={cat.id} href={`/catalog/${cat.slug || cat.id}`} className={styles.subCategoryCard}>
                                             <span className={styles.subCategoryIcon}>{cat.icon || '📦'}</span>
                                             {cat.nameRu}
                                         </Link>
@@ -425,7 +475,7 @@ function SearchContent() {
                             <>
                                 <div className={styles.resultsHeader}>
                                     <h2>
-                                        Найдено {filteredOffers.length} предложени{filteredOffers.length === 1 ? 'е' : filteredOffers.length < 5 ? 'я' : 'й'}
+                                        Найдено {groupedResults.length} товар{groupedResults.length === 1 ? '' : groupedResults.length < 5 ? 'а' : 'ов'}
                                     </h2>
                                     <div className={styles.resultsHeaderActions}>
                                         {requestSent && (
@@ -474,85 +524,73 @@ function SearchContent() {
                                                     <thead>
                                                         <tr>
                                                             <th>Товар</th>
-                                                            <th>Артикул</th>
-                                                            <th>Цена</th>
-                                                            <th>Поставщик</th>
-                                                            <th>Наличие</th>
+                                                            {dynamicSpecKeys.map(key => (
+                                                                <th key={key}>{keyNamesMap[key] || key}</th>
+                                                            ))}
+                                                            <th>Цена за ед.</th>
+                                                            <th>Предложений</th>
                                                             <th></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {filteredOffers.map((offer) => {
-                                                            const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
-                                                            const isPriceOnRequest = offer.priceFrom <= 0 || (offer.priceUnit || '').toLowerCase().includes('запрос');
+                                                        {groupedResults.map((group) => {
+                                                            const master = group[0];
+                                                            const bestPrice = master.priceFrom;
+                                                            const offerCount = group.length;
+                                                            const isPriceOnRequest = bestPrice <= 0 || (master.priceUnit || '').toLowerCase().includes('запрос');
+                                                            const isIntercity = master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase());
+
                                                             return (
-                                                                <tr key={`${offer.companyId}:${offer.productId}`}>
+                                                                <tr key={master.productId} className={styles.masterRow}>
                                                                     <td>
                                                                         <div className={styles.tableProduct}>
-                                                                            <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.tableThumbWrap}>
-                                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                            <Link href={`/product/${master.productSlug || master.productId}`} className={styles.tableThumbWrap}>
                                                                                 <img
-                                                                                    src={offer.imageUrl || '/images/catalog/materials.jpg'}
-                                                                                    alt={offer.productName}
+                                                                                    src={master.imageUrl || '/images/catalog/materials.jpg'}
+                                                                                    alt={master.productName}
                                                                                     className={styles.tableThumb}
                                                                                     loading="lazy"
                                                                                 />
                                                                             </Link>
                                                                             <div>
-                                                                                <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.tableTitleLink}>
-                                                                                    <div className={styles.tableTitle}>{offer.productName}</div>
-                                                                                </Link>
-
-                                                                                {/* Render 2-3 key Technical Specs if available */}
-                                                                                {offer.productSpecs && Object.keys(offer.productSpecs).length > 0 && (
-                                                                                    <div className={styles.tableSpecs}>
-                                                                                        {Object.entries(offer.productSpecs).slice(0, 3).map(([key, value]) => {
-                                                                                            // Quick localization mapping for common keys
-                                                                                            const keyNames: Record<string, string> = { diameter: 'Диаметр', class: 'Класс', steel: 'Сталь', weight: 'Вес', dimensions: 'Размеры', thickness: 'Толщина' };
-                                                                                            const label = keyNames[key] || key;
-                                                                                            return (
-                                                                                                <span key={key} className={styles.specBadge}>
-                                                                                                    {label}: {String(value)}
-                                                                                                </span>
-                                                                                            );
-                                                                                        })}
+                                                                                <Link href={`/product/${master.productSlug || master.productId}`} className={styles.tableTitleLink}>
+                                                                                    <div className={styles.tableTitle}>
+                                                                                        {master.productName}
+                                                                                        {isIntercity && (
+                                                                                            <span className={styles.intercityBadge} title={`Доставка из: ${master.companyAddress}`}>
+                                                                                                🚛 Межгород
+                                                                                            </span>
+                                                                                        )}
                                                                                     </div>
-                                                                                )}
-
-                                                                                {/* Show Brand if no Specs exist */}
-                                                                                {(!offer.productSpecs || Object.keys(offer.productSpecs).length === 0) && offer.productBrand && (
-                                                                                    <div className={styles.tableSub}>{offer.productBrand}</div>
-                                                                                )}
+                                                                                </Link>
+                                                                                <div className={styles.tableSub}>{master.productBrand || 'Westroy'}</div>
                                                                             </div>
                                                                         </div>
                                                                     </td>
-                                                                    <td>
-                                                                        {offer.productArticle ? (
-                                                                            <div className={styles.articleBadge}>{offer.productArticle}</div>
-                                                                        ) : '—'}
-                                                                    </td>
+                                                                    {dynamicSpecKeys.map(key => (
+                                                                        <td key={key}>
+                                                                            {master.productSpecs?.[key] ? String(master.productSpecs[key]) : '—'}
+                                                                        </td>
+                                                                    ))}
                                                                     <td className={styles.priceCol}>
                                                                         {isPriceOnRequest ? (
                                                                             <span className={styles.priceOnRequest}>По запросу</span>
                                                                         ) : (
                                                                             <>
-                                                                                <span className={styles.priceAmount}>{formatPrice(offer.priceFrom)} ₸</span>
-                                                                                <span className={styles.priceUnit}> / {offer.priceUnit}</span>
+                                                                                <span className={styles.priceAmount}>{formatPrice(bestPrice)} ₸</span>
+                                                                                <span className={styles.priceUnit}> / {master.priceUnit}</span>
                                                                             </>
                                                                         )}
                                                                     </td>
                                                                     <td>
-                                                                        <Link href={`/company/${offer.companySlug || offer.companyId}`} className={styles.supplierLink}>{offer.companyName}</Link>
+                                                                        <span className={styles.offerCountLabel}>
+                                                                            {offerCount} {offerCount === 1 ? 'цена' : offerCount < 5 ? 'цены' : 'цен'}
+                                                                        </span>
                                                                     </td>
-                                                                    <td>{offer.inStock ? 'В наличии' : 'Под заказ'}</td>
                                                                     <td>
-                                                                        <button
-                                                                            type="button"
-                                                                            className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
-                                                                            onClick={() => handleProductToggle(offer.companyId, offer.productId)}
-                                                                        >
-                                                                            {isSelected ? 'В заявке' : 'В заявку'}
-                                                                        </button>
+                                                                        <Link href={`/product/${master.productSlug || master.productId}`} className="btn btn-sm btn-ghost">
+                                                                            Смотреть
+                                                                        </Link>
                                                                     </td>
                                                                 </tr>
                                                             );
@@ -562,34 +600,35 @@ function SearchContent() {
                                             </div>
                                         ) : (
                                             <div className={viewMode === 'grid-3' ? styles.offersGrid3 : styles.offersGrid}>
-                                                {filteredOffers.map((offer, i) => {
-                                                    const offerKey = `${offer.companyId}:${offer.productId}`;
-                                                    const isSelected = selectedProductIdsByCompany[offer.companyId]?.includes(offer.productId);
-                                                    const showGuestInline = !session?.user?.id && guestOfferId === offerKey;
-
+                                                {groupedResults.map((group, i) => {
+                                                    const master = group[0];
+                                                    const offerCount = group.length;
+                                                    // In Grid mode, we still show the "Master" product card, but we show multiple prices if applicable
                                                     return (
                                                         <OfferCard
-                                                            key={offerKey}
-                                                            offer={offer}
+                                                            key={master.productId}
+                                                            offer={master}
                                                             index={i}
-                                                            isSelected={!!isSelected}
-                                                            showGuestInline={showGuestInline}
+                                                            isSelected={false} // Selection is now handled in SKU page
+                                                            showGuestInline={false}
                                                             guestForm={guestForm}
                                                             setGuestForm={setGuestForm}
                                                             guestSent={guestSent}
                                                             guestSubmitting={guestSubmitting}
-                                                            guestSeller={guestSeller}
+                                                            guestSeller={null}
                                                             requestedQuantity={requestedQuantity}
                                                             hasRequestedQuantity={hasRequestedQuantity}
                                                             requestedUnit={requestedUnit}
                                                             isAggregatesCategory={isAggregatesCategory}
                                                             viewMode={viewMode}
-                                                            onToggleProduct={handleProductToggle}
-                                                            onGuestSubmit={() => handleGuestSubmit(offer)}
-                                                            onGuestRegister={makeGuestAuthHandler(offer, 'register')}
-                                                            onGuestLogin={makeGuestAuthHandler(offer, 'login')}
-                                                            onGuestContinue={() => { setGuestOfferId(null); setGuestSeller(null); setGuestSent(false); }}
-                                                            onGuestPostRegister={makeGuestAuthHandler(offer, 'register')}
+                                                            onToggleProduct={() => { }} // Disabled here
+                                                            onGuestSubmit={() => { }}
+                                                            onGuestRegister={() => { }}
+                                                            onGuestLogin={() => { }}
+                                                            onGuestContinue={() => { }}
+                                                            onGuestPostRegister={() => { }}
+                                                            multiOfferCount={offerCount}
+                                                            isIntercity={master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase())}
                                                         />
                                                     );
                                                 })}

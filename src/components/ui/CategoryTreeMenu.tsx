@@ -33,7 +33,7 @@ const CategoryNode = ({ category, level, activeCategoryId }: { category: TreeCat
         setIsExpanded(!isExpanded);
     };
 
-    const linkHref = toAppUrl(`/search?category=${category.slug || category.id}`);
+    const linkHref = toAppUrl(`/catalog/${category.slug || category.id}`);
 
     return (
         <div className={styles.node} style={{ marginLeft: `${level * 12}px` }}>

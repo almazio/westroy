@@ -6,7 +6,7 @@ const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 // Берем модель из env или дефолт.
 // Возвращаем гибкость: если hardcode не сработал, даем возможность менять через Vercel.
 // gemini-1.5-flash - текущая стабильная (General Availability) модель.
-const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const modelName = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
 // Устанавливаем максимальное время выполнения функции (Vercel)
 export const maxDuration = 30; // seconds
@@ -23,6 +23,7 @@ interface AIParseResponse {
   details: string | null;
   rawContact: string | null;
   userMessage: string;
+  quickButtons?: string[];
 }
 
 export async function POST(req: NextRequest) {
@@ -41,15 +42,15 @@ export async function POST(req: NextRequest) {
 
     // DEBUG: Если текст "debug_models", возвращаем список доступных моделей
     if (text === "debug_models") {
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-        const listRes = await fetch(listUrl);
-        const listData = await listRes.json();
-        return NextResponse.json({
-            success: true,
-            debug: true,
-            models: listData.models?.map((m: any) => m.name) || [],
-            raw: listData
-        });
+      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+      const listRes = await fetch(listUrl);
+      const listData = await listRes.json();
+      return NextResponse.json({
+        success: true,
+        debug: true,
+        models: listData.models?.map((m: any) => m.name) || [],
+        raw: listData
+      });
     }
 
     if (!text || typeof text !== "string") {
@@ -78,13 +79,15 @@ export async function POST(req: NextRequest) {
         "urgent": true/false,
         "details": "Детали (марка, фракция) или null",
         "rawContact": "Контакты из текста или null",
-        "userMessage": "Твой вежливый ответ клиенту на русском. Подтверди детали заказа."
+        "userMessage": "Твой вежливый ответ клиенту на русском. Подтверди детали заказа.",
+        "quickButtons": ["Массив строк (2-3 шт) с уточняющим запросом или фильтром, например: ['Бетон с доставкой', 'М350', 'Сертификат']")
       }
 
       ПРАВИЛА:
       1. Если запрос спам/не стройка -> category="INVALID", userMessage="Я ищу только стройматериалы.".
       2. volume только число.
       3. userMessage должен быть кратким и полезным.
+      4. quickButtons предлагай только если запрос неполный (например, нет марки или объема).
     `;
 
     // 4. Прямой запрос к REST API (без SDK)
@@ -106,22 +109,22 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Gemini API Error:", response.status, errorText);
-        
-        // Если ошибка 404, пробуем подсказать, какие модели доступны (если это возможно узнать из ошибки)
-        if (response.status === 404) {
-             throw new Error(`Model '${modelName}' not found. Try sending 'debug_models' as text to see available models.`);
-        }
-        
-        throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
+      const errorText = await response.text();
+      console.error("Gemini API Error:", response.status, errorText);
+
+      // Если ошибка 404, пробуем подсказать, какие модели доступны (если это возможно узнать из ошибки)
+      if (response.status === 404) {
+        throw new Error(`Model '${modelName}' not found. Try sending 'debug_models' as text to see available models.`);
+      }
+
+      throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!responseText) {
-        throw new Error("Empty response from Gemini API");
+      throw new Error("Empty response from Gemini API");
     }
 
     // Очистка от markdown (```json ... ```)
@@ -153,13 +156,13 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error(`Gemini Parse Error (Model: ${modelName}):`, error);
-    
+
     // Подсказка про 404
     if (error.message?.includes("404") || error.message?.includes("not found")) {
-        return NextResponse.json(
-            { success: false, error: `Model '${modelName}' not found via REST API. Check GEMINI_MODEL env var or try 'gemini-1.5-flash'.` },
-            { status: 500 }
-        );
+      return NextResponse.json(
+        { success: false, error: `Model '${modelName}' not found via REST API. Check GEMINI_MODEL env var or try 'gemini-1.5-flash'.` },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(

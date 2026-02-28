@@ -22,11 +22,11 @@ export default function Footer() {
                 <div className={styles.links}>
                     <div className={styles.col}>
                         <h4>Категории</h4>
-                        <a href={toAppUrl('/search?category=concrete')}>Бетон</a>
-                        <a href={toAppUrl('/search?category=sand')}>Песок</a>
-                        <a href={toAppUrl('/search?category=stone')}>Щебень</a>
-                        <a href={toAppUrl('/search?category=brick')}>Кирпич</a>
-                        <a href={toAppUrl('/search?category=cement')}>Цемент</a>
+                        <a href={toAppUrl('/catalog/concrete')}>Бетон</a>
+                        <a href={toAppUrl('/catalog/sand')}>Песок</a>
+                        <a href={toAppUrl('/catalog/stone')}>Щебень</a>
+                        <a href={toAppUrl('/catalog/brick')}>Кирпич</a>
+                        <a href={toAppUrl('/catalog/cement')}>Цемент</a>
                     </div>
                     <div className={styles.col}>
                         <h4>Платформа</h4>

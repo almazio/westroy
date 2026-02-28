@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import MobileTabBar from '@/components/MobileTabBar';
 
 function shouldHideNavbar(pathname: string) {
     const hiddenPrefixes = ['/offline'];
@@ -24,6 +25,7 @@ export default function RouteChrome({ children }: { children: React.ReactNode })
             {!hideNavbar && <Navbar />}
             <main>{children}</main>
             {!hideFooter && <Footer />}
+            {!hideFooter && <MobileTabBar />}
         </>
     );
 }

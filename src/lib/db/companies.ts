@@ -27,7 +27,7 @@ export async function getCompanies(): Promise<Company[]> {
         const companies = await prisma.company.findMany({
             include: { categories: true }
         });
-        const mapped = companies.map(mapCompany);
+        const mapped = (companies as any[]).map(mapCompany);
         companiesCache = { data: mapped, expiresAt: Date.now() + CACHE_TTL_MS };
         return mapped;
     } catch (error) {
@@ -56,7 +56,7 @@ export async function getCompaniesByCategory(categoryId: string): Promise<Compan
         where: { categories: { some: { categoryId } } },
         include: { categories: true }
     });
-    return companies.map(mapCompany);
+    return (companies as any[]).map(mapCompany);
 }
 
 // Products
@@ -96,7 +96,7 @@ export async function getProductsByCategory(categoryId: string): Promise<Product
     let added = true;
     while (added) {
         added = false;
-        for (const cat of allCategories) {
+        for (const cat of allCategories as any[]) {
             if (cat.parentId && descendantIds.has(cat.parentId) && !descendantIds.has(cat.id)) {
                 descendantIds.add(cat.id);
                 added = true;
@@ -142,4 +142,25 @@ export async function searchProductsByText(query: string, limit: number = 8): Pr
         console.warn('[DB] searchProductsByText fallback (no DB url):', error);
         return [];
     }
+}
+
+export async function getProductById(id: string): Promise<Product | null> {
+    const product = await prisma.product.findUnique({
+        where: { id },
+        include: { offers: { include: { company: true } } }
+    });
+    return product ? mapProduct(product as any) : null;
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+    const product = await prisma.product.findFirst({
+        where: {
+            OR: [
+                { slug: slug },
+                { article: slug },
+            ]
+        },
+        include: { offers: { include: { company: true } } }
+    });
+    return product ? mapProduct(product as any) : null;
 }

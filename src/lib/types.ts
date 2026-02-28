@@ -48,6 +48,8 @@ export interface Product {
   technicalSpecs?: Record<string, unknown>; // JsonB
   marketingFeatures?: Record<string, unknown>; // JsonB
   tags?: string[]; // JsonB
+  unit?: string;
+  specsJson?: Record<string, unknown>;
   categoryId: string;
   offers?: Offer[]; // Inferred from relation
   createdAt?: string;
@@ -91,6 +93,7 @@ export interface Offer {
   leadTime?: string;
   deliveryPrice?: number;
   requestId?: string;
+  company?: Company;
   createdAt: string;
   updatedAt?: string;
 }

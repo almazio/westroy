@@ -26,6 +26,8 @@ interface OfferCardProps {
     onGuestLogin: () => void;
     onGuestContinue: () => void;
     onGuestPostRegister: () => void;
+    multiOfferCount?: number;
+    isIntercity?: boolean;
 }
 
 export default function OfferCard({
@@ -49,6 +51,8 @@ export default function OfferCard({
     onGuestLogin,
     onGuestContinue,
     onGuestPostRegister,
+    multiOfferCount,
+    isIntercity,
 }: OfferCardProps) {
     const calculateEstimatedTotalByOffer = (priceFrom: number, priceUnit: string) => {
         if (!hasRequestedQuantity) return null;
@@ -79,7 +83,14 @@ export default function OfferCard({
             </Link>
 
             <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.offerTitleLink}>
-                <div className={styles.offerTitle}>{offer.productName}</div>
+                <div className={styles.offerTitle}>
+                    {offer.productName}
+                    {isIntercity && (
+                        <span className={styles.intercityBadge} title={`Доставка из другого города`}>
+                            🚛 Межгород
+                        </span>
+                    )}
+                </div>
             </Link>
 
             <div className={styles.offerPrice}>
@@ -137,13 +148,12 @@ export default function OfferCard({
             <div className={styles.offerUpdate}>Прайс обновлен: {formatRelativePriceUpdate(offer.updatedAt) || 'недавно'}</div>
 
             <div className={styles.offerActions}>
-                <button
-                    type="button"
-                    className={`btn btn-primary btn-sm ${isSelected ? styles.offerSelectActive : ''}`}
-                    onClick={() => onToggleProduct(offer.companyId, offer.productId)}
+                <Link
+                    href={`/product/${offer.productSlug || offer.productId}`}
+                    className={`btn btn-primary btn-sm`}
                 >
-                    {isSelected ? 'В заявке' : 'Добавить в заявку'}
-                </button>
+                    {multiOfferCount && multiOfferCount > 1 ? `Цены от ${multiOfferCount} поставщиков` : 'Смотреть цены'}
+                </Link>
             </div>
 
             {showGuestInline && (
