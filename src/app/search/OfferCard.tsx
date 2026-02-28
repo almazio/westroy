@@ -65,7 +65,7 @@ export default function OfferCard({
     };
 
     const estimatedTotal = calculateEstimatedTotalByOffer(offer.priceFrom, offer.priceUnit);
-    const isPriceOnRequest = offer.priceFrom <= 0 || offer.priceUnit.toLowerCase().includes('запрос');
+    const isPriceOnRequest = offer.priceFrom <= 0 || (offer.priceUnit || '').toLowerCase().includes('запрос');
     return (
         <article className={`${styles.offerCard} ${viewMode === 'list' ? styles.offerCardList : ''}`} style={{ animationDelay: `${index * 0.04}s` }}>
             <div className={styles.offerImageWrap}>

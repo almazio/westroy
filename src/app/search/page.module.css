@@ -148,6 +148,40 @@
     font-size: 1.2rem;
 }
 
+/* Hub Mode Overrides */
+.directoryHubMode {
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+}
+
+.directoryHubMode h3 {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.directoryHubMode .subCategoriesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.directoryHubMode .subCategoryCard {
+    padding: 24px;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    gap: 16px;
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.directoryHubMode .subCategoryIcon {
+    font-size: 2.5rem;
+}
+
 /* Results header */
 .resultsHeader {
     display: flex;
