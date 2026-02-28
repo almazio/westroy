@@ -21,6 +21,16 @@ function parseCsvLine(text: string): string[] {
     return array.map(val => (val || '').trim());
 }
 
+function generateSlug(text: string): string {
+    const a = 'а-б-в-г-д-е-ё-ж-з-и-й-к-л-м-н-о-п-р-с-т-у-ф-х-ц-ч-ш-щ-ъ-ы-ь-э-ю-я'.split('-');
+    const b = 'a-b-v-g-d-e-yo-zh-z-i-y-k-l-m-n-o-p-r-s-t-u-f-h-ts-ch-sh-shch---y---e-yu-ya'.split('-');
+    let res = text.toLowerCase();
+    for (let i = 0; i < a.length; i++) {
+        res = res.split(a[i]).join(b[i]);
+    }
+    return res.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+}
+
 async function main() {
     console.log('Starting Merchant Offers Import...');
 
@@ -105,6 +115,7 @@ async function main() {
             company = await prisma.company.create({
                 data: {
                     name: companyName,
+                    slug: generateSlug(companyName),
                     description: `Поставщик: ${companyName}`,
                     baseCityId: 'shymkent',
                     delivery: !!data.deliveryPrice,

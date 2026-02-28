@@ -15,7 +15,7 @@ export default async function FeaturedProducers() {
                     {companies.map(company => {
                         return (
                             <article key={company.id} className={styles.card}>
-                                <Link href={`/company/${company.id}`} className={styles.cardLink}>
+                                <Link href={`/company/${company.slug || company.id}`} className={styles.cardLink}>
                                     <div className={styles.cardHeader}>
                                         <div className={styles.logoPlaceholder}>
                                             {company.name[0]}
@@ -26,7 +26,7 @@ export default async function FeaturedProducers() {
                                     </div>
                                 </Link>
                                 <div className={styles.actions}>
-                                    <Link href={`/company/${company.id}`} className={`btn btn-primary ${styles.requestBtn}`}>
+                                    <Link href={`/company/${company.slug || company.id}`} className={`btn btn-primary ${styles.requestBtn}`}>
                                         Запросить цену
                                     </Link>
                                 </div>

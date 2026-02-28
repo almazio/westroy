@@ -11,6 +11,7 @@ export type CategoryDbRecord = Omit<Category, 'keywords' | 'children'> & { keywo
 export type CompanyDbRecord = {
     id: string;
     name: string;
+    slug: string | null;
     description: string | null;
     address: string | null;
     phone: string | null;
@@ -117,6 +118,7 @@ export const mapCompany = (c: CompanyDbRecord): Company => {
 
     return {
         ...c,
+        slug: c.slug || undefined,
         description: c.description || undefined,
         address: c.address || undefined,
         phone: c.phone || undefined,

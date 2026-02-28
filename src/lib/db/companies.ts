@@ -85,18 +85,26 @@ export async function getProductsByCompany(companyId: string): Promise<Product[]
 }
 
 export async function getProductsByCategory(categoryId: string): Promise<Product[]> {
-    // Получаем текущую категорию и её дочерние категории
-    const categories = await prisma.category.findMany({
-        where: {
-            OR: [
-                { id: categoryId },
-                { parentId: categoryId }
-            ]
-        },
-        select: { id: true }
+    // Получаем все категории, чтобы рекурсивно найти все дочерние
+    const allCategories = await prisma.category.findMany({
+        select: { id: true, parentId: true }
     });
 
-    const categoryIds = categories.map(c => c.id);
+    const descendantIds = new Set<string>();
+    descendantIds.add(categoryId);
+
+    let added = true;
+    while (added) {
+        added = false;
+        for (const cat of allCategories) {
+            if (cat.parentId && descendantIds.has(cat.parentId) && !descendantIds.has(cat.id)) {
+                descendantIds.add(cat.id);
+                added = true;
+            }
+        }
+    }
+
+    const categoryIds = Array.from(descendantIds);
 
     const products = await prisma.product.findMany({
         where: { categoryId: { in: categoryIds } },

@@ -146,6 +146,7 @@ export interface ProductOffer {
     updatedAt?: string;
     companyId: string;
     companyName: string;
+    companySlug?: string | null;
     companyAddress: string;
     companyDelivery: boolean;
     companyVerified: boolean;

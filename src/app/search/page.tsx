@@ -231,6 +231,7 @@ function SearchContent() {
                 updatedAt: product.updatedAt,
                 companyId: result.company.id,
                 companyName: result.company.name,
+                companySlug: result.company.slug,
                 companyAddress: result.company.address,
                 companyDelivery: result.company.delivery,
                 companyVerified: result.company.verified,
@@ -498,7 +499,7 @@ function SearchContent() {
                                                             <td>{offer.productArticle || '—'}</td>
                                                             <td>{isPriceOnRequest ? 'По запросу' : `${formatPrice(offer.priceFrom)} ₸ ${offer.priceUnit}`}</td>
                                                             <td>
-                                                                <Link href={`/company/${offer.companyId}`}>{offer.companyName}</Link>
+                                                                <Link href={`/company/${offer.companySlug || offer.companyId}`}>{offer.companyName}</Link>
                                                             </td>
                                                             <td>{offer.inStock ? 'В наличии' : 'Под заказ'}</td>
                                                             <td>

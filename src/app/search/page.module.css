@@ -167,9 +167,17 @@
 
 .resultsLayout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: 16px;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
     align-items: start;
+}
+
+.sidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .resultsMain {

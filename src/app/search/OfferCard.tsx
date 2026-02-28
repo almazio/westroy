@@ -110,7 +110,7 @@ export default function OfferCard({
             )}
 
             <div className={styles.offerSupplier}>
-                От: <Link href={`/company/${offer.companyId}`}>{offer.companyName}</Link>
+                От: <Link href={`/company/${offer.companySlug || offer.companyId}`}>{offer.companyName}</Link>
             </div>
             <div className={styles.offerAddress}>{offer.companyAddress}</div>
             <div className={styles.offerUpdate}>Прайс обновлен: {formatRelativePriceUpdate(offer.updatedAt) || 'недавно'}</div>
