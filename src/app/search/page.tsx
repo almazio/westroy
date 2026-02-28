@@ -538,7 +538,7 @@ function SearchContent() {
                                                             const bestPrice = master.priceFrom;
                                                             const offerCount = group.length;
                                                             const isPriceOnRequest = bestPrice <= 0 || (master.priceUnit || '').toLowerCase().includes('запрос');
-                                                            const isIntercity = master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase());
+                                                            const isIntercity = !!(master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase()));
 
                                                             return (
                                                                 <tr key={master.productId} className={styles.masterRow}>
@@ -628,7 +628,7 @@ function SearchContent() {
                                                             onGuestContinue={() => { }}
                                                             onGuestPostRegister={() => { }}
                                                             multiOfferCount={offerCount}
-                                                            isIntercity={master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase())}
+                                                            isIntercity={!!(master.companyAddress && !master.companyAddress.toLowerCase().includes((parsed?.city || 'алматы').toLowerCase()))}
                                                         />
                                                     );
                                                 })}
