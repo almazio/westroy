@@ -147,7 +147,7 @@ export async function searchProductsByText(query: string, limit: number = 8): Pr
 export async function getProductById(id: string): Promise<Product | null> {
     const product = await prisma.product.findUnique({
         where: { id },
-        include: { offers: { include: { company: true } } }
+        include: { offers: { include: { company: true } }, category: true }
     });
     return product ? mapProduct(product as any) : null;
 }
@@ -160,7 +160,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
                 { article: slug },
             ]
         },
-        include: { offers: { include: { company: true } } }
+        include: { offers: { include: { company: true } }, category: true }
     });
     return product ? mapProduct(product as any) : null;
 }

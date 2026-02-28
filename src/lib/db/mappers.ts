@@ -51,12 +51,14 @@ export type ProductDbRecord = {
     brand: string | null;
     imageUrl: string | null;
     additionalImages: unknown;
-    technicalSpecs: unknown;
-    marketingFeatures: unknown;
-    tags: unknown;
+    specsJson: string | null;
+    technicalSpecs?: unknown;
+    marketingFeatures?: unknown;
+    tags?: unknown;
     createdAt: Date;
     updatedAt: Date;
     offers?: OfferDbRecord[];
+    category?: CategoryDbRecord;
 };
 
 export type UserDbRecord = {
@@ -161,6 +163,22 @@ export const mapOffer = (o: OfferDbRecord): Offer => ({
 export const mapProduct = (p: ProductDbRecord): Product => {
     const offers = p.offers ? p.offers.map(mapOffer) : undefined;
 
+    // Helper to parse JSON strings from SQLite or take objects from Postgres
+    const parseJson = (val: unknown) => {
+        if (typeof val === 'string' && val.trim().startsWith('{')) {
+            try { return JSON.parse(val); } catch { return undefined; }
+        }
+        if (typeof val === 'string' && val.trim().startsWith('[')) {
+            try { return JSON.parse(val); } catch { return undefined; }
+        }
+        return val;
+    };
+
+    let technicalSpecs = parseJson(p.technicalSpecs);
+    if (!technicalSpecs && p.specsJson) {
+        try { technicalSpecs = JSON.parse(p.specsJson); } catch { }
+    }
+
     return {
         id: p.id,
         categoryId: p.categoryId,
@@ -170,11 +188,12 @@ export const mapProduct = (p: ProductDbRecord): Product => {
         article: p.article || undefined,
         brand: p.brand || undefined,
         imageUrl: p.imageUrl || undefined,
-        additionalImages: safeJsonArray(p.additionalImages),
-        technicalSpecs: safeJsonObject(p.technicalSpecs),
-        marketingFeatures: safeJsonObject(p.marketingFeatures),
-        tags: safeJsonArray(p.tags),
+        additionalImages: parseJson(p.additionalImages) || [],
+        technicalSpecs: technicalSpecs || {},
+        marketingFeatures: parseJson(p.marketingFeatures) || {},
+        tags: parseJson(p.tags) || [],
         offers,
+        category: p.category ? mapCategory(p.category) : undefined,
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
     };

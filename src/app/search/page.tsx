@@ -15,7 +15,6 @@ import AiInsightPanel from './AiInsightPanel';
 import SearchFilters from './SearchFilters';
 import SmartRequestForm from './SmartRequestForm';
 import OfferCard from './OfferCard';
-import CategoryTreeMenu, { TreeCategory } from '@/components/ui/CategoryTreeMenu';
 import styles from './page.module.css';
 
 function SearchContent() {
@@ -45,7 +44,6 @@ function SearchContent() {
     const [withImageOnly, setWithImageOnly] = useState(false);
     const [withArticleOnly, setWithArticleOnly] = useState(false);
     const [brandFilter, setBrandFilter] = useState('');
-    const [fullCategories, setFullCategories] = useState<TreeCategory[]>([]);
     const requestFormRef = useRef<HTMLDivElement | null>(null);
     const seenProductCardsRef = useRef<Set<string>>(new Set());
     const { data: session } = useSession();
@@ -86,20 +84,9 @@ function SearchContent() {
         }
     }, [q, categoryParam, inStockOnly, withImageOnly, withArticleOnly, brandFilter]);
 
-    // Fetch full categories for the tree menu once
+    // Fetch category breadcrumbs if needed in future
     useEffect(() => {
-        async function fetchCatTree() {
-            try {
-                const res = await fetch('/api/categories');
-                if (res.ok) {
-                    const data = await res.json();
-                    setFullCategories(data);
-                }
-            } catch (e) {
-                console.error('Failed to load category tree', e);
-            }
-        }
-        void fetchCatTree();
+        // ...
     }, []);
 
     // --- Auth intent replay ---
@@ -435,13 +422,13 @@ function SearchContent() {
                 {loading && (
                     <div className={styles.loading}>
                         <div className={styles.loadingDots}><span></span><span></span><span></span></div>
-                        <p>{isCategoryBrowseOnly ? 'Загружаем предложения по категории...' : 'AI анализирует ваш запрос...'}</p>
+                        <p>{isCategoryBrowseOnly ? 'Загрузка...' : 'AI анализирует ваш запрос...'}</p>
                     </div>
                 )}
 
                 {!loading && (
                     <>
-                        {parsed && q.trim() && (
+                        {parsed && q.trim() && !isCategoryBrowseOnly && (
                             <AiInsightPanel
                                 parsed={parsed}
                                 avgPrice={avgPrice}
@@ -499,7 +486,6 @@ function SearchContent() {
 
                                 <div className={styles.resultsLayout}>
                                     <div className={styles.sidebar}>
-                                        <CategoryTreeMenu categories={fullCategories} activeCategoryId={parsed?.categoryId || categoryParam} />
                                         <SearchFilters
                                             onlyDelivery={onlyDelivery}
                                             setOnlyDelivery={setOnlyDelivery}

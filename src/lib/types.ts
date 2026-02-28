@@ -51,6 +51,7 @@ export interface Product {
   unit?: string;
   specsJson?: Record<string, unknown>;
   categoryId: string;
+  category?: Category;
   offers?: Offer[]; // Inferred from relation
   createdAt?: string;
   updatedAt?: string;

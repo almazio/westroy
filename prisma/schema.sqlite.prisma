@@ -70,6 +70,8 @@ model Product {
   brand       String?
   boxQuantity Int?
   imageUrl    String?
+  additionalImages String?
+  technicalSpecs String?
   source      String?
   specsJson   String?
   unit        String
