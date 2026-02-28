@@ -7,7 +7,7 @@ export default async function CategoriesGrid() {
     const categories = await getCategories();
 
     return (
-        <section className={styles.section}>
+        <section id="categories" className={styles.section}>
             <div className="container">
                 <div className={styles.header}>
                     <h2 className={styles.title}>Категории материалов</h2>
@@ -24,7 +24,7 @@ export default async function CategoriesGrid() {
                                 className={styles.cardHeader}
                             >
                                 <div className={styles.iconWrapper}>
-                                    <span className={styles.icon}>{cat.icon}</span>
+                                    <span>{cat.icon || '📦'}</span>
                                 </div>
                                 <h3 className={styles.cardTitle}>{cat.nameRu}</h3>
                             </a>

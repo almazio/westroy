@@ -33,7 +33,7 @@ export default function Navbar() {
 
     const guestLinks = [
         ...(isAppHost ? [] : [
-            { href: '/', label: 'Главная' },
+            { href: '/#categories', label: 'Каталог' },
             { href: toAppUrl('/search'), label: 'Поиск', external: true },
             { href: '/partners', label: 'Партнерам' },
         ]),
@@ -168,7 +168,7 @@ export default function Navbar() {
                 </div>
 
                 <div className={styles.mobileLinks}>
-                    {fallbackLinks.map(link => (
+                    {fallbackLinks.filter(l => !['Поиск', 'Каталог', 'Главная'].includes(l.label)).map(link => (
                         link.external ? (
                             <a key={link.href} href={link.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
                                 {link.label}

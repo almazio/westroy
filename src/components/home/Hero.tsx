@@ -1,35 +1,33 @@
 
 import SearchBar from '@/components/SearchBar';
 import styles from './Hero.module.css';
+import Link from 'next/link';
+
+const QUICK_SEARCHES = [
+    { label: 'Бетон М300', query: 'Бетон М300' },
+    { label: 'Песок мытый', query: 'Песок мытый' },
+    { label: 'Арматура 12мм', query: 'Арматура 12мм' },
+    { label: 'Газоблок 600x300', query: 'Газоблок 600x300' },
+];
 
 export default function Hero() {
     return (
-        <section className={styles.hero}>
-            <div className={styles.overlay}></div>
+        <section id="hero" className={styles.hero}>
             <div className={styles.content}>
-                <div className={styles.badge}>
-                    <span className={styles.badgeDot}></span>
-                    Маркетплейс строительных решений №1
-                </div>
-                <h1 className={styles.title}>
-                    Все для стройки <br />
-                    <span className={styles.highlight}>в одном месте</span>
-                </h1>
-                <p className={styles.subtitle}>
-                    Опишите задачу своими словами и получите предложения поставщиков.
-                    Без десятков звонков и долгого сравнения вручную.
-                </p>
-
                 <div className={styles.searchWrapper}>
                     <SearchBar size="hero" />
                 </div>
-
                 <div className={styles.tags}>
-                    <span>Часто ищут:</span>
-                    <button className={styles.tag}>Бетон М300</button>
-                    <button className={styles.tag}>Песок мытый</button>
-                    <button className={styles.tag}>Арматура 12мм</button>
-                    <button className={styles.tag}>Газоблок 600x300</button>
+                    <span className={styles.tagsLabel}>Часто ищут:</span>
+                    {QUICK_SEARCHES.map((item) => (
+                        <Link
+                            key={item.query}
+                            href={`/search?q=${encodeURIComponent(item.query)}`}
+                            className={styles.tag}
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
                 </div>
             </div>
         </section>
