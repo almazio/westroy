@@ -15,6 +15,7 @@ import AiInsightPanel from './AiInsightPanel';
 import SearchFilters from './SearchFilters';
 import SmartRequestForm from './SmartRequestForm';
 import OfferCard from './OfferCard';
+import CategoryTreeMenu, { TreeCategory } from '@/components/ui/CategoryTreeMenu';
 import styles from './page.module.css';
 
 function SearchContent() {
@@ -44,6 +45,7 @@ function SearchContent() {
     const [withImageOnly, setWithImageOnly] = useState(false);
     const [withArticleOnly, setWithArticleOnly] = useState(false);
     const [brandFilter, setBrandFilter] = useState('');
+    const [fullCategories, setFullCategories] = useState<TreeCategory[]>([]);
     const requestFormRef = useRef<HTMLDivElement | null>(null);
     const seenProductCardsRef = useRef<Set<string>>(new Set());
     const { data: session } = useSession();
@@ -82,6 +84,22 @@ function SearchContent() {
             setLoading(false);
         }
     }, [q, categoryParam, inStockOnly, withImageOnly, withArticleOnly, brandFilter]);
+
+    // Fetch full categories for the tree menu once
+    useEffect(() => {
+        async function fetchCatTree() {
+            try {
+                const res = await fetch('/api/categories');
+                if (res.ok) {
+                    const data = await res.json();
+                    setFullCategories(data);
+                }
+            } catch (e) {
+                console.error('Failed to load category tree', e);
+            }
+        }
+        void fetchCatTree();
+    }, []);
 
     // --- Auth intent replay ---
     useEffect(() => {
@@ -389,7 +407,7 @@ function SearchContent() {
                                 <h3>Уточните категорию:</h3>
                                 <div className={styles.subCategoriesGrid}>
                                     {subCategories.map(cat => (
-                                        <Link key={cat.id} href={`/search?category=${cat.id}`} className={styles.subCategoryCard}>
+                                        <Link key={cat.id} href={`/search?category=${cat.slug || cat.id}`} className={styles.subCategoryCard}>
                                             <span className={styles.subCategoryIcon}>{cat.icon || '📦'}</span>
                                             {cat.nameRu}
                                         </Link>
@@ -423,7 +441,8 @@ function SearchContent() {
                         )}
 
                         <div className={styles.resultsLayout}>
-                            <div className={styles.resultsMain}>
+                            <div className={styles.sidebar}>
+                                <CategoryTreeMenu categories={fullCategories} activeCategoryId={parsed?.categoryId || categoryParam} />
                                 <SearchFilters
                                     onlyDelivery={onlyDelivery}
                                     setOnlyDelivery={setOnlyDelivery}
@@ -440,6 +459,8 @@ function SearchContent() {
                                     viewMode={viewMode}
                                     setViewMode={setViewMode}
                                 />
+                            </div>
+                            <div className={styles.resultsMain}>
                                 {viewMode === 'list' ? (
                                     <div className={styles.tableWrap}>
                                         <table className={styles.offersTable}>

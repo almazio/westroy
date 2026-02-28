@@ -20,7 +20,7 @@ export default async function CategoriesGrid() {
                     {categories.map((cat) => (
                         <div key={cat.id} className={styles.card}>
                             <a
-                                href={toAppUrl(`/search?category=${cat.id}`)}
+                                href={toAppUrl(`/search?category=${cat.slug || cat.id}`)}
                                 className={styles.cardHeader}
                             >
                                 <div className={styles.iconWrapper}>
@@ -32,7 +32,7 @@ export default async function CategoriesGrid() {
                                 <ul className={styles.subCategories}>
                                     {cat.children.map((child) => (
                                         <li key={child.id}>
-                                            <a href={toAppUrl(`/search?category=${child.id}`)} className={styles.subCategoryLink}>
+                                            <a href={toAppUrl(`/search?category=${child.slug || child.id}`)} className={styles.subCategoryLink}>
                                                 {child.nameRu}
                                             </a>
                                         </li>
