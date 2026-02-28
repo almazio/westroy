@@ -116,9 +116,14 @@ export interface Suggestion {
 }
 
 // Search result types
+export interface SearchResultProduct extends Product {
+  priceFrom: number;
+  priceUnit: string;
+}
+
 export interface SearchResult {
   company: Company;
-  products: Product[];
+  products: SearchResultProduct[];
   priceFrom: number;
   priceUnit: string;
   relevanceScore: number;

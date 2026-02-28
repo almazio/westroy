@@ -98,7 +98,14 @@ function buildResult({
 
     return {
         company,
-        products: matchedProducts,
+        products: matchedProducts.map(p => {
+            const offer = p.offers?.find(o => o.companyId === company.id);
+            return {
+                ...p,
+                priceFrom: offer?.price ?? 0,
+                priceUnit: offer?.priceUnit ?? '',
+            };
+        }),
         priceFrom: minPricedPair?.offer?.price ?? 0,
         priceUnit: minPricedPair?.offer?.priceUnit ?? (companyProducts[0]?.offer?.priceUnit || ''),
         relevanceScore: Math.min(relevanceScore, 1),

@@ -214,15 +214,16 @@ function SearchContent() {
         router.push(`/${mode}?callbackUrl=${encodeURIComponent(buildSearchCallback())}`);
     };
 
-    // --- Product offers ---
     const productOffers = useMemo<ProductOffer[]>(() => {
         return results.flatMap((result) =>
             result.products.map((product) => ({
                 productId: product.id,
                 productName: product.name,
+                productSlug: product.slug,
                 productDescription: product.description,
                 productArticle: product.article,
                 productBrand: product.brand,
+                productSpecs: product.technicalSpecs,
                 boxQuantity: product.boxQuantity,
                 imageUrl: product.imageUrl,
                 source: product.source,
@@ -284,8 +285,10 @@ function SearchContent() {
         };
     });
 
-    const avgPrice = comparisonRows.length > 0
-        ? Math.round(comparisonRows.reduce((sum, row) => sum + row.priceFrom, 0) / comparisonRows.length) : null;
+    const validPrices = filteredOffers.filter(o => o.priceFrom > 0).map(o => o.priceFrom);
+    const avgPrice = validPrices.length > 0
+        ? Math.round(validPrices.reduce((sum, price) => sum + price, 0) / validPrices.length)
+        : null;
     const deliveryTotals = comparisonRows.filter((r) => r.hasDelivery && r.total !== null).map((r) => r.total as number);
     const minDeliveryTotal = deliveryTotals.length > 0 ? Math.min(...deliveryTotals) : null;
     const fallbackTotals = comparisonRows.filter((r) => r.total !== null).map((r) => r.total as number);
@@ -486,23 +489,60 @@ function SearchContent() {
                                                                 <tr key={`${offer.companyId}:${offer.productId}`}>
                                                                     <td>
                                                                         <div className={styles.tableProduct}>
-                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                            <img
-                                                                                src={offer.imageUrl || '/images/catalog/materials.jpg'}
-                                                                                alt={offer.productName}
-                                                                                className={styles.tableThumb}
-                                                                                loading="lazy"
-                                                                            />
+                                                                            <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.tableThumbWrap}>
+                                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                                <img
+                                                                                    src={offer.imageUrl || '/images/catalog/materials.jpg'}
+                                                                                    alt={offer.productName}
+                                                                                    className={styles.tableThumb}
+                                                                                    loading="lazy"
+                                                                                />
+                                                                            </Link>
                                                                             <div>
-                                                                                <div className={styles.tableTitle}>{offer.productName}</div>
-                                                                                <div className={styles.tableSub}>{offer.productBrand || '—'}</div>
+                                                                                <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.tableTitleLink}>
+                                                                                    <div className={styles.tableTitle}>{offer.productName}</div>
+                                                                                </Link>
+
+                                                                                {/* Render 2-3 key Technical Specs if available */}
+                                                                                {offer.productSpecs && Object.keys(offer.productSpecs).length > 0 && (
+                                                                                    <div className={styles.tableSpecs}>
+                                                                                        {Object.entries(offer.productSpecs).slice(0, 3).map(([key, value]) => {
+                                                                                            // Quick localization mapping for common keys
+                                                                                            const keyNames: Record<string, string> = { diameter: 'Диаметр', class: 'Класс', steel: 'Сталь', weight: 'Вес', dimensions: 'Размеры', thickness: 'Толщина' };
+                                                                                            const label = keyNames[key] || key;
+                                                                                            return (
+                                                                                                <span key={key} className={styles.specBadge}>
+                                                                                                    {label}: {String(value)}
+                                                                                                </span>
+                                                                                            );
+                                                                                        })}
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {/* Show Brand if no Specs exist */}
+                                                                                {(!offer.productSpecs || Object.keys(offer.productSpecs).length === 0) && offer.productBrand && (
+                                                                                    <div className={styles.tableSub}>{offer.productBrand}</div>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </td>
-                                                                    <td>{offer.productArticle || '—'}</td>
-                                                                    <td>{isPriceOnRequest ? 'По запросу' : `${formatPrice(offer.priceFrom)} ₸ ${offer.priceUnit}`}</td>
                                                                     <td>
-                                                                        <Link href={`/company/${offer.companySlug || offer.companyId}`}>{offer.companyName}</Link>
+                                                                        {offer.productArticle ? (
+                                                                            <div className={styles.articleBadge}>{offer.productArticle}</div>
+                                                                        ) : '—'}
+                                                                    </td>
+                                                                    <td className={styles.priceCol}>
+                                                                        {isPriceOnRequest ? (
+                                                                            <span className={styles.priceOnRequest}>По запросу</span>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className={styles.priceAmount}>{formatPrice(offer.priceFrom)} ₸</span>
+                                                                                <span className={styles.priceUnit}> / {offer.priceUnit}</span>
+                                                                            </>
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        <Link href={`/company/${offer.companySlug || offer.companyId}`} className={styles.supplierLink}>{offer.companyName}</Link>
                                                                     </td>
                                                                     <td>{offer.inStock ? 'В наличии' : 'Под заказ'}</td>
                                                                     <td>

@@ -68,7 +68,7 @@ export default function OfferCard({
     const isPriceOnRequest = offer.priceFrom <= 0 || (offer.priceUnit || '').toLowerCase().includes('запрос');
     return (
         <article className={`${styles.offerCard} ${viewMode === 'list' ? styles.offerCardList : ''}`} style={{ animationDelay: `${index * 0.04}s` }}>
-            <div className={styles.offerImageWrap}>
+            <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.offerImageWrap}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={offer.imageUrl || getOfferImage(offer)}
@@ -76,13 +76,34 @@ export default function OfferCard({
                     className={styles.offerImage}
                     loading="lazy"
                 />
-            </div>
-            <div className={styles.offerTitle}>{offer.productName}</div>
+            </Link>
+
+            <Link href={`/product/${offer.productSlug || offer.productId}`} className={styles.offerTitleLink}>
+                <div className={styles.offerTitle}>{offer.productName}</div>
+            </Link>
+
             <div className={styles.offerPrice}>
                 {isPriceOnRequest ? 'Цена по запросу' : `${formatPrice(offer.priceFrom)} ₸`}
                 <span>{isPriceOnRequest ? '' : offer.priceUnit}</span>
             </div>
-            <p className={styles.offerDesc}>{offer.productDescription}</p>
+
+            {/* If specs exist, show them; otherwise fallback to short description */}
+            {offer.productSpecs && Object.keys(offer.productSpecs).length > 0 ? (
+                <div className={styles.offerSpecsList}>
+                    {Object.entries(offer.productSpecs).slice(0, 3).map(([key, value]) => {
+                        const keyNames: Record<string, string> = { diameter: 'Диаметр', class: 'Класс', steel: 'Сталь', weight: 'Вес', dimensions: 'Размеры', thickness: 'Толщина' };
+                        const label = keyNames[key] || key;
+                        return (
+                            <div key={key} className={styles.offerSpecItem}>
+                                <span className={styles.offerSpecLabel}>{label}:</span>
+                                <span className={styles.offerSpecValue}>{String(value)}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <p className={styles.offerDesc}>{offer.productDescription}</p>
+            )}
             {(offer.productArticle || offer.productBrand || offer.boxQuantity) && (
                 <div className={styles.offerMeta}>
                     {offer.productArticle && <span className="badge">Артикул: {offer.productArticle}</span>}

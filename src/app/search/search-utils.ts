@@ -76,6 +76,7 @@ export interface SearchResultData {
     products: {
         id: string;
         name: string;
+        slug?: string;
         description: string;
         article?: string;
         brand?: string;
@@ -84,9 +85,10 @@ export interface SearchResultData {
         source?: string;
         priceFrom: number;
         priceUnit: string;
-        unit: string;
+        unit?: string;
         updatedAt?: string;
         inStock?: boolean;
+        technicalSpecs?: Record<string, unknown>;
     }[];
     priceFrom: number;
     priceUnit: string;
@@ -135,9 +137,11 @@ export interface PendingAuthIntent {
 export interface ProductOffer {
     productId: string;
     productName: string;
+    productSlug?: string;
     productDescription: string;
     productArticle?: string;
     productBrand?: string;
+    productSpecs?: Record<string, unknown>;
     boxQuantity?: number;
     imageUrl?: string;
     source?: string;
