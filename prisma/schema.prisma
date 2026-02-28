@@ -76,7 +76,8 @@ model Region {
   nameRu                  String
 
   // Relations
-  companies               Company[]
+  baseCityCompanies       Company[]           @relation("CompanyBaseCity") // Обратная связь для Company.baseCity
+  // Если нужны другие связи компаний с регионами (например, доставка), то через доп. модель
 }
 
 // Модель Категорий с иерархией и slug
@@ -100,7 +101,6 @@ model Category {
   products                Product[]
   requests                Request[]
   companyCategories       CompanyCategory[]   // Связь многие ко многим для компаний
-  companies               Company[]           // Удалить эту связь, если CompanyCategory используется для всех связей с категориями
 
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
@@ -130,7 +130,6 @@ model Company {
   categories              CompanyCategory[]
 
   // Продукты и предложения компании
-  products                Product[]           // Продукты, которые компания *может производить/поставлять*
   offers                  Offer[]             // Торговые предложения конкретной компании
   orders                  Order[]
   reviews                 Review[]
@@ -152,7 +151,7 @@ model Product {
   
   // Dynamic Specs (JSONB) для хранения технических характеристик
   technicalSpecs          Json?
-  // Marketing (JSONB) для преиму
+  // Marketing (JSONB) для преимуществ
   marketingFeatures       Json?
   
   // Tags (JSONB) для плашек «Хит», «ГОСТ»
