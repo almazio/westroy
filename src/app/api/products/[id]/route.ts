@@ -12,11 +12,11 @@ const generateSlug = (name: string) => {
 };
 
 // PUT /api/products/[id] - Update product and its associated offer
-export async function PUT(request: Request, { params }: { params: { id: string } }) { // Убрал Promise из params
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
     const { id } = params;
     const session = await auth();
 
-    if (!session?.user || session.user.role !== 'producer') {
+    if (!session?.user || !['producer', 'admin'].includes(session.user.role as string)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -30,17 +30,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        // Verify ownership via company
+        // Verify ownership via company Offer presence
         const company = await prisma.company.findUnique({
             where: { ownerId: session.user.id }
         });
 
         if (!company || (product.offers.length > 0 && !product.offers.some(offer => offer.companyId === company.id))) {
-            // Если продукт уже имеет офферы, проверяем, что текущий продюсер имеет хотя бы один из них.
-            // Иначе, если продукт без офферов, просто проверяем, что продюсер существует.
-            // Это упрощенная логика, в реальной системе может быть сложнее.
-            // Для PUT, если продюсер владеет продуктом, он может его обновлять.
-            // Если продукт есть, но продюсер его "не владеет" (нет оффера), то это Forbidden.
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
         
@@ -150,11 +145,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE /api/products/[id] - Delete product
-export async function DELETE(request: Request, { params }: { params: { id: string } }) { // Убрал Promise из params
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
     const { id } = params;
     const session = await auth();
 
-    if (!session?.user || session.user.role !== 'producer') {
+    if (!session?.user || !['producer', 'admin'].includes(session.user.role as string)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -174,7 +169,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         });
 
         if (!company || !product.offers.some(offer => offer.companyId === company.id)) {
-            // Если у текущего продюсера нет предложений для этого продукта, он не может его удалять
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
